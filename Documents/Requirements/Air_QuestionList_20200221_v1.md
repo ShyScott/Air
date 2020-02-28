@@ -32,3 +32,19 @@ RongKai LIU
 
 9. How many users are the system allowed to use simultaneously?
 
+## V2
+
+1. Whether the user information is imported from ispace or is provided by the user?
+
+2. What is the final exported form of the contribution, user can view the results through downloading a excel file, by searching the results online in browser, or both?
+
+3. Should we provide a user guide document?
+
+4. Can this software be a ancillary function for ispace or a separated software?
+
+5. Considering multiple types of students in the campus: undergraduate, graduate and exchange students, should they be treated equally or differently?
+
+6. Is there any time limitations for the software response? If so, please specify them case by case.
+
+7. Is there any software you wish it can have interaction with the contirbution system? If so, please list them and describe the details.
+
