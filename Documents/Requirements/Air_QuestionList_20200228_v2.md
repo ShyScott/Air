@@ -46,5 +46,6 @@ RongKai LIU
 
 15. Is there any time limitations for the software response? If so, please specify them case by case.
 
-16. Is there any software you wish it can have interaction with the contirbution system? If so, please list them and describe the details.
+16. Is there any software you wish it can have interaction with the contribution system? If so, please list them and describe the details.
 
+17. What is language requirement of this software? English, Chinese or both?
