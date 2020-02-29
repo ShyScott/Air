@@ -6,9 +6,10 @@
 
 ### <u>I. Call to order</u>
 
-​**LONG YuePeng** called to order the regular meeting of the **AIR** at **15:30** on **2020/02/28** in **Zoom**.
+​**Yuepeng Long** called to order the regular meeting of the **AIR** at **15:30** on **2020/02/28** in **Zoom**.
 
 ### <u>II. Roll call</u>
+
 **Hongyue Shen** conducted a roll call. The following persons were present:
 
 **Yitao Qiu**
