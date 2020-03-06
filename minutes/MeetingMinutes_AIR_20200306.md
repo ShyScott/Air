@@ -29,7 +29,7 @@
 
 3. **Complete the division of work of the teamwork**  
     part 1: **Rongkai Liu**  
-    part 2: **Hongytue Shen**  
+    part 2: **Hongyue Shen**  
     part 4: **Yuepeng Long**  
     part 5 & 6: **Yitao Qiu**
 
