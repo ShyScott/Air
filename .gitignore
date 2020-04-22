@@ -131,3 +131,6 @@ dmypy.json
 
 # editor
 .vscode/
+
+# Apple file system attribute file
+.DS_Store
