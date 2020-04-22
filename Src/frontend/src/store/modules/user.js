@@ -1,5 +1,6 @@
 import Vue from 'vue'
-import { login, getInfo, logout } from '@/api/login'
+import { login } from '@/api/auth'
+import { getInfo, logout } from '@/api/login'
 import { ACCESS_TOKEN } from '@/store/mutation-types'
 import { welcome } from '@/utils/util'
 
@@ -37,9 +38,10 @@ const user = {
     Login ({ commit }, userInfo) {
       return new Promise((resolve, reject) => {
         login(userInfo).then(response => {
-          const result = response.result
-          Vue.ls.set(ACCESS_TOKEN, result.token, 7 * 24 * 60 * 60 * 1000)
-          commit('SET_TOKEN', result.token)
+          const token = 'Bearer ' + response.access
+          // 设置 Vue-ls 存储的 ACCESS_TOKEN 超时时间为 30 分钟
+          Vue.ls.set(ACCESS_TOKEN, token, 30 * 60 * 1000)
+          commit('SET_TOKEN', token)
           resolve()
         }).catch(error => {
           reject(error)
