@@ -9,7 +9,6 @@ export const asyncRouterMap = [
     name: 'index',
     component: BasicLayout,
     meta: { title: '首页' },
-    redirect: '/dashboard/workplace',
     children: [
       // dashboard
       {
@@ -327,6 +326,38 @@ export const asyncRouterMap = [
   },
   {
     path: '*', redirect: '/404', hidden: true
+  }
+]
+
+/**
+ * 学生专用路由
+ * @type { *[] }
+ */
+export const studentRoutes = [
+  {
+    path: 'mainpage',
+    name: 'Analysis',
+    component: () => import('@/views/dashboard/Analysis'),
+    meta: { title: '分析页' }
+  }
+]
+
+/**
+ * 老师专用路由
+ * @type { *[] }
+ */
+export const teacherRoutes = [
+  {
+    path: 'mainpage',
+    name: 'Workplace',
+    component: () => import('@/views/dashboard/Workplace'),
+    meta: { title: '工作台' }
+  },
+  {
+    path: 'course',
+    name: 'Course',
+    component: () => import('@/views/teacher/course/index'),
+    meta: { title: '课程管理', icon: 'setting' }
   }
 ]
 
