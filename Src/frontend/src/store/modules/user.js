@@ -10,7 +10,7 @@ const user = {
     name: '',
     welcome: '',
     avatar: '',
-    isTeacher: false,
+    isTeacher: true,
     roles: [],
     info: {}
   },

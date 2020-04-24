@@ -330,35 +330,58 @@ export const asyncRouterMap = [
 ]
 
 /**
- * 学生专用路由
- * @type { *[] }
+ * Router dedicated for Student
  */
 export const studentRoutes = [
   {
     path: 'mainpage',
-    name: 'Analysis',
-    component: () => import('@/views/dashboard/Analysis'),
-    meta: { title: '分析页' }
+    name: 'Index',
+    meta: { title: 'Main', icon: 'smile' },
+    component: () => import('@/views/student/index')
+  },
+  {
+    path: 'team',
+    name: 'Team',
+    meta: { title: 'Team Management', icon: 'team' },
+    component: () => import('@/views/student/Team/TeamManagement')
+  },
+  {
+    path: 'assessment',
+    name: 'Assessment',
+    meta: { title: 'Assessment', icon: 'like' },
+    component: () => import('@/views/student/Assessment/Assessment')
   }
 ]
 
 /**
- * 老师专用路由
- * @type { *[] }
+ * Router dedicated for Teacher
  */
 export const teacherRoutes = [
   {
     path: 'mainpage',
-    name: 'Workplace',
-    component: () => import('@/views/dashboard/Workplace'),
-    meta: { title: '工作台' }
+    name: 'Index',
+    component: () => import('@/views/teacher/index'),
+    meta: { title: 'Main', icon: 'crown' }
   },
   {
     path: 'course',
-    name: 'Course',
-    component: () => import('@/views/teacher/course/index'),
-    meta: { title: '课程管理', icon: 'setting' }
+    name: 'CourseManagement',
+    component: () => import('@/views/teacher/course/CourseManagement'),
+    meta: { title: 'Course Management', icon: 'solution' }
+  },
+  {
+    path: 'contribution',
+    name: 'ViewContribution',
+    component: () => import('@/views/teacher/contribution/ViewContribution'),
+    meta: { title: 'View Contribution', icon: 'like' }
+  },
+  {
+    path: 'submission',
+    name: 'SubmissManagement',
+    component: () => import('@/views/teacher/submission/SubmissionManagement'),
+    meta: { title: 'View Submission', icon: 'upload' }
   }
+
 ]
 
 /**
