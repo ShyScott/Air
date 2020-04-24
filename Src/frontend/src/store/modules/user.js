@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import { login } from '@/api/auth'
+import { login, getMyInfo } from '@/api/auth'
 import { getInfo, logout } from '@/api/login'
 import { ACCESS_TOKEN } from '@/store/mutation-types'
 import { welcome } from '@/utils/util'
@@ -10,6 +10,7 @@ const user = {
     name: '',
     welcome: '',
     avatar: '',
+    isTeacher: false,
     roles: [],
     info: {}
   },
@@ -30,6 +31,9 @@ const user = {
     },
     SET_INFO: (state, info) => {
       state.info = info
+    },
+    SET_IS_TEACHER: (state, isTeacher) => {
+      state.isTeacher = isTeacher
     }
   },
 
@@ -53,30 +57,41 @@ const user = {
     GetInfo ({ commit }) {
       return new Promise((resolve, reject) => {
         getInfo().then(response => {
-          const result = response.result
+          const { result } = response
 
           if (result.role && result.role.permissions.length > 0) {
             const role = result.role
             role.permissions = result.role.permissions
             role.permissions.map(per => {
               if (per.actionEntitySet != null && per.actionEntitySet.length > 0) {
-                const action = per.actionEntitySet.map(action => { return action.action })
+                const action = per.actionEntitySet.map(action => {
+                  return action.action
+                })
                 per.actionList = action
               }
             })
-            role.permissionList = role.permissions.map(permission => { return permission.permissionId })
+            role.permissionList = role.permissions.map(permission => {
+              return permission.permissionId
+            })
             commit('SET_ROLES', result.role)
             commit('SET_INFO', result)
-          } else {
-            reject(new Error('getInfo: roles must be a non-null array !'))
           }
 
-          commit('SET_NAME', { name: result.name, welcome: welcome() })
+          // commit('SET_NAME', { name: result.name, welcome: welcome() })
           commit('SET_AVATAR', result.avatar)
 
-          resolve(response)
-        }).catch(error => {
-          reject(error)
+          getMyInfo().then(user => {
+            commit('SET_NAME', { name: user.username, welcome: welcome() })
+            // commit('SET_AVATAR', user.avatar)
+            if (user.student_profile) {
+              commit('SET_IS_TEACHER', false)
+              // TODO: save student profile
+            } else {
+              commit('SET_IS_TEACHER', true)
+            }
+
+            resolve(response)
+          })
         })
       })
     },
