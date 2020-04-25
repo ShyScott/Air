@@ -3,24 +3,7 @@
     <template>
       <!--This is the area for the rendering of course cards-->
       <div style="background-color: #f1f2f5;">
-        <a-card class="card-border" style="margin-bottom: 25px;">
-          <a-row>
-            <a-col>
-              <!--Breadcrumb Area-->
-              <a-breadcrumb class="breadcrumb-adjust">
-                <a-breadcrumb-item href="">
-                  <a-icon type="home" />
-                </a-breadcrumb-item>
-                <a-breadcrumb-item href="">
-                  <a-icon type="user" />
-                  <span>Application List</span>
-                </a-breadcrumb-item>
-                <a-breadcrumb-item>
-                  Application
-                </a-breadcrumb-item>
-              </a-breadcrumb>
-            </a-col>
-          </a-row>
+        <a-card class="card-border" style="margin-bottom: 25px; margin-top: 10px">
           <a-row>
             <a-col>
               <!--WelcomeArea-->
@@ -48,6 +31,20 @@
                     src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
                   />
                 </a-card-meta>
+              </a-card>
+            </a-col>
+          </a-row>
+        </a-card>
+        <!--Quick Navigation Area-->
+        <a-card style="margin-top: 25px;">
+          <a-row>
+            <a-col>
+              <a-card title="Quick Navigation" class="card-border">
+                <a-row :gutter="16" style="text-align: center">
+                  <a-col :span="8"><a href="#">Add a new course</a></a-col>
+                  <a-col :span="8"><a href="#">Import Students</a></a-col>
+                  <a-col :span="8"><a href="#">Export Contribution</a></a-col>
+                </a-row>
               </a-card>
             </a-col>
           </a-row>
@@ -92,6 +89,11 @@
       // function used to move to the detailed page of course
       moveToCoursePage () {
         this.$router.push('course')
+      },
+      // function used to move to the index page of teacher
+      moveToIndex () {
+        this.$router.push('mainpage')
+        console.log('12323121')
       }
     }
   }
