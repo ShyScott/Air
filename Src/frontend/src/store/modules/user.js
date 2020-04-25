@@ -57,11 +57,11 @@ const user = {
     GetInfo ({ commit }) {
       return new Promise((resolve, reject) => {
         getInfo().then(response => {
-          const { data } = response
+          const { result } = response
 
-          if (data.role && data.role.permissions.length > 0) {
-            const role = data.role
-            role.permissions = data.role.permissions
+          if (result.role && result.role.permissions.length > 0) {
+            const role = result.role
+            role.permissions = result.role.permissions
             role.permissions.map(per => {
               if (per.actionEntitySet != null && per.actionEntitySet.length > 0) {
                 const action = per.actionEntitySet.map(action => {
@@ -73,12 +73,12 @@ const user = {
             role.permissionList = role.permissions.map(permission => {
               return permission.permissionId
             })
-            commit('SET_ROLES', data.role)
-            commit('SET_INFO', data)
+            commit('SET_ROLES', result.role)
+            commit('SET_INFO', result)
           }
 
           // commit('SET_NAME', { name: result.name, welcome: welcome() })
-          commit('SET_AVATAR', data.avatar)
+          commit('SET_AVATAR', result.avatar)
 
           getMyInfo().then(user => {
             commit('SET_NAME', { name: user.username, welcome: welcome() })
