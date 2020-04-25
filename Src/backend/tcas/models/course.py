@@ -4,9 +4,12 @@ from django.conf import settings
 
 class Course(models.Model):
     title = models.CharField(max_length=128, unique=True)
-    form_method = models.SmallIntegerField()
+    duration = models.DateField(auto_now_add=True)
+    form_method = models.SmallIntegerField(default=0)
     member_count_primary = models.IntegerField(default=0)
+    team_count_primary = models.IntegerField(default=0)
     member_count_secondary = models.IntegerField(default=0)
+    team_count_secondary = models.IntegerField(default=0)
     floating_band = models.FloatField(default=0)
 
     instructor = models.ForeignKey(
@@ -20,7 +23,7 @@ class Course(models.Model):
     students = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         related_name='courses_in',
-        blank=True
+        blank=True,
     )
 
     class Meta:
