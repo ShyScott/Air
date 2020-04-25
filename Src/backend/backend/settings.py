@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,7 +25,7 @@ SECRET_KEY = '4#*b)j+m8h(1-#tfs$uoghwu^m1b98iae7u3d@bz16qxgweh_x'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['tcas.mchobbylong.com', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -124,7 +125,13 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # Project default user model
+
 AUTH_USER_MODEL = 'tcas.User'
+
+# Default login & logout url (for Swagger-UI)
+
+LOGIN_URL = '/api-auth/login/'
+LOGOUT_URL = '/api-auth/logout/'
 
 # Django REST Framework settings
 
@@ -140,4 +147,23 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.OrderingFilter',
     ],
+}
+
+# Swagger in DRF (drf-yasg) settings
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        "WebToken": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+        },
+    },
+}
+
+# JSON Web Token settings
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
