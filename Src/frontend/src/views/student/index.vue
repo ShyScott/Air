@@ -1,7 +1,9 @@
+<script src="../../api/auth.js"></script>
 <template>
   <div>
     Index
     {{ this.nickname }}
+    {{ this.isTeacher }}
   </div>
 </template>
 
@@ -11,7 +13,8 @@
     name: 'Index',
     computed: {
       ...mapGetters([
-        'nickname'
+        'nickname',
+        'isTeacher'
       ])
     }
   }

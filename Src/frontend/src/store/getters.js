@@ -11,7 +11,6 @@ const getters = {
   addRouters: state => state.permission.addRouters,
   multiTab: state => state.app.multiTab,
   lang: state => state.i18n.lang,
-
   isTeacher: state => state.user.isTeacher
 }
 
