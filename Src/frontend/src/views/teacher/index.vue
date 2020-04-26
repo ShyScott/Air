@@ -93,7 +93,7 @@
       // function used to move to the index page of teacher
       moveToIndex () {
         this.$router.push('mainpage')
-        console.log('12323121')
+        // console.log('12323121')
       }
     }
   }

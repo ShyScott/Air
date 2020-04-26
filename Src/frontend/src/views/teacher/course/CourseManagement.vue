@@ -13,7 +13,7 @@
         </a-breadcrumb-item>
       </a-breadcrumb>
       <a-button class="addButton-adjust" type="primary" size="default">
-        <a-icon type="left"/>
+        <a-icon type="coffee"/>
         New Course
       </a-button>
       <!--Alert Area-->
@@ -21,15 +21,18 @@
       <!--The table of courses-->
       <a-table class="table-adjust" :columns="this.courseColumns" :dataSource="courseList" rowKey="id" :pagination="paginationAdjust">
         <template slot="name" slot-scope="text, record">
-          <a @click="ShowManageStudentDialog(record)">{{ record.title }}</a>
+          <a @click="DisplayInfoOnStudentManageCard(record)">{{ record.title }}</a>
         </template>
+        <!--operation area of the table-->
         <template slot="operation" slot-scope="text, record">
+          <!--tooltip for operation button-->
           <a-tooltip placement="top">
             <template slot="title">
               <span>Click to edit this course</span>
             </template>
-            <a href="#" @click="EditCourseInfo(record)"><a-icon type="edit" />Edit</a>
+            <a href="#" @click="moveToCourseInfoEditPage(record)"><a-icon type="edit" />Edit</a>
           </a-tooltip>
+          <!--tooltip for operation button-->
           <a-tooltip>
             <template slot="title">
               <span>Click to delete this course</span>
@@ -39,32 +42,84 @@
         </template>
       </a-table>
     </a-card>
-    <!--Student Mangement Modal-->
-    <div>
-      <a-modal title="Students Mangement" width="820px" v-model="studentManagementModalVisible">
-        <a-form :model="studentManagementForm" :label-col="labelCol" :wrapper-col="wrapperCol">
-          <!--Chosed course row-->
-          <a-form-item label="Chosed course">
-            <a-input v-model="studentManagementForm.choosedCourse" :disabled="true"/>
-          </a-form-item>
-          <!--student query and student list-->
-        </a-form>
-      </a-modal>
-    </div>
+    <!--Student management card area-->
+    <a-card title="Course Info" style="margin-top: 20px">
+      Chosed Course: {{ this.studentManagementForm.chosedCourse }}
+      <div style="margin-bottom: 20px">
+        <a-button class="addButton-adjust" type="primary" size="default" style="margin-right: 20px">
+          <a-icon type="user-add"/>
+          Add a Student
+        </a-button>
+        <a-button class="addButton-adjust" type="primary" size="default">
+          <a-icon type="file-done"/>
+          Import students from a file
+        </a-button>
+      </div>
+      <a-table :columns="studentListColumns" :dataSource="studentList" rowKey="id" :pagination="paginationAdjust">
+        <!--Add delete button to operation slot-->
+        <template slot="operation" slot-scope="text, record">
+          <!--Operation Area-->
+          <a-tooltip>
+            <template slot="title">
+              <span>Click to delete the student from this course</span>
+            </template>
+            <a class="a-adjust" href="#" style="font-color: red" @click="DeleteCourse(record)"><a-icon type="delete" />Delete</a>
+          </a-tooltip>
+        </template>
+        <!--Add query function to Student name-->
+        <div slot="filterDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }" style="padding: 8px">
+          <a-input
+            v-ant-ref="c => (searchInput = c)"
+            :placeholder="`Search ${ column.dataIndex }`"
+            :value="selectedKeys[0]"
+            @change="e => setSelectedKeys(e.target.value ? [e.target.value] : [])"
+            @pressEnter="() => handleSearch(selectedKeys, confirm, column.dataIndex)"
+            style="width: 188px; margin-bottom: 8px; display: block"
+          />
+          <a-button
+            type="primary"
+            @click="() => handleSearch(selectedKeys, confirm, column.dataIndex)"
+            icon="search"
+            size="small"
+            style="width: 90px; margin-left: 8px"
+          >Search</a-button>
+          <a-button @click="() => handleReset(clearFilters)" size="small" style="width: 90px">Reset</a-button>
+        </div>
+        <a-icon
+          slot="filterIcon"
+          slot-scope="filtered"
+          type="search"
+          :style="{ color: filtered ? '#108ee9' : undefined }"
+        />
+        <template slot="customRender" slot-scope="text, record, index, column">
+          <span v-if="searchText && searchedColumn === column.dataIndex">
+            <template
+              v-for="(fragment, i) in text
+                .toString()
+                .split(new RegExp(`(?<=${searchText})|(?=${searchText})`, 'i'))">
+              <mark
+                v-if="fragment.toLowerCase() === searchText.toLowerCase()"
+                :key="i"
+                class="highlight">{{ fragment }}
+              </mark>
+              <template v-else>{{ fragment }}</template>
+            </template>
+          </span>
+          <template v-else>{{ text }}</template>
+        </template>
+      </a-table>
+    </a-card>
   </div>
 </template>
 
 <script>
-  import { getTeacherCourses } from '../../../api/teacher'
+  import { getTeacherCourses, getCourseInfoById, getStudentListOfTheCourse } from '../../../api/teacher'
   import { mapGetters } from 'vuex'
 
   export default {
     name: 'CourseManagement',
     data () {
       return {
-        // student management form layout settings
-        labelCol: { span: 4 },
-        wrapperCol: { span: 14 },
         // Used to indicate the header of the course table
         courseColumns: [{
           // Course name column
@@ -95,12 +150,64 @@
             scopedSlots: { customRender: 'operation' }
           }
         ],
+        // Columns settings for the student list table in the student management card
+        studentListColumns: [
+          {
+            // Student name column
+            title: 'Student Name',
+            dataIndex: 'username',
+            width: '20%',
+            scopedSlots: { filterDropdown: 'filterDropdown', filterIcon: 'filterIcon', cunstomRender: 'username' },
+            onFilter: (value, record) => {
+              console.log(value)
+              console.log(record)
+              return record.username.toString().toLowerCase().includes(value.toLowerCase())
+            },
+            onFilterDropdownVisibleChange: visible => {
+              if (visible) {
+                setTimeout(() => {
+                  this.searchInput.focus()
+                }, 0)
+              }
+            }
+          },
+          {
+            // Email column
+            title: 'Email Address',
+            dataIndex: 'student_profile.email',
+            width: '20%',
+            scopedSlots: { customRender: 'email' }
+          },
+          {
+            // Student ID column
+            title: 'Student ID',
+            dataIndex: 'student_profile.student_id',
+            width: '20%',
+            scopedSlots: { customRender: 'id' }
+          },
+          {
+            // GPA column
+            title: 'GPA',
+            dataIndex: 'student_profile.gpa',
+            width: '20%',
+            scopedSlots: { customRender: 'gpa' }
+          },
+          {
+            // operation column
+            title: 'Operation',
+            dataIndex: 'operation',
+            width: '20%',
+            scopedSlots: { customRender: 'operation' }
+          }
+        ],
         // list used to store all the courses of current teacher
         courseList: [],
+        // list used to store all the students taking the course selected
+        studentList: [],
         // object used to adjust the pagination of the table
         paginationAdjust: {
           // default page size
-          defaultPageSize: 10,
+          defaultPageSize: 5,
           // Show the number of total items
           showTotal: (total) => `Totally ${ total } items`,
           total: 0,
@@ -116,12 +223,29 @@
             this.getCourses()
           }
         },
-        // variable used to control whether the student management modal is visible
-        studentManagementModalVisible: false,
         // Form object used in the students management
         studentManagementForm: {
-          choosedCourse: ''
-        }
+          chosedCourse: ''
+        },
+        // variable used to control whether the course info edit modal is visible
+        courseInfoEditModalVisible: false,
+        // Form object used in the course info edit
+        courseInfoEditForm: {
+          id: 0,
+          title: '',
+          duration: '',
+          students_count: '',
+          form_method: 0,
+          member_count_primary: 0,
+          team_count_primary: 0,
+          member_count_secondary: 0,
+          team_count_secondary: 0,
+          floating_band: 0
+        },
+        // The query info input by the user
+        searchText: '',
+        searchInput: null,
+        searchedColumn: ''
       }
     },
     computed: {
@@ -149,19 +273,56 @@
           })
         })
       },
-      EditCourseInfo (x) {
-        console.log(x)
+      // get the information of the course selected to be edited
+      getCourseInfoToBeEdited (id) {
+        // console.log(id)
+        getCourseInfoById(id).then(response => {
+          this.courseInfoEditForm = response
+          // console.log(this.courseInfoEditForm)
+        }).catch(error => {
+          console.info(error)
+          // if failing, output the warning message
+          this.$notification.error({
+            message: 'Error',
+            description: 'Failed to get the information of selected course'
+          })
+        })
+      },
+      // get the students list according to the course id given
+      getStudentList (courseId) {
+        getStudentListOfTheCourse(courseId).then(response => {
+          this.studentList = response
+          // console.log(this.studentList)
+        })
       },
       DeleteCourse (x) {
         console.log(x)
       },
-      // function used to show the student management dialog
-      ShowManageStudentDialog (course) {
-        this.studentManagementForm.choosedCourse = course.title
-        this.studentManagementModalVisible = true
+      // function used to fill the infomation supposed to be displayed in the Student Managemet Card
+      // course is the info of course selected
+      DisplayInfoOnStudentManageCard (course) {
+        this.studentManagementForm.chosedCourse = course.title
+        // console.log(course.id)
+        this.getStudentList(course.id)
+      },
+      // function used to show the course info edit modal
+      moveToCourseInfoEditPage (course) {
+        console.log(course.id)
+      },
+      // function used when user click search in the student list table
+      handleSearch (selectedKeys, confirm, dataIndex) {
+        confirm()
+        this.searchText = selectedKeys[0]
+        this.searchColumn = dataIndex
+      },
+      // function used to reset the query input
+      handleReset (clearFilters) {
+        clearFilters()
+        this.searchText = ''
       }
     },
     created () {
+      // get all the courses belonging to the current teacher after initialzaion
       this.getCourses()
     }
   }
@@ -180,5 +341,10 @@
   .a-adjust {
     margin-left: 20px;
     color: #EE2C2C;
+  }
+
+  .highlight {
+    background-color: rgb(255, 192, 105);
+    padding: 0px;
   }
 </style>
