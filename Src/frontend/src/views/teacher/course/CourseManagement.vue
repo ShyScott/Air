@@ -19,7 +19,7 @@
       <!--Alert Area-->
       <a-alert style="margin-top: 20px" message="Reminder: Please click the course name for students management" type="info" showIcon />
       <!--The table of courses-->
-      <a-table class="table-adjust" :columns="this.courseColumns" :dataSource="courseList" rowKey="id" :pagination="paginationAdjust">
+      <a-table class="table-adjust" :columns="this.courseColumns" :dataSource="courseList" rowKey="id" :pagination="paginationForCourseTable">
         <template slot="name" slot-scope="text, record">
           <a @click="DisplayInfoOnStudentManageCard(record)">{{ record.title }}</a>
         </template>
@@ -55,7 +55,7 @@
           Import students from a file
         </a-button>
       </div>
-      <a-table :columns="studentListColumns" :dataSource="studentList" rowKey="id" :pagination="paginationAdjust">
+      <a-table :columns="studentListColumns" :dataSource="studentList" rowKey="id" :pagination="paginationForStudentListTable">
         <!--Add delete button to operation slot-->
         <template slot="operation" slot-scope="text, record">
           <!--Operation Area-->
@@ -204,8 +204,8 @@
         courseList: [],
         // list used to store all the students taking the course selected
         studentList: [],
-        // object used to adjust the pagination of the table
-        paginationAdjust: {
+        // object used to adjust the pagination of the course table
+        paginationForCourseTable: {
           // default page size
           defaultPageSize: 5,
           // Show the number of total items
@@ -214,13 +214,36 @@
           showSizeChanger: true,
           pageSizeOptions: ['5', '10', '12', '15', '25'],
           onShowSizeChange: (current, pageSize) => {
-            this.pageSize = pageSize
+            this.pagenumForCourse = current
+            this.pagesizeForCourse = pageSize
             this.getCourses()
           },
           onChange: (page, pageSize) => {
-            this.pageSize = pageSize
-            this.pageNum = page
+            this.pagesizeForCourse = pageSize
+            this.pagenumForCourse = page
+            // console.log(this.pagesizeForCourse)
+            // console.log(this.pagenumForCourse)
             this.getCourses()
+          }
+        },
+        // object used to adjust the pagination of the student list table
+        paginationForStudentListTable: {
+          // default page size
+          defaultPageSize: 5,
+          // Show the number of total items
+          showTotal: (total) => `Totally ${ total } items`,
+          total: 0,
+          showSizeChanger: true,
+          pageSizeOptions: ['5', '10', '15', '20', '25'],
+          onShowSizeChange: (current, pageSize) => {
+            this.pagenumForStudentList = current
+            this.pagesizeForStudentList = pageSize
+            this.getStudentList(this.selectedCourseId)
+          },
+          onChange: (page, pageSize) => {
+            this.pagesizeForStudentList = pageSize
+            this.pagenumForStudentList = page
+            this.getStudentList(this.selectedCourseId)
           }
         },
         // Form object used in the students management
@@ -245,7 +268,17 @@
         // The query info input by the user
         searchText: '',
         searchInput: null,
-        searchedColumn: ''
+        searchedColumn: '',
+        // the id of the course selected by user
+        selectedCourseId: '',
+        // pagination parameters for the course table
+        totalForCourse: 0,
+        pagenumForCourse: 1,
+        pagesizeForCourse: 5,
+        // pagination parameters for the student list table
+        totalForStudentList: 0,
+        pagenumForStudentList: 1,
+        pagesizeForStudentList: 5
       }
     },
     computed: {
@@ -261,9 +294,14 @@
       },
       // function used to get all the courses available of current Teacher
       getCourses () {
-        getTeacherCourses().then(response => {
-            this.courseList = response
-            // console.log(this.courseList)
+        getTeacherCourses(this.pagenumForCourse, this.pagesizeForCourse).then(response => {
+          // console.log(response)
+          this.courseList = response.results
+          // pagination settings
+          this.totalForCourse = response.count
+          this.paginationForCourseTable.total = response.count
+          // console.log(this.totalForCourse)
+          // console.log(this.courseList)
           }
         ).catch(error => {
           console.info(error)
@@ -290,8 +328,11 @@
       },
       // get the students list according to the course id given
       getStudentList (courseId) {
-        getStudentListOfTheCourse(courseId).then(response => {
-          this.studentList = response
+        getStudentListOfTheCourse(courseId, this.pagenumForStudentList, this.pagesizeForStudentList).then(response => {
+          this.studentList = response.results
+          // pagination settings
+          this.totalForStudentList = response.count
+          this.paginationForStudentListTable.total = response.count
           // console.log(this.studentList)
         })
       },
@@ -303,7 +344,8 @@
       DisplayInfoOnStudentManageCard (course) {
         this.studentManagementForm.chosedCourse = course.title
         // console.log(course.id)
-        this.getStudentList(course.id)
+        this.selectedCourseId = course.id
+        this.getStudentList(this.selectedCourseId)
       },
       // function used to show the course info edit modal
       moveToCourseInfoEditPage (course) {

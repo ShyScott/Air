@@ -10,7 +10,7 @@ export function login (data) {
 
 export function getMyInfo () {
   return axios({
-    url: '/users/me',
+    url: '/users/me/',
     method: 'get'
   })
 }

@@ -17,7 +17,7 @@
           <a href="#" slot="extra" @click="moveToCoursePage">More</a>
           <a-row :gutter="16">
             <!--Each row 3 items, at most 6 items rendered-->
-            <a-col :span="8" v-for="(item, i) in courseList" :key="item.id" v-if="i < 6">
+            <a-col :span="8" v-for="(item, i) in courseList.results" :key="item.id" v-if="i < 6">
               <a-card hoverable style="width: 100%; margin-bottom: 10px">
                 <!--Course Card Image-->
                 <img
@@ -36,16 +36,14 @@
           </a-row>
         </a-card>
         <!--Quick Navigation Area-->
-        <a-card style="margin-top: 25px;">
+        <a-card title="Qucik Navigation" style="margin-top: 25px;">
           <a-row>
             <a-col>
-              <a-card title="Quick Navigation" class="card-border">
-                <a-row :gutter="16" style="text-align: center">
-                  <a-col :span="8"><a href="#">Add a new course</a></a-col>
-                  <a-col :span="8"><a href="#">Import Students</a></a-col>
-                  <a-col :span="8"><a href="#">Export Contribution</a></a-col>
-                </a-row>
-              </a-card>
+              <a-row :gutter="16" style="text-align: center">
+                <a-col :span="8"><a href="#">Add a new course</a></a-col>
+                <a-col :span="8"><a href="#">Import Students</a></a-col>
+                <a-col :span="8"><a href="#">Export Contribution</a></a-col>
+              </a-row>
             </a-col>
           </a-row>
         </a-card>
@@ -75,8 +73,10 @@
     methods: {
       // function used to get all the courses available of current Teacher
       getCourses () {
-        getTeacherCourses().then(response => {
+        // default: display 6 courses on the main page
+        getTeacherCourses(1, 6).then(response => {
           this.courseList = response
+          // console.log(this.courseList)
           }
         ).catch(error => {
           console.info(error)
