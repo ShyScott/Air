@@ -147,6 +147,8 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.OrderingFilter',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'tcas.utils.ExtendedPageNumberPagination',
+    'PAGE_SIZE': 10,
 }
 
 # Swagger in DRF (drf-yasg) settings
