@@ -6,6 +6,7 @@ from . import views
 router = routers.DefaultRouter()
 router.register('users', views.UserViewSet)
 router.register('courses', views.CourseViewSet, basename='course')
+router.register('submissions', views.SubmissionViewSet)
 
 urlpatterns = [
     path('', include(router.urls))
