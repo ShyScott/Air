@@ -3,12 +3,18 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
+from .generic import PermissionDictMixin
 from tcas.models import Course
 from tcas.serializers import CourseSerializer, CourseListSerializer, CourseRemoveStudentSerializer
 from tcas.permissions import IsTeacher, IsLogin
 
 
-class CourseViewSet(ModelViewSet):
+class CourseViewSet(PermissionDictMixin, ModelViewSet):
+    permission_dict = {
+        'list': [IsLogin],
+        'retrieve': [IsLogin],
+        'others': [IsTeacher],
+    }
 
     def get_queryset(self):
         if not self.request.user.is_authenticated:
@@ -23,11 +29,6 @@ class CourseViewSet(ModelViewSet):
         elif self.action == 'remove_student':
             return CourseRemoveStudentSerializer
         return CourseSerializer
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            return [IsLogin()]
-        return [IsTeacher()]
 
     @action(detail=True, methods=['post'])
     def remove_student(self, request, *args, **kwargs):

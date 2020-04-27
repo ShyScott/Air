@@ -11,6 +11,7 @@ from django.db.models.functions import Length, Replace
 
 from django_filters import rest_framework as filters
 
+from .generic import PermissionDictMixin
 from tcas.models import User, Course
 from tcas.serializers import UserSerializer, ChangePasswordSerializer, StudentBatchCreateSerializer, StudentBatchCreateWeakSerializer
 from tcas.permissions import IsTeacher, IsLogin, IsCurrentUser, IsInCurrentCourse
@@ -54,9 +55,17 @@ def filter_duplicated_user(duplicated_users):
     return is_duplicated_user
 
 
-class UserViewSet(ModelViewSet):
+class UserViewSet(PermissionDictMixin, ModelViewSet):
     queryset = User.objects.all()
     filterset_class = UserFilter
+    permission_dict = {
+        'list': [IsTeacher | IsInCurrentCourse],
+        'retrieve': [IsLogin],
+        'create': [IsTeacher, IsInCurrentCourse],
+        'me': [IsLogin],
+        'change_password': [IsCurrentUser],
+        'others': [IsTeacher],
+    }
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -70,17 +79,6 @@ class UserViewSet(ModelViewSet):
         if self.action == 'me':
             context['full_info'] = True
         return context
-
-    def get_permissions(self):
-        if self.action == 'list':
-            return [(IsTeacher | IsInCurrentCourse)()]
-        elif self.action == 'create':
-            return [IsTeacher(), IsInCurrentCourse()]
-        elif self.action in ['retrieve', 'me']:
-            return [IsLogin()]
-        elif self.action == 'change_password':
-            return [IsCurrentUser()]
-        return [IsTeacher()]
 
     def create(self, request, *args, **kwargs):
         serializer = StudentBatchCreateWeakSerializer(data=request.data)
