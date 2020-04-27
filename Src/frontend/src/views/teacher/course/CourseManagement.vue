@@ -66,47 +66,6 @@
             <a class="a-adjust" href="#" style="font-color: red" @click="DeleteCourse(record)"><a-icon type="delete" />Delete</a>
           </a-tooltip>
         </template>
-        <!--Add query function to Student name-->
-        <div slot="filterDropdown" slot-scope="{ setSelectedKeys, selectedKeys, confirm, clearFilters, column }" style="padding: 8px">
-          <a-input
-            v-ant-ref="c => (searchInput = c)"
-            :placeholder="`Search ${ column.dataIndex }`"
-            :value="selectedKeys[0]"
-            @change="e => setSelectedKeys(e.target.value ? [e.target.value] : [])"
-            @pressEnter="() => handleSearch(selectedKeys, confirm, column.dataIndex)"
-            style="width: 188px; margin-bottom: 8px; display: block"
-          />
-          <a-button
-            type="primary"
-            @click="() => handleSearch(selectedKeys, confirm, column.dataIndex)"
-            icon="search"
-            size="small"
-            style="width: 90px; margin-left: 8px"
-          >Search</a-button>
-          <a-button @click="() => handleReset(clearFilters)" size="small" style="width: 90px">Reset</a-button>
-        </div>
-        <a-icon
-          slot="filterIcon"
-          slot-scope="filtered"
-          type="search"
-          :style="{ color: filtered ? '#108ee9' : undefined }"
-        />
-        <template slot="customRender" slot-scope="text, record, index, column">
-          <span v-if="searchText && searchedColumn === column.dataIndex">
-            <template
-              v-for="(fragment, i) in text
-                .toString()
-                .split(new RegExp(`(?<=${searchText})|(?=${searchText})`, 'i'))">
-              <mark
-                v-if="fragment.toLowerCase() === searchText.toLowerCase()"
-                :key="i"
-                class="highlight">{{ fragment }}
-              </mark>
-              <template v-else>{{ fragment }}</template>
-            </template>
-          </span>
-          <template v-else>{{ text }}</template>
-        </template>
       </a-table>
     </a-card>
   </div>
@@ -157,19 +116,7 @@
             title: 'Student Name',
             dataIndex: 'username',
             width: '20%',
-            scopedSlots: { filterDropdown: 'filterDropdown', filterIcon: 'filterIcon', cunstomRender: 'username' },
-            onFilter: (value, record) => {
-              console.log(value)
-              console.log(record)
-              return record.username.toString().toLowerCase().includes(value.toLowerCase())
-            },
-            onFilterDropdownVisibleChange: visible => {
-              if (visible) {
-                setTimeout(() => {
-                  this.searchInput.focus()
-                }, 0)
-              }
-            }
+            scopedSlots: { cunstomRender: 'username' }
           },
           {
             // Email column
@@ -350,17 +297,6 @@
       // function used to show the course info edit modal
       moveToCourseInfoEditPage (course) {
         console.log(course.id)
-      },
-      // function used when user click search in the student list table
-      handleSearch (selectedKeys, confirm, dataIndex) {
-        confirm()
-        this.searchText = selectedKeys[0]
-        this.searchColumn = dataIndex
-      },
-      // function used to reset the query input
-      handleReset (clearFilters) {
-        clearFilters()
-        this.searchText = ''
       }
     },
     created () {
