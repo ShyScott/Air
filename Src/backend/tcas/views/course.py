@@ -20,8 +20,8 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         if not self.request.user.is_authenticated:
             return Course.objects.all()
         if self.request.user.is_teacher:
-            return self.request.user.courses_teach
-        return self.request.user.courses_in
+            return Course.objects.filter(instructor=self.request.user)
+        return Course.objects.filter(students=self.request.user)
 
     def get_serializer_class(self):
         if self.action == 'list':
