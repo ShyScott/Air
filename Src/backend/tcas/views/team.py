@@ -60,12 +60,12 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
         serializer.save()
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['get'])
     def quit(self, request, *arg, **kwargs):
         team = self.get_object()
-        team.students.remove(request.user)
+        team.members.remove(request.user)
         dismissed = False
-        if team.students.count() == 0:
+        if team.members.count() == 0:
             dismissed = True
             team.delete()
         return Response({'dismiss': dismissed})
