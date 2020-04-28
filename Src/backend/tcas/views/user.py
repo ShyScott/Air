@@ -12,29 +12,21 @@ from django.db.models.functions import Length, Replace
 from django_filters import rest_framework as filters
 
 from .generic import PermissionDictMixin
-from tcas.models import User, Course
+from tcas.models import User, Course, Team
 from tcas.serializers import UserSerializer, ChangePasswordSerializer, StudentBatchCreateSerializer, StudentBatchCreateWeakSerializer
 from tcas.permissions import IsTeacher, IsLogin, IsCurrentUser, IsInCurrentCourse
 
 
-def get_team_queryset(request):
-    return request.user.teams
-
-
 class UserFilter(filters.FilterSet):
     username = filters.CharFilter(method='filter_username')
-    course = filters.NumberFilter(label='Course', method='filter_course')
-    team = filters.ModelChoiceFilter(field_name='teams', queryset=get_team_queryset)
+    course = filters.ModelChoiceFilter(field_name='courses_in', queryset=Course.objects.all())
 
     class Meta:
         model = User
-        fields = ['username', 'course', 'team']
+        fields = ['username', 'course']
 
     def filter_username(self, queryset, field_name, value):
         return queryset.filter(username__icontains=value).order_by(Length(Replace('username', Value(value))))
-
-    def filter_course(self, queryset, field_name, value):
-        return queryset.filter(courses_in__pk=value)
 
 
 def filter_duplicated_user(duplicated_users):
