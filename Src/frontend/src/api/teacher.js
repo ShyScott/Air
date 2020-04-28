@@ -22,3 +22,27 @@ export function getStudentListOfTheCourse (courseId, page, pagesize) {
     params: { course: courseId, page: page, size: pagesize }
   })
 }
+
+// get the student info according to the query info
+export function getStudentByQuery (queryName, courseId) {
+  return axios({
+    url: '/users/',
+    method: 'get',
+    params: { username: queryName, course: courseId }
+  })
+}
+
+// delete the course selected by teacher
+export function deleteCourse (courseId) {
+  return axios({
+    url: `/courses/${courseId}`,
+    method: 'delete'
+  })
+}
+export function removeStudent (courseId, studentId) {
+  return axios({
+    url: `/courses/${courseId}/remove_student/`,
+    method: 'post',
+    data: { user: studentId }
+  })
+}

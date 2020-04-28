@@ -370,6 +370,13 @@ export const teacherRoutes = [
     meta: { title: 'Course Management', icon: 'solution' }
   },
   {
+    path: 'course/addCourse',
+    name: 'AddCourse',
+    component: () => import('@/views/teacher/course/AddCourse'),
+    meta: { title: 'Course Management' },
+    hidden: true
+  },
+  {
     path: 'contribution',
     name: 'ViewContribution',
     component: () => import('@/views/teacher/contribution/ViewContribution'),

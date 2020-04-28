@@ -32,21 +32,30 @@
             </template>
             <a href="#" @click="moveToCourseInfoEditPage(record)"><a-icon type="edit" />Edit</a>
           </a-tooltip>
-          <!--tooltip for operation button-->
-          <a-tooltip>
-            <template slot="title">
-              <span>Click to delete this course</span>
-            </template>
-            <a class="a-adjust" href="#" style="font-color: red" @click="DeleteCourse(record)"><a-icon type="delete" />Delete</a>
-          </a-tooltip>
+          <a-popconfirm title="Are you sure to delete this course?" @confirm="ConfirmCourseDelete(record.id)" @cancel="CancelCourseDelete">
+            <!--tooltip for operation button-->
+            <a-tooltip>
+              <template slot="title">
+                <span>Click to delete this course</span>
+              </template>
+              <a class="a-adjust" href="#" style="font-color: red"><a-icon type="delete" />Delete</a>
+            </a-tooltip>
+          </a-popconfirm>
         </template>
       </a-table>
     </a-card>
     <!--Student management card area-->
     <a-card title="Course Info" style="margin-top: 20px">
       Chosed Course: {{ this.studentManagementForm.chosedCourse }}
+      <a-form>
+        <a-form-item style="margin-bottom: 5px">
+          <div>
+            <a-input-search style="margin-top: 20px; width: 50%" v-model="studentListQuery" placeholder="Please input student name" @search="QueryStudent" enterButton></a-input-search>
+          </div>
+        </a-form-item>
+      </a-form>
       <div style="margin-bottom: 20px">
-        <a-button class="addButton-adjust" type="primary" size="default" style="margin-right: 20px">
+        <a-button class="addButton-adjust" type="primary" size="default" style="margin-right: 20px" @click="ShowAddStudentModal">
           <a-icon type="user-add"/>
           Add a Student
         </a-button>
@@ -59,20 +68,26 @@
         <!--Add delete button to operation slot-->
         <template slot="operation" slot-scope="text, record">
           <!--Operation Area-->
-          <a-tooltip>
-            <template slot="title">
-              <span>Click to delete the student from this course</span>
-            </template>
-            <a class="a-adjust" href="#" style="font-color: red" @click="DeleteCourse(record)"><a-icon type="delete" />Delete</a>
-          </a-tooltip>
+          <a-popconfirm title="Are you sure to remove this student from the course?" @confirm="ConfirmStudentRemove(selectedCourseId, record.id)" @cancel="CancelStudentRemove">
+            <a-tooltip>
+              <template slot="title">
+                <span>Click to delete the student from this course</span>
+              </template>
+              <a class="a-adjust" href="#" style="font-color: red"><a-icon type="delete" />Remove</a>
+            </a-tooltip>
+          </a-popconfirm>
         </template>
       </a-table>
     </a-card>
+    <a-modal title="Add a Student" v-model="this.addStudentModalVisible">
+      <a-form>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
 <script>
-  import { getTeacherCourses, getCourseInfoById, getStudentListOfTheCourse } from '../../../api/teacher'
+  import { getTeacherCourses, getCourseInfoById, getStudentListOfTheCourse, getStudentByQuery, deleteCourse, removeStudent } from '../../../api/teacher'
   import { mapGetters } from 'vuex'
 
   export default {
@@ -185,12 +200,34 @@
           onShowSizeChange: (current, pageSize) => {
             this.pagenumForStudentList = current
             this.pagesizeForStudentList = pageSize
-            this.getStudentList(this.selectedCourseId)
+            // if search bar has been input something, do not run the function getStudentList
+            if (this.studentListQuery) {
+              getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(response => {
+                this.studentList = response.results
+                // pagination settings
+                this.totalForStudentList = response.count
+                this.paginationForStudentListTable.total = response.count
+                // console.log(response)
+              })
+            } else {
+              this.getStudentList(this.selectedCourseId)
+            }
           },
           onChange: (page, pageSize) => {
             this.pagesizeForStudentList = pageSize
             this.pagenumForStudentList = page
-            this.getStudentList(this.selectedCourseId)
+            // if search bar has been input something, do not run the function getStudentList
+            if (this.studentListQuery) {
+              getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(response => {
+                this.studentList = response.results
+                // pagination settings
+                this.totalForStudentList = response.count
+                this.paginationForStudentListTable.total = response.count
+                // console.log(response)
+              })
+            } else {
+              this.getStudentList(this.selectedCourseId)
+            }
           }
         },
         // Form object used in the students management
@@ -213,9 +250,7 @@
           floating_band: 0
         },
         // The query info input by the user
-        searchText: '',
-        searchInput: null,
-        searchedColumn: '',
+        studentListQuery: '',
         // the id of the course selected by user
         selectedCourseId: '',
         // pagination parameters for the course table
@@ -225,7 +260,9 @@
         // pagination parameters for the student list table
         totalForStudentList: 0,
         pagenumForStudentList: 1,
-        pagesizeForStudentList: 5
+        pagesizeForStudentList: 5,
+        // variable used to control whether the add student modal is visible or not
+        addStudentModalVisible: false
       }
     },
     computed: {
@@ -283,20 +320,106 @@
           // console.log(this.studentList)
         })
       },
-      DeleteCourse (x) {
-        console.log(x)
-      },
       // function used to fill the infomation supposed to be displayed in the Student Managemet Card
       // course is the info of course selected
       DisplayInfoOnStudentManageCard (course) {
         this.studentManagementForm.chosedCourse = course.title
         // console.log(course.id)
         this.selectedCourseId = course.id
+        // console.log(this.selectedCourseId)
         this.getStudentList(this.selectedCourseId)
+        this.studentListQuery = ''
       },
       // function used to show the course info edit modal
       moveToCourseInfoEditPage (course) {
-        console.log(course.id)
+        // console.log(course.id)
+        const target = { name: 'AddCourse' }
+        this.$router.push(target)
+      },
+      // function used to query the student info input by the user
+      QueryStudent () {
+        // if course is not selected yet
+        // give the warning
+        if (this.selectedCourseId === '') {
+          return this.$notification.info({
+            message: 'Reminder',
+            description: 'Please select the target course before searching'
+          })
+        }
+        // judge if user has input something
+        // if nothing, search by course id
+        if (this.studentListQuery === '') {
+          // console.log('Nothing')
+          this.getStudentList(this.selectedCourseId)
+        }
+        // if all the query info available, do the searching
+        getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(response => {
+          this.studentList = response.results
+          // pagination settings
+          this.totalForStudentList = response.count
+          this.paginationForStudentListTable.total = response.count
+          // console.log(response)
+        })
+      },
+      // function executed when user confirm to delete the course
+      ConfirmCourseDelete (courseId) {
+        // console.log(courseId)
+        deleteCourse(courseId).then(response => {
+          // re-render the course tables
+          this.getCourses()
+          this.$notification.success({
+            message: 'Message',
+            description: 'Course delete Successful'
+          })
+        }).catch(error => {
+          if (error.response) {
+            this.$notification.error({
+              message: 'Message',
+              description: 'Course delete Failed'
+            })
+          }
+          }
+        )
+      },
+      // function executed when user cancel to delete the course
+      CancelCourseDelete () {
+        this.$notification.info({
+          message: 'Message',
+          description: 'You have canceled the course delete'
+        })
+      },
+      // function executed when user confirm to remove the student from the course
+      ConfirmStudentRemove (courseId, studentId) {
+        // console.log(courseId)
+        // console.log(studentId)
+        removeStudent(courseId, studentId).then(response => {
+          // re-render the course tables
+          this.getStudentList(this.selectedCourseId)
+          this.$notification.success({
+            message: 'Message',
+            description: 'Student remove Successful'
+          })
+        }).catch(error => {
+            if (error.response) {
+              console.log(error.response)
+              this.$notification.error({
+                message: 'Message',
+                description: 'Student remove Failed'
+              })
+            }
+          }
+        )
+      },
+      // function executed when user cancel to remove the student from student list
+      CancelStudentRemove () {
+        this.$notification.info({
+          message: 'Message',
+          description: 'You have canceled the student remove'
+        })
+      },
+      // function used to show the Add student modal
+      ShowAddStudentModal () {
+        this.addStudentModalVisible = true
       }
     },
     created () {
