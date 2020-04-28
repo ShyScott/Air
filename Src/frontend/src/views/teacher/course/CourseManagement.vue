@@ -79,20 +79,87 @@
         </template>
       </a-table>
     </a-card>
-    <a-modal title="Add a Student" v-model="this.addStudentModalVisible">
-      <a-form>
-      </a-form>
+    <a-modal v-model="addStudentModalVisible" title="Add a Student" onOk="handleAddStudentModalOk" width="800px">
+      <template slot="footer">
+        <a-button key="Cancel" @click="handleAddStudentModalReset">Reset</a-button>
+        <a-button key="submit" type="primary" @click="handleAddStudentModalOk">
+          Submit
+        </a-button>
+      </template>
+      <div style="width: 640px">
+        <a-form-model
+          :model="addStudentForm"
+          :rules="addStudentFormRules"
+          ref="addStudentFormRef"
+          :label-col="labelCol"
+          :wrapper-col="wrapperCol">
+          <!--Course name-->
+          <a-form-model-item label="Course name">
+            <a-input v-model="this.addStudentForm.coursename" :disabled="true"></a-input>
+          </a-form-model-item>
+          <!--Student name-->
+          <a-form-model-item label="Student name" prop="username">
+            <a-input v-model="addStudentForm.username"></a-input>
+          </a-form-model-item>
+          <!--Student ID-->
+          <a-form-model-item label="Student ID" prop="student_id">
+            <a-input v-model="addStudentForm.student_id"></a-input>
+          </a-form-model-item>
+          <!--Email-->
+          <a-form-model-item label="Email" prop="email">
+            <a-input v-model="addStudentForm.email"></a-input>
+          </a-form-model-item>
+          <!--GPA-->
+          <a-form-model-item label="GPA" prop="gpa">
+            <a-input v-model="addStudentForm.gpa"></a-input>
+          </a-form-model-item>
+          <!--default password-->
+          <a-form-model-item label="Default Password" prop="default_password">
+            <a-input v-model="addStudentForm.default_password"></a-input>
+          </a-form-model-item>
+        </a-form-model>
+      </div>
     </a-modal>
   </div>
 </template>
 
 <script>
-  import { getTeacherCourses, getCourseInfoById, getStudentListOfTheCourse, getStudentByQuery, deleteCourse, removeStudent } from '../../../api/teacher'
+  import { getTeacherCourses, getCourseInfoById, getStudentListOfTheCourse, getStudentByQuery, deleteCourse, removeStudent, addStudentToTheCourse } from '../../../api/teacher'
   import { mapGetters } from 'vuex'
 
   export default {
     name: 'CourseManagement',
     data () {
+      // Email address validator
+      var checkEmail = (rule, value, cb) => {
+        const regEmail = /^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z-Z0-9_-])+/
+
+        if (regEmail.test(value)) {
+          return cb()
+        }
+
+        cb(new Error('Please input a valid Email Address'))
+      }
+      // GPA format validator
+      var checkGPA = (rule, value, cb) => {
+        const regGPA = /^[0-3]+(.[0-9]{1,2})?$/
+
+        if (regGPA.test(value)) {
+          return cb()
+        }
+
+        cb(new Error('Please input a valid GPA'))
+      }
+      // student name format validator
+      var checkStudentName = (rule, value, cb) => {
+        const regName = /^[A-Za-z]*(\s[A-Za-z]*)*$/
+
+        if (regName.test(value)) {
+          return cb()
+        }
+
+        cb(new Error('Please input a valid Student Name'))
+      }
       return {
         // Used to indicate the header of the course table
         courseColumns: [{
@@ -234,21 +301,6 @@
         studentManagementForm: {
           chosedCourse: ''
         },
-        // variable used to control whether the course info edit modal is visible
-        courseInfoEditModalVisible: false,
-        // Form object used in the course info edit
-        courseInfoEditForm: {
-          id: 0,
-          title: '',
-          duration: '',
-          students_count: '',
-          form_method: 0,
-          member_count_primary: 0,
-          team_count_primary: 0,
-          member_count_secondary: 0,
-          team_count_secondary: 0,
-          floating_band: 0
-        },
         // The query info input by the user
         studentListQuery: '',
         // the id of the course selected by user
@@ -262,7 +314,41 @@
         pagenumForStudentList: 1,
         pagesizeForStudentList: 5,
         // variable used to control whether the add student modal is visible or not
-        addStudentModalVisible: false
+        addStudentModalVisible: false,
+        // form object used to add the student
+        addStudentForm: {
+          username: '',
+          coursename: '',
+          student_id: '',
+          email: '',
+          gpa: 0,
+          default_password: ''
+        },
+        // layout settings for the add student form
+        labelCol: { span: 8 },
+        wrapperCol: { span: 16 },
+        // validation rules for the add student form
+        addStudentFormRules: {
+          // validation for username
+          username: [
+            { required: true, message: `Please input the student's name`, trigger: 'blur' },
+            { validator: checkStudentName, trigger: 'blur' }
+          ],
+          student_id: [
+            { required: true, message: `Please input the student's ID`, trigger: 'blur' }
+          ],
+          email: [
+            { required: true, message: `Please input the student's Email Address`, trigger: 'blur' },
+            { validator: checkEmail, trigger: 'blur' }
+          ],
+          gpa: [
+            { required: true, message: `Please input the student's GPA`, trigger: 'blur' },
+            { validator: checkGPA, trigger: 'blur' }
+          ],
+          default_password: [
+            { required: true, message: 'Please input the default password', trigger: 'blur' }
+          ]
+        }
       }
     },
     computed: {
@@ -365,8 +451,13 @@
       ConfirmCourseDelete (courseId) {
         // console.log(courseId)
         deleteCourse(courseId).then(response => {
-          // re-render the course tables
+          // solve the problem: if there is only 1 student left in the current page, delete this course will lead to a 404 since that current page is not existed anymore
+          if (this.totalForCourse % this.pagesizeForCourse === 1) {
+            this.pagenumForCourse -= 1
+          }
+          // re-render 2 tables
           this.getCourses()
+          this.getStudentList(this.selectedCourseId)
           this.$notification.success({
             message: 'Message',
             description: 'Course delete Successful'
@@ -393,7 +484,12 @@
         // console.log(courseId)
         // console.log(studentId)
         removeStudent(courseId, studentId).then(response => {
-          // re-render the course tables
+          // solve the problem: if there is only 1 student left in the current page, remove this student will lead to a 404 since that current page is not existed anymore
+          if (this.totalForStudentList % this.pagesizeForStudentList === 1) {
+            this.pagenumForStudentList -= 1
+          }
+          // re-render 2 tables
+          this.getCourses()
           this.getStudentList(this.selectedCourseId)
           this.$notification.success({
             message: 'Message',
@@ -419,7 +515,53 @@
       },
       // function used to show the Add student modal
       ShowAddStudentModal () {
+        // make sure teacher has picked a course before add the student
+        if (this.selectedCourseId === '') {
+          return this.$notification.warn(
+            {
+              message: 'Warning',
+              description: 'Please select the target course firstly'
+            }
+          )
+        }
+        this.addStudentForm.coursename = this.studentManagementForm.chosedCourse
         this.addStudentModalVisible = true
+      },
+      // function executed when user click the cancel button of the add student modal
+      handleAddStudentModalReset () {
+        // clear all the input when canceling
+        this.$refs.addStudentFormRef.resetFields()
+        this.addStudentModalVisible = false
+      },
+      // function executed when user click the submit button of the add student modal
+      handleAddStudentModalOk () {
+        this.$refs.addStudentFormRef.validate(valid => {
+          // if all the info user input has past the validation
+          if (valid) {
+            const parameter = { students: [ { username: this.addStudentForm.username, student_profile: { student_id: this.addStudentForm.student_id, email: this.addStudentForm.email, gpa: this.addStudentForm.gpa } } ], course: this.selectedCourseId, default_password: this.addStudentForm.default_password }
+            addStudentToTheCourse(parameter).then(response => {
+              this.getStudentList(this.selectedCourseId)
+              this.getCourses()
+              this.addStudentModalVisible = false
+              this.$refs.addStudentFormRef.resetFields()
+              return this.$notification.success({
+                message: 'Message',
+                description: 'Add new student Successful'
+              })
+            }).catch(error => {
+              console.info(error)
+              return this.$notification.error({
+                message: 'Message',
+                description: 'Add new student Failed'
+              })
+            })
+          } else {
+            return this.$notification.warn({
+              message: 'Message',
+              description: 'Please provide valid information for submit'
+            })
+          }
+        })
       }
     },
     created () {

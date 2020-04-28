@@ -1,6 +1,7 @@
 // with polyfills
 import 'core-js/stable'
 import 'regenerator-runtime/runtime'
+import { FormModel } from 'ant-design-vue'
 
 import Vue from 'vue'
 import App from './App.vue'
@@ -24,6 +25,7 @@ Vue.config.productionTip = false
 // mount axios Vue.$http and this.$http
 Vue.use(VueAxios)
 Vue.use(Dialog)
+Vue.use(FormModel)
 
 new Vue({
   router,

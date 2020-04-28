@@ -39,10 +39,19 @@ export function deleteCourse (courseId) {
     method: 'delete'
   })
 }
+// remove the student from the given course
 export function removeStudent (courseId, studentId) {
   return axios({
     url: `/courses/${courseId}/remove_student/`,
     method: 'post',
     data: { user: studentId }
+  })
+}
+// add a student to a selected course
+export function addStudentToTheCourse (parameter) {
+  return axios({
+    url: `/users/`,
+    method: 'post',
+    data: parameter
   })
 }
