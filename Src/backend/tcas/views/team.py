@@ -4,15 +4,24 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 
+from django_filters import rest_framework as filters
+
 from .generic import PermissionDictMixin
 from tcas.models import Team
 from tcas.serializers import TeamSerializer, TeamNameSerializer
 from tcas.permissions import IsTeacher, IsInCurrentCourse, IsInCurrentTeam
 
 
+class TeamFilter(filters.FilterSet):
+    class Meta:
+        model = Team
+        fields = ['course']
+
+
 class TeamViewSet(PermissionDictMixin, ModelViewSet):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
+    filterset_class = TeamFilter
     permission_dict = {
         'list': [IsTeacher | IsInCurrentCourse],
         'retrieve': [IsTeacher | IsInCurrentCourse],
