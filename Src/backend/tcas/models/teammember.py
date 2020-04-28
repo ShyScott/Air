@@ -15,7 +15,7 @@ class TeamMember(models.Model):
         null=True,
         blank=True,
     )
-    leader_bonus = models.SmallIntegerField()
+    leader_bonus = models.SmallIntegerField(default=0)
 
     contributions = models.ManyToManyField(
         Submission,
