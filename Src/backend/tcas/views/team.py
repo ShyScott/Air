@@ -25,20 +25,32 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
     permission_dict = {
         'list': [IsTeacher | IsInCurrentCourse],
         'retrieve': [IsTeacher | IsInCurrentCourse],
-        'create': [IsTeacher | IsInCurrentCourse],
+        'create': [IsTeacher],
         'update': [IsTeacher],
         'partial_update': [IsTeacher],
         'destroy': [IsTeacher],
+        'form_new': [IsInCurrentCourse],
         'rename': [IsTeacher | IsInCurrentCourse],
         'quit': [IsTeacher | IsInCurrentTeam],
     }
 
-    def perform_create(self, serializer):
+    @action(detail=False, methods=['post'], serializer_class=TeamSerializer)
+    def form_new(self, request, *arg, **kwargs):
+        """
+        Form a new team (for students)
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         user = self.request.user
         if user.teams.filter(course=serializer.validated_data['course']).exists():
             raise ValidationError('You are already in one team of the course!')
+
         team = serializer.save()
         team.members.add(user)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @action(detail=True, methods=['put'], serializer_class=TeamNameSerializer)
     def rename(self, request, *arg, **kwargs):
