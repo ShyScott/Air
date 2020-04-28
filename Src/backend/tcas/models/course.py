@@ -5,7 +5,7 @@ from django.conf import settings
 class Course(models.Model):
     title = models.CharField(max_length=128, unique=True)
     duration = models.DateField(auto_now_add=True)
-    form_method = models.SmallIntegerField(default=0)
+    form_method = models.SmallIntegerField(null=True)
     member_count_primary = models.IntegerField(default=0)
     team_count_primary = models.IntegerField(default=0)
     member_count_secondary = models.IntegerField(default=0)
