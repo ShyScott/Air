@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from tcas.models import Course, User
+from tcas.models import Course, User, Team
+from .team import TeamSerializer
 
 
 class CourseListSerializer(serializers.ModelSerializer):
@@ -9,10 +10,18 @@ class CourseListSerializer(serializers.ModelSerializer):
     """
 
     students_count = serializers.ReadOnlyField(source='students.count')
+    team_in = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'duration', 'students_count']
+        fields = ['id', 'title', 'duration', 'students_count', 'team_in']
+
+    def get_team_in(self, obj):
+        try:
+            team = Team.objects.get(course=obj, members=self.context['request'].user)
+            return TeamSerializer(team).data
+        except Team.DoesNotExist:
+            return None
 
 
 class CourseSerializer(CourseListSerializer):
