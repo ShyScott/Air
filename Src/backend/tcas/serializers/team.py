@@ -4,6 +4,8 @@ from tcas.models import Team, User
 
 
 class TeamSerializer(serializers.ModelSerializer):
+    leader = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Team
         fields = '__all__'
