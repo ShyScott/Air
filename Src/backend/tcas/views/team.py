@@ -26,10 +26,10 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        if user.teams.filter(course=serializer.data['course']).exists():
-            raise ValidationError('This user is already in one team of the course!')
+        if user.teams.filter(course=serializer.validated_data['course']).exists():
+            raise ValidationError('You are already in one team of the course!')
         team = serializer.save()
-        team.members.add(self.request.user)
+        team.members.add(user)
 
     @action(detail=True, methods=['put'], serializer_class=TeamNameSerializer)
     def rename(self, request, *arg, **kwargs):
