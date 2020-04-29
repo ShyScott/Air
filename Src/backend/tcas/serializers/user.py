@@ -9,7 +9,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     """
     Serializer to retrieve and update student profiles
     """
-    gpa = serializers.FloatField(min_value=0)
+    gpa = serializers.FloatField(min_value=0, required=False)
 
     class Meta:
         model = StudentProfile
