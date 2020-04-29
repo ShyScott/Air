@@ -126,6 +126,7 @@
 <script>
   import { getTeacherCourses, getCourseInfoById, getStudentListOfTheCourse, getStudentByQuery, deleteCourse, removeStudent, addStudentToTheCourse } from '../../../api/teacher'
   import { mapGetters } from 'vuex'
+  import pick from 'lodash.pick'
 
   export default {
     name: 'CourseManagement',
@@ -142,13 +143,20 @@
       }
       // GPA format validator
       var checkGPA = (rule, value, cb) => {
-        const regGPA = /^[0-3]+(.[0-9]{1,2})?$/
+        if (value === '') return cb()
 
-        if (regGPA.test(value)) {
-          return cb()
+        const regFloat = /^\d+(.\d{1,2})?$/
+        if (!regFloat.test(value)) {
+          return cb(new Error('Please input a float number with no more than 2 decimal places'))
         }
 
-        cb(new Error('Please input a valid GPA'))
+        const gpa = parseFloat(value)
+        const eps = 0.001
+        if (gpa - 0 < eps || gpa - 4 > eps) {
+          return cb(new Error('Please input a valid GPA'))
+        }
+
+        return cb()
       }
       // student name format validator
       var checkStudentName = (rule, value, cb) => {
@@ -321,7 +329,7 @@
           coursename: '',
           student_id: '',
           email: '',
-          gpa: 0,
+          gpa: '',
           default_password: ''
         },
         // layout settings for the add student form
@@ -342,7 +350,6 @@
             { validator: checkEmail, trigger: 'blur' }
           ],
           gpa: [
-            { required: true, message: `Please input the student's GPA`, trigger: 'blur' },
             { validator: checkGPA, trigger: 'blur' }
           ],
           default_password: [
@@ -538,7 +545,18 @@
         this.$refs.addStudentFormRef.validate(valid => {
           // if all the info user input has past the validation
           if (valid) {
-            const parameter = { students: [ { username: this.addStudentForm.username, student_profile: { student_id: this.addStudentForm.student_id, email: this.addStudentForm.email, gpa: this.addStudentForm.gpa } } ], course: this.selectedCourseId, default_password: this.addStudentForm.default_password }
+            const profile = pick(this.addStudentForm, ['student_id', 'email', 'gpa'])
+            if (profile.gpa === '') delete profile.gpa
+            const parameter = {
+              students: [
+                {
+                  username: this.addStudentForm.username,
+                  student_profile: profile
+                }
+              ],
+              course: this.selectedCourseId,
+              default_password: this.addStudentForm.default_password
+            }
             addStudentToTheCourse(parameter).then(() => {
               this.getStudentList(this.selectedCourseId)
               this.getCourses()
