@@ -12,7 +12,7 @@
           <span>Course Management</span>
         </a-breadcrumb-item>
       </a-breadcrumb>
-      <a-button class="addButton-adjust" type="primary" size="default">
+      <a-button class="addButton-adjust" type="primary" size="default" @click="MoveToAddCoursePage()">
         <a-icon type="coffee"/>
         New Course
       </a-button>
@@ -562,6 +562,11 @@
             })
           }
         })
+      },
+      // function used to route to the add course page
+      MoveToAddCoursePage () {
+        const target = { name: 'AddCourse' }
+        this.$router.push(target)
       }
     },
     created () {
