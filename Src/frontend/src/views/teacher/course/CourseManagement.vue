@@ -198,7 +198,7 @@
             title: 'Student Name',
             dataIndex: 'username',
             width: '20%',
-            scopedSlots: { cunstomRender: 'username' }
+            scopedSlots: { customRender: 'username' }
           },
           {
             // Email column
@@ -455,9 +455,9 @@
           if (this.totalForCourse % this.pagesizeForCourse === 1) {
             this.pagenumForCourse -= 1
           }
-          // re-render 2 tables
+          // re-render
           this.getCourses()
-          this.getStudentList(this.selectedCourseId)
+          // this.getStudentList(this.selectedCourseId)
           this.$notification.success({
             message: 'Message',
             description: 'Course delete Successful'

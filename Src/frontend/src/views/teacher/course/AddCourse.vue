@@ -12,13 +12,13 @@
                 Course Info
               </span>
               <!--Course name-->
-              <a-form-item label="Course Name" style="width: 850px; margin-top: 20px">
+              <a-form-model-item label="Course Name" style="width: 850px; margin-top: 20px">
                 <a-input v-model="addCourseForm.course_name"></a-input>
-              </a-form-item>
+              </a-form-model-item>
               <!--duration given by the system-->
-              <a-form-item label="Duration" style="width: 850px">
+              <a-form-model-item label="Duration" style="width: 850px">
                 <a-input v-model="addCourseForm.duration" :disabled="true"></a-input>
-              </a-form-item>
+              </a-form-model-item>
             </a-tab-pane>
             <!-- Tab 2 used to import student list by file-->
             <a-tab-pane key="2">
@@ -34,7 +34,7 @@
               </a-row>
               <a-row>
                 <a-col style="width: 150%">
-                  <a-form-item style="margin-top: 20px">
+                  <a-form-model-item style="margin-top: 20px">
                     <template>
                       <a-upload-dragger
                         name="file"
@@ -56,9 +56,13 @@
                         </p>
                       </a-upload-dragger>
                     </template>
-                  </a-form-item>
+                  </a-form-model-item>
                 </a-col>
               </a-row>
+              <a-form-model-item label="Default Password" style="width: 850px">
+                <a-input v-model="addCourseForm.default_password"></a-input>
+              </a-form-model-item>
+              <a-table :dataSource="this.tableData" :columns="studentListColumns" rowKey="ID" :paginaton="studentListPagination"></a-table>
             </a-tab-pane>
           </a-tabs>
         </a-form-model>
@@ -80,7 +84,8 @@
         // form object used to add a new course
         addCourseForm: {
           course_name: '',
-          duration: ''
+          duration: '',
+          default_password: ''
         },
         // validation rules for course add
         addCourseFormRules: {},
@@ -94,7 +99,60 @@
         // if we need to transfer the file stream to binary - false
         rABS: false,
         wb: '',
-        tableData: []
+        // used to store the student list imported from the table
+        tableData: [],
+        // columns of the student list table
+        studentListColumns: [
+          {
+            // Student name column
+            title: 'Student Name',
+            dataIndex: 'name',
+            width: '25%',
+            scopedSlots: { customRender: 'username' }
+          },
+          {
+            // Email column
+            title: 'Email Address',
+            dataIndex: 'email',
+            width: '25%',
+            scopedSlots: { customRender: 'email' }
+          },
+          {
+            // Student ID column
+            title: 'Student ID',
+            dataIndex: 'ID',
+            width: '25%',
+            scopedSlots: { customRender: 'id' }
+          },
+          {
+            // GPA column
+            title: 'GPA',
+            dataIndex: 'GPA',
+            width: '25%',
+            scopedSlots: { customRender: 'gpa' }
+          }
+        ],
+        // object used to adjust the pagination of the student list table
+        studentListPagination: {
+          // default page size
+          pageSize: 5,
+          // Show the number of total items
+          showTotal: (total) => `Total ${ total } items`,
+          showSizeChanger: true,
+          pageSizeOptions: ['5', '10', '15', '20', '25'],
+          onShowSizeChange: (current, pageSize) => {
+            this.current = current
+            this.pageSize = pageSize
+          },
+          onChange: (page, pageSize) => {
+            this.current = pageSize
+            this.pageSize = page
+          }
+        },
+        // current page
+        current: 1,
+        // page size
+        pageSize: 5
       }
     },
     created () {
@@ -207,6 +265,9 @@
           // wb.Sheets[Sheet's name] is to get the data of the first sheet
           // document.getElementById("demo").innerHTML= JSON.stringify( XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]) );
           _this.tableData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])
+          // _this.studentListPagination = { ..._this.studentListPagination, total: _this.tableData.length }
+          // _this.$set(_this.studentListPagination, 'total', _this.tableData.length)
+          // _this.studentListPagination.total = _this.tableData.length
           // _this.tableData = data1
           // console.log(_this.tableData)
         }

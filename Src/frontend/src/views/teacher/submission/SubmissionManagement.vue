@@ -1,6 +1,6 @@
 <template>
   <div>
-    Submission Management
+    Submission Manage
   </div>
 </template>
 
