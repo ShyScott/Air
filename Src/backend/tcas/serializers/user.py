@@ -9,7 +9,7 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     """
     Serializer to retrieve and update student profiles
     """
-    gpa = serializers.FloatField(min_value=0, required=False)
+    gpa = serializers.FloatField(min_value=0, max_value=4, required=False)
 
     class Meta:
         model = StudentProfile
@@ -80,7 +80,7 @@ class ChangePasswordSerializer(serializers.Serializer):
 class StudentProfileWeakSerializer(serializers.Serializer):
     student_id = serializers.CharField(max_length=64)
     email = serializers.EmailField(max_length=254)
-    gpa = serializers.FloatField(min_value=0)
+    gpa = serializers.FloatField(min_value=0, max_value=4, required=False)
 
 
 class UserWeakSerializer(serializers.Serializer):
