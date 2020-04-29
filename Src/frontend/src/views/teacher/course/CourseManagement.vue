@@ -269,7 +269,7 @@
             this.pagesizeForStudentList = pageSize
             // if search bar has been input something, do not run the function getStudentList
             if (this.studentListQuery) {
-              getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(response => {
+              getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(({ data: response }) => {
                 this.studentList = response.results
                 // pagination settings
                 this.totalForStudentList = response.count
@@ -285,7 +285,7 @@
             this.pagenumForStudentList = page
             // if search bar has been input something, do not run the function getStudentList
             if (this.studentListQuery) {
-              getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(response => {
+              getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(({ data: response }) => {
                 this.studentList = response.results
                 // pagination settings
                 this.totalForStudentList = response.count
@@ -364,7 +364,7 @@
       },
       // function used to get all the courses available of current Teacher
       getCourses () {
-        getTeacherCourses(this.pagenumForCourse, this.pagesizeForCourse).then(response => {
+        getTeacherCourses(this.pagenumForCourse, this.pagesizeForCourse).then(({ data: response }) => {
           // console.log(response)
           this.courseList = response.results
           // pagination settings
@@ -385,7 +385,7 @@
       getCourseInfoToBeEdited (id) {
         // console.log(id)
         getCourseInfoById(id).then(response => {
-          this.courseInfoEditForm = response
+          this.courseInfoEditForm = response.data
           // console.log(this.courseInfoEditForm)
         }).catch(error => {
           console.info(error)
@@ -398,7 +398,7 @@
       },
       // get the students list according to the course id given
       getStudentList (courseId) {
-        getStudentListOfTheCourse(courseId, this.pagenumForStudentList, this.pagesizeForStudentList).then(response => {
+        getStudentListOfTheCourse(courseId, this.pagenumForStudentList, this.pagesizeForStudentList).then(({ data: response }) => {
           this.studentList = response.results
           // pagination settings
           this.totalForStudentList = response.count
@@ -439,7 +439,7 @@
           this.getStudentList(this.selectedCourseId)
         }
         // if all the query info available, do the searching
-        getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(response => {
+        getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(({ data: response }) => {
           this.studentList = response.results
           // pagination settings
           this.totalForStudentList = response.count
@@ -450,7 +450,7 @@
       // function executed when user confirm to delete the course
       ConfirmCourseDelete (courseId) {
         // console.log(courseId)
-        deleteCourse(courseId).then(response => {
+        deleteCourse(courseId).then(() => {
           // solve the problem: if there is only 1 student left in the current page, delete this course will lead to a 404 since that current page is not existed anymore
           if (this.totalForCourse % this.pagesizeForCourse === 1) {
             this.pagenumForCourse -= 1
@@ -483,7 +483,7 @@
       ConfirmStudentRemove (courseId, studentId) {
         // console.log(courseId)
         // console.log(studentId)
-        removeStudent(courseId, studentId).then(response => {
+        removeStudent(courseId, studentId).then(() => {
           // solve the problem: if there is only 1 student left in the current page, remove this student will lead to a 404 since that current page is not existed anymore
           if (this.totalForStudentList % this.pagesizeForStudentList === 1) {
             this.pagenumForStudentList -= 1
@@ -539,7 +539,7 @@
           // if all the info user input has past the validation
           if (valid) {
             const parameter = { students: [ { username: this.addStudentForm.username, student_profile: { student_id: this.addStudentForm.student_id, email: this.addStudentForm.email, gpa: this.addStudentForm.gpa } } ], course: this.selectedCourseId, default_password: this.addStudentForm.default_password }
-            addStudentToTheCourse(parameter).then(response => {
+            addStudentToTheCourse(parameter).then(() => {
               this.getStudentList(this.selectedCourseId)
               this.getCourses()
               this.addStudentModalVisible = false

@@ -42,7 +42,7 @@ const user = {
     Login ({ commit }, userInfo) {
       return new Promise((resolve, reject) => {
         login(userInfo).then(response => {
-          const token = 'Bearer ' + response.access
+          const token = 'Bearer ' + response.data.access
           // 设置 Vue-ls 存储的 ACCESS_TOKEN 超时时间为 30 分钟
           Vue.ls.set(ACCESS_TOKEN, token, 30 * 60 * 1000)
           commit('SET_TOKEN', token)
@@ -57,7 +57,7 @@ const user = {
     GetInfo ({ commit }) {
       return new Promise((resolve, reject) => {
         getInfo().then(response => {
-          const { result } = response
+          const { data: { result } } = response
 
           if (result.role && result.role.permissions.length > 0) {
             const role = result.role
@@ -80,7 +80,7 @@ const user = {
           // commit('SET_NAME', { name: result.name, welcome: welcome() })
           commit('SET_AVATAR', result.avatar)
 
-          getMyInfo().then(user => {
+          getMyInfo().then(({ data: user }) => {
             commit('SET_NAME', { name: user.username, welcome: welcome() })
             // commit('SET_AVATAR', user.avatar)
             // If the user identity is a student

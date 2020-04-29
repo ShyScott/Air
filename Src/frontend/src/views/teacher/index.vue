@@ -75,15 +75,14 @@
       getCourses () {
         // default: display 6 courses on the main page
         getTeacherCourses(1, 6).then(response => {
-          this.courseList = response
+          this.courseList = response.data
           // console.log(this.courseList)
-          }
-        ).catch(error => {
+        }).catch(error => {
           console.info(error)
           this.$notification.error({
             message: 'Error',
             description: 'Failed to get the information of available courses'
-        })
+          })
         })
       },
       // function used to move to the detailed page of course
