@@ -31,7 +31,7 @@
         <!--Alert Area-->
         <a-alert style="margin-top: 20px; margin-bottom: 20px" message="Reminder: Please select the course before further management operations" type="info" showIcon />
         <!--Table Area-->
-        <a-table :dataSource="this.submissionList" rowKey="id" :columns="this.submissionListColumns">
+        <a-table :dataSource="this.submissionList" rowKey="id" :columns="this.submissionListColumns" :pagination="this.submissionListPagination">
           <template slot="operation" slot-scope="text, record">
             <!--tooltip for operation button-->
             <a-tooltip placement="top">
@@ -69,13 +69,14 @@
         // list used to store the submission of course selected
         submissionList: [],
         // columns for the submission list table
-        submissionListColumns: [{
+        submissionListColumns: [
+          {
         // Submission ID column
         title: ' Submission ID ',
         dataIndex: 'id',
         width: '25%',
         scopedSlots: { customRender: 'id' }
-      },
+        },
         {
           // Submission Title column
           title: 'Submission Title',
@@ -97,7 +98,31 @@
           width: '25%',
           scopedSlots: { customRender: 'operation' }
         }
-      ]
+      ],
+        // pagination settings for submission list table
+        submissionListPagination: {
+            // default page size
+            defaultPageSize: 5,
+            // Show the number of total items
+            showTotal: (total) => `Total ${ total } items`,
+            total: 0,
+            showSizeChanger: true,
+            pageSizeOptions: ['5', '10', '15', '20', '25'],
+            onShowSizeChange: (current, pageSize) => {
+              this.pageNumForSubmission = current
+              this.pageSizeForSubmission = pageSize
+              this.getSubmissions(this.selectedCourseId)
+            },
+            onChange: (page, pageSize) => {
+              this.pageSizeForSubmission = pageSize
+              this.pageNumForSubmission = page
+              this.getSubmissions(this.selectedCourseId)
+            }
+          },
+        // current page num for submission list
+        pageNumForSubmission: 1,
+        // current page size for submission list
+        pageSizeForSubmission: 5
       }
     },
     methods: {
@@ -110,13 +135,27 @@
         getTeacherCourses().then(({ data: response }) => {
           this.courseList = response.results
           // console.log(this.courseList)
+        }).catch(error => {
+          console.info(error)
+          this.$notification.error({
+            message: 'Error',
+            description: 'Failed to get the information of available courses'
+          })
         })
       },
       // function used to get the submission list of the current course
       getSubmissions (courseId) {
         getSubmissionList(courseId).then(({ data: response }) => {
           this.submissionList = response.results
-          console.log(this.submissionList)
+          // console.log(response.length)
+          this.submissionListPagination.total = response.results.length
+          // console.log(this.submissionList)
+        }).catch(error => {
+          console.info(error)
+          this.$notification.error({
+            message: 'Error',
+            description: 'Failed to get the information of available submissions'
+          })
         })
       },
       // function executed when user select the target course
