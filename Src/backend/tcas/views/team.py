@@ -30,7 +30,7 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
         'partial_update': [IsTeacher],
         'destroy': [IsTeacher],
         'form_new': [IsInCurrentCourse],
-        'rename': [IsTeacher | IsInCurrentCourse],
+        'rename': [IsTeacher | IsInCurrentTeam],
         'quit': [IsTeacher | IsInCurrentTeam],
     }
 
