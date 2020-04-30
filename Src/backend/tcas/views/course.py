@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework import status
 
+from django_filters import rest_framework as filters
+
 from .generic import PermissionDictMixin
 from tcas.models import Course, Team
 from tcas.serializers import CourseSerializer, CourseListSerializer, CourseRemoveStudentSerializer, TeamSerializer
@@ -54,7 +56,19 @@ def group_students(students, members_list, team_nums, current_student, current_t
     return False
 
 
+class CourseFilter(filters.FilterSet):
+    title = filters.CharFilter(method='filter_title')
+
+    class Meta:
+        model = Course
+        fields = ['title']
+
+    def filter_title(self, queryset, field_name, value):
+        return queryset.filter(title__icontains=value).order_by(Length(Replace('title', Value(value))))
+
+
 class CourseViewSet(PermissionDictMixin, ModelViewSet):
+    filterset_class = CourseFilter
     permission_dict = {
         'list': [IsLogin],
         'retrieve': [IsLogin],
