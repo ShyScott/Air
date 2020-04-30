@@ -4,7 +4,7 @@ from .course import Course
 
 
 class Submission(models.Model):
-    title = models.CharField(max_length=128, unique=True)
+    title = models.CharField(max_length=128)
     percentage = models.IntegerField()
 
     course = models.ForeignKey(
