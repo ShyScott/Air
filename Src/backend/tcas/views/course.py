@@ -6,6 +6,9 @@ from rest_framework import status
 
 from django_filters import rest_framework as filters
 
+from django.db.models import Value
+from django.db.models.functions import Length, Replace
+
 from .generic import PermissionDictMixin
 from tcas.models import Course, Team
 from tcas.serializers import CourseSerializer, CourseListSerializer, CourseRemoveStudentSerializer, TeamSerializer
