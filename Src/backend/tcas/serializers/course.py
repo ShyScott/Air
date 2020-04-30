@@ -62,6 +62,11 @@ class CourseSerializer(CourseListSerializer):
         """
         if self.instance is None:
             return data
+
+        if (data['form_method'] == 4 or data['form_method'] == 5) and \
+                (data['member_count_primary'] % 2 > 0 or data['member_count_secondary'] % 2 > 0):
+            raise serializers.ValidationError('Member counts must be even numbers!')
+
         if data['member_count_primary'] * data['team_count_primary'] + \
                 data['member_count_secondary'] * data['team_count_secondary'] != self.instance.students.count():
             raise serializers.ValidationError('Invalid combination of member counts and team counts!')
