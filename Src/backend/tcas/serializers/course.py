@@ -18,7 +18,11 @@ class CourseListSerializer(serializers.ModelSerializer):
 
     def get_team_in(self, obj):
         try:
-            team = Team.objects.get(course=obj, members=self.context['request'].user)
+            team_set = Team.objects.filter(course=obj, members=self.context['request'].user)
+            if team_set.count() > 1:
+                team = team_set.get(is_generated=False)
+            else:
+                team = team_set.get()
             return TeamSerializer(team).data
         except Team.DoesNotExist:
             return None
