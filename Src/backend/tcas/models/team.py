@@ -7,6 +7,8 @@ from .teammember import TeamMember
 
 class Team(models.Model):
     name = models.CharField(max_length=256)
+    is_generated = models.BooleanField(default=False)
+    is_locked = models.BooleanField(default=False)
 
     course = models.ForeignKey(
         Course,
