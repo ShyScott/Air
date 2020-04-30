@@ -86,7 +86,7 @@
 </template>
 
 <script>
-  import { getTeacherCourses, getSubmissionList } from '../../../api/teacher'
+  import { getTeacherCourses, getSubmissionList, addNewSubmissionToCourse } from '../../../api/teacher'
   export default {
     name: 'SubmissionManagement',
     data () {
@@ -159,10 +159,9 @@
         addSubmissionModalVisible: false,
         // add submission form
         addSubmissionForm: {
-          percentage: '',
+          percentage: 0,
           title: '',
-          course: '',
-          coursename: ''
+          course: ''
         },
         addSubmissionRules: {
           percentage: [
@@ -250,11 +249,45 @@
       },
       // function executed when user click submit
       handleAddSubmissionOk () {
+        this.$refs.addSubmissionFormRef.validate(valid => {
+          if (valid) {
+            const parameter = { course: this.selectedCourseId, percentage: this.addSubmissionForm.percentage, title: this.addSubmissionForm.title }
+            this.addNewSubmission(parameter)
+          }
+        })
       },
       // function used to reset the submission form model
       handleAddStudentModalReset () {
         this.$refs.addSubmissionFormRef.resetFields()
         this.addSubmissionModalVisible = false
+      },
+      // function used to add new submission
+      addNewSubmission (parameter) {
+        addNewSubmissionToCourse(parameter).then(() => {
+          // re-render
+          this.getSubmissions(this.selectedCourseId)
+          // reset the form
+          this.$refs.addSubmissionFormRef.resetFields()
+          // close modal
+          this.addSubmissionModalVisible = false
+          // give the feedback
+            return this.$notification.success({
+              message: 'Success',
+              description: 'Add new submission Successful'
+            })
+          }
+        ).catch(error => {
+          // if error occurs
+          if (error.response) {
+            // console.log(error.response)
+            const errorInfo = error.response.data.non_field_errors
+            // give the feedback
+            return this.$notification.error({
+              message: 'Error',
+              description: errorInfo[0] + ''
+            })
+          }
+        })
       }
     },
     created () {
