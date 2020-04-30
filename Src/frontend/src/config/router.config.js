@@ -384,9 +384,15 @@ export const teacherRoutes = [
   },
   {
     path: 'submission',
-    name: 'SubmissManagement',
+    name: 'SubmissionManagement',
     component: () => import('@/views/teacher/submission/SubmissionManagement'),
-    meta: { title: 'View Submission', icon: 'upload' }
+    meta: { title: 'Submission Management', icon: 'upload' }
+  },
+  {
+    path: 'team',
+    name: 'TeamManagement',
+    component: () => import('@/views/teacher/team/TeamManagement'),
+    meta: { title: 'Team Management', icon: 'team' }
   }
 
 ]
