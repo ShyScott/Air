@@ -71,3 +71,26 @@ export function addNewSubmissionToCourse (parameter) {
     data: parameter
   })
 }
+// get courses by query
+export function getCoursesByQuery (query) {
+  return axios({
+    url: '/courses/',
+    method: 'get',
+    params: query
+  })
+}
+// delete the submission from the course
+export function deleteSubmission (submissionId) {
+  return axios({
+    url: `/submissions/${submissionId}/`,
+    method: 'delete'
+  })
+}
+// edit the submission to the current course
+export function editSubmission (parameter, submissionId) {
+  return axios({
+    url: `/submissions/${submissionId}/`,
+    method: 'put',
+    data: parameter
+  })
+}

@@ -17,7 +17,14 @@
         <!--Select Area-->
         <div style="margin-top: 20px">
           <span style="margin-right: 15px">Target Course: </span>
-          <a-select placeholder="Please select the course" style="width: 250px" @change="handleChange">
+          <a-select
+            placeholder="Please select the course"
+            style="width: 400px"
+            show-search
+            :filterOption="false"
+            @search="handleSearch"
+            @change="handleChange"
+          >
             <a-icon slot="suffixIcon" type="smile" />
             <a-select-option v-for="(item, i) in this.courseList" :key="i" :value="item.id">
               {{ item.title }}
@@ -26,7 +33,7 @@
         </div>
         <!--New submission Button-->
         <div style="margin-top: 20px">
-          <a-button type="primary" icon="cloud-upload" size="default" style="width: 180px" @click="showAddSubmissionModal"> New Submission </a-button>
+          <a-button type="primary" icon="cloud-upload" size="default" @click="showAddSubmissionModal"> New Submission </a-button>
         </div>
         <!--Alert Area-->
         <a-alert style="margin-top: 20px; margin-bottom: 20px" message="Reminder: Please select the course before further management operations" type="info" showIcon />
@@ -38,7 +45,7 @@
               <template slot="title">
                 <span>Click to edit this submission</span>
               </template>
-              <a href="#" @click="editSubmission(record)"><a-icon type="edit" />Edit</a>
+              <a href="#" @click="showEditSubmissionModal(record)"><a-icon type="edit" />Edit</a>
             </a-tooltip>
             <a-popconfirm title="Are you sure to delete this submission?" @confirm="confirmDeleteSubmission(record)" @cancel="cancelDeleteSubmission">
               <!--tooltip for operation button-->
@@ -52,6 +59,7 @@
           </template>
         </a-table>
       </a-card>
+      <!--Add Submission Modal-->
       <a-modal v-model="addSubmissionModalVisible" title="Add a new Submission" width="800px">
         <template slot="footer">
           <a-button key="Cancel" @click="handleAddStudentModalReset">Reset</a-button>
@@ -81,12 +89,47 @@
           </a-form-model>
         </div>
       </a-modal>
+      <!--Edit Submission Modal-->
+      <a-modal v-model="editSubmissionModalVisible" title="Edit Submission" width="800px">
+        <template slot="footer">
+          <a-button key="Cancel" @click="handleEditSubmissionModalReset">Reset</a-button>
+          <a-button key="submit" type="primary" @click="handleEditSubmissionOk">
+            Submit
+          </a-button>
+        </template>
+        <div style="width: 640px">
+          <a-form-model
+            :model="editSubmissionForm"
+            :rules="editSubmissionRules"
+            ref="editSubmissionFormRef"
+            :label-col="labelCol"
+            :wrapper-col="wrapperCol">
+            <!--Course name-->
+            <a-form-model-item label="Course name">
+              <a-input v-model="editSubmissionForm.coursename" :disabled="true"></a-input>
+            </a-form-model-item>
+            <!--Submission Title-->
+            <a-form-model-item label="Submission Title" prop="title">
+              <a-input v-model="editSubmissionForm.title"></a-input>
+            </a-form-model-item>
+            <!--Submission Percentage-->
+            <a-form-model-item label="Percentage" prop="percentage">
+              <a-input v-model="editSubmissionForm.percentage" suffix="%"></a-input>
+            </a-form-model-item>
+          </a-form-model>
+        </div>
+      </a-modal>
     </template>
   </div>
 </template>
 
 <script>
-  import { getTeacherCourses, getSubmissionList, addNewSubmissionToCourse } from '../../../api/teacher'
+  import {
+    getTeacherCourses,
+    getSubmissionList,
+    addNewSubmissionToCourse,
+    getCoursesByQuery, deleteSubmission, editSubmission
+  } from '../../../api/teacher'
   export default {
     name: 'SubmissionManagement',
     data () {
@@ -96,7 +139,7 @@
         if (regPercentage.test(value)) {
           return cb()
         }
-        cb(new Error('Please input a valid Student Name'))
+        cb(new Error('Please input a valid percentage'))
       }
       return {
         // list used store all the course info of current teacher
@@ -163,15 +206,41 @@
           title: '',
           course: ''
         },
+        // edit submission form
+        editSubmissionForm: {
+          percentage: 0,
+          title: '',
+          course: ''
+        },
+        // validation rules for add submission form
         addSubmissionRules: {
           percentage: [
-            { required: true, message: 'Please input the proposed percentage', trigger: 'blur' },
-            { validator: checkPercentage, trigger: 'blur' }
+            { required: true, message: 'Please input the proposed percentage', trigger: ['change', 'blur'] },
+            { validator: checkPercentage, trigger: ['change', 'blur'] }
+          ],
+          title: [
+            { required: true, message: 'Please input the submission title', trigger: 'change' },
+            { max: 50, min: 1, message: 'Please input the Submission title with length between 1 and 50', trigger: ['change', 'blur'] }
+          ]
+        },
+        // validation rules for edit submission form
+        editSubmissionRules: {
+          percentage: [
+            { required: true, message: 'Please input the proposed percentage', trigger: ['change', 'blur'] },
+            { validator: checkPercentage, trigger: ['change', 'blur'] }
+          ],
+          title: [
+            { required: true, message: 'Please input the submission title', trigger: 'change' },
+            { max: 50, min: 1, message: 'Please input the Submission title with length between 1 and 50', trigger: ['change', 'blur'] }
           ]
         },
         // layout settings for the add submission form
         labelCol: { span: 8 },
-        wrapperCol: { span: 16 }
+        wrapperCol: { span: 16 },
+        // variable used to control whether to display the edit submission modal
+        editSubmissionModalVisible: false,
+        // variable used to indicate the submission to be edited
+        selectedSubmissionId: ''
       }
     },
     methods: {
@@ -224,16 +293,42 @@
         this.getSubmissions(this.selectedCourseId)
       },
       // function executed when user click the edit button
-      editSubmission (course) {
-        console.log(course.id)
+      showEditSubmissionModal (course) {
+        // console.log(course)
+        // give the original values to the edit form
+        this.editSubmissionForm.percentage = course.percentage
+        this.editSubmissionForm.title = course.title
+        this.editSubmissionForm.coursename = this.selectedCourseName
+        this.selectedSubmissionId = course.id
+        this.editSubmissionModalVisible = true
       },
       // function executed when user confirm to delete the submission
       confirmDeleteSubmission (course) {
-        console.log(course.id)
+        // console.log(course.id)
+        deleteSubmission(course.id).then(() => {
+          // re-render
+          this.getSubmissions(this.selectedCourseId)
+          // feedback
+          return this.$notification.success({
+            message: 'Success',
+            description: 'Delete the Submission Successful'
+          })
+        }).catch(error => {
+          if (error.response) {
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Delete the Submission Failed'
+            })
+          }
+        })
       },
       // function executed when user cancel the submission delete
       cancelDeleteSubmission () {
-        console.log('cancel')
+        // console.log('cancel')
+        return this.$notification.info({
+          message: 'Feedback',
+          description: 'You have canceled the delete'
+        })
       },
       // function used to add new submission to the current course
       showAddSubmissionModal () {
@@ -285,6 +380,56 @@
             return this.$notification.error({
               message: 'Error',
               description: errorInfo[0] + ''
+            })
+          }
+        })
+      },
+      // when user want to search the target course
+      handleSearch (value) {
+        console.log(value)
+        const parameter = { title: value }
+        getCoursesByQuery(parameter).then(({ data: response }) => {
+          // console.log(response)
+          this.courseList = response.results
+          console.log(this.courseList)
+        })
+      },
+      // function used to reset the submission form model
+      handleEditSubmissionModalReset () {
+        this.$refs.editSubmissionFormRef.resetFields()
+        this.editSubmissionModalVisible = false
+      },
+      // function used to edit the submission
+      handleEditSubmissionOk () {
+        this.$refs.editSubmissionFormRef.validate(valid => {
+          if (valid) {
+            const parameter = { course: this.selectedCourseId, percentage: this.editSubmissionForm.percentage, title: this.editSubmissionForm.title }
+            this.editCurrentSubmission(parameter, this.selectedSubmissionId)
+          }
+        })
+      },
+      // function used to edit the given submission
+      editCurrentSubmission (parameter, submissionId) {
+        editSubmission(parameter, submissionId).then(() => {
+            // re-render
+            this.getSubmissions(this.selectedCourseId)
+            // reset the form
+            this.$refs.editSubmissionFormRef.resetFields()
+            // close modal
+            this.editSubmissionModalVisible = false
+            // give the feedback
+            return this.$notification.success({
+              message: 'Success',
+              description: 'Edit new submission Successful'
+            })
+          }
+        ).catch(error => {
+          // if error occurs
+          if (error.response) {
+            // console.log(error.response)
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Edit the Submission Failed'
             })
           }
         })
