@@ -4,11 +4,12 @@ from tcas.models import Team, User
 
 
 class TeamSerializer(serializers.ModelSerializer):
+    is_generated = serializers.BooleanField(write_only=True)
     leader = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Team
-        fields = '__all__'
+        fields = ['id', 'name', 'is_generated', 'is_locked', 'course', 'members', 'leader']
 
 
 class TeamNameSerializer(serializers.ModelSerializer):
