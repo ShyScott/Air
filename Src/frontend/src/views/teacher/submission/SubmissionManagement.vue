@@ -63,7 +63,7 @@
           <a-form-model
             :model="addSubmissionForm"
             :rules="addSubmissionRules"
-            ref="addSubmissionForRef"
+            ref="addSubmissionFormRef"
             :label-col="labelCol"
             :wrapper-col="wrapperCol">
             <!--Course name-->
@@ -74,7 +74,7 @@
             <a-form-model-item label="Submission Title" prop="title">
               <a-input v-model="addSubmissionForm.title"></a-input>
             </a-form-model-item>
-            <!--Student ID-->
+            <!--Submission Percentage-->
             <a-form-model-item label="Percentage" prop="percentage">
               <a-input v-model="addSubmissionForm.percentage" suffix="%"></a-input>
             </a-form-model-item>
@@ -109,32 +109,25 @@
         submissionList: [],
         // columns for the submission list table
         submissionListColumns: [
-          {
-        // Submission ID column
-        title: ' Submission ID ',
-        dataIndex: 'id',
-        width: '25%',
-        scopedSlots: { customRender: 'id' }
-        },
         {
           // Submission Title column
           title: 'Submission Title',
           dataIndex: 'title',
-          width: '25%',
+          width: '35%',
           scopedSlots: { customRender: 'title' }
         },
         {
           // Percentage column
           title: 'Percentage (%)',
           dataIndex: 'percentage',
-          width: '25%',
+          width: '30%',
           scopedSlots: { customRender: 'percentage' }
         },
         {
           // operation column
           title: 'Operation',
           dataIndex: 'operation',
-          width: '25%',
+          width: '35%',
           scopedSlots: { customRender: 'operation' }
         }
       ],
@@ -220,7 +213,7 @@
         for (var i = 0; i < this.courseList.length; i++) {
           if (this.courseList[i].id === this.selectedCourseId) {
             this.selectedCourseName = this.courseList[i].title
-            console.log(this.selectedCourseName)
+            // console.log(this.selectedCourseName)
           }
         }
       },
@@ -260,6 +253,8 @@
       },
       // function used to reset the submission form model
       handleAddStudentModalReset () {
+        this.$refs.addSubmissionFormRef.resetFields()
+        this.addSubmissionModalVisible = false
       }
     },
     created () {
