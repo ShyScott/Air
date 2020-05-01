@@ -10,7 +10,7 @@ from django.db.models import Value
 from django.db.models.functions import Length, Replace
 
 from .generic import PermissionDictMixin
-from tcas.models import Course, Team, User
+from tcas.models import Course, Team
 from tcas.serializers import CourseSerializer, CourseListSerializer, CourseRemoveStudentSerializer, TeamSerializer, UserSerializer
 from tcas.permissions import IsTeacher, IsLogin
 
@@ -121,12 +121,7 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
             raise ValidationError('No student in this course!')
 
         # Initialize variables for further uses
-        x = course.member_count_primary
-        x_num = course.team_count_primary
-        y = course.member_count_secondary
-        y_num = course.team_count_secondary
-        team_nums = [x for _ in range(x_num)]
-        team_nums.extend([y for _ in range(y_num)])
+        team_nums = course.team_nums
         students = list(course.students.all())
         random.shuffle(students)
         min_gpa = max_gpa = 0
@@ -136,12 +131,9 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
             min_gpa = mean_gpa - course.floating_band
             max_gpa = mean_gpa + course.floating_band
 
-        # Clean all system-generated teams first
-        course.teams.filter(is_generated=True).delete()
-
         # Form method 1: all teams are created by students themselves
         if course.form_method == 1:
-            teams = course.teams.all()
+            teams = TeamSerializer(course.teams.all(), many=True).data
 
         # Form method 2, 3: random generation (3 with GPA optimization)
         elif course.form_method == 2 or course.form_method == 3:
@@ -173,11 +165,16 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         if form_method != 1:
             teams = []
             for index in range(len(members_list)):
-                team = Team.objects.create(name='Team %d' % (index + 1), course=course, is_generated=True)
-                team.members.set(members_list[index])
-                teams.append(team)
+                # team = Team.objects.create(name='Team %d' % (index + 1), course=course, is_generated=True)
+                # team.members.set(members_list[index])
+                # teams.append(team)
+                teams.append({
+                    'name': 'Team %d' % (index+1),
+                    'course': course.pk,
+                    'members': UserSerializer(members_list[index], many=True, context={'request': request}).data,
+                })
 
-        return Response(TeamSerializer(teams, many=True).data)
+        return Response(teams)
 
     @action(detail=True, methods=['get'])
     def single_students(self, request, *args, **kwargs):

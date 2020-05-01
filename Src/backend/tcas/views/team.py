@@ -15,7 +15,7 @@ from tcas.permissions import IsTeacher, IsInCurrentCourse, IsInCurrentTeam
 class TeamFilter(filters.FilterSet):
     class Meta:
         model = Team
-        fields = ['course', 'is_generated']
+        fields = ['course']
 
 
 class TeamViewSet(PermissionDictMixin, ModelViewSet):

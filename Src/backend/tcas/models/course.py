@@ -32,6 +32,12 @@ class Course(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def team_nums(self):
+        team_nums = [self.member_count_primary for _ in range(self.team_count_primary)]
+        team_nums.extend([self.member_count_secondary for _ in range(self.team_count_secondary)])
+        return team_nums
+
     def clear_forming_options(self):
         self.form_method = None
         self.member_count_primary = self.member_count_secondary = self.team_count_primary = self.team_count_secondary = 0
