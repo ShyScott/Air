@@ -10,19 +10,20 @@ class CourseListSerializer(serializers.ModelSerializer):
     """
 
     students_count = serializers.ReadOnlyField(source='students.count')
+    teams_count = serializers.ReadOnlyField(source='teams.count')
+    formed_students_count = serializers.SerializerMethodField()
     team_in = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'duration', 'students_count', 'team_in']
+        fields = ['id', 'title', 'duration', 'students_count', 'team_in', 'teams_count', 'formed_students_count']
 
-    def get_team_in(self, obj):
+    def get_formed_students_count(self, course):
+        return course.students.filter(teams__course=course).count()
+
+    def get_team_in(self, course):
         try:
-            team_set = Team.objects.filter(course=obj, members=self.context['request'].user)
-            if team_set.count() > 1:
-                team = team_set.get(is_generated=False)
-            else:
-                team = team_set.get()
+            team = Team.objects.get(course=course, members=self.context['request'].user)
             return TeamSerializer(team).data
         except Team.DoesNotExist:
             return None
