@@ -58,6 +58,8 @@
             </a-popconfirm>
           </template>
         </a-table>
+        <!--Area prepared for the pie chart-->
+        <div id="main" style="width: 800px;height:500px; margin-top: 20px; justify-content: center; display: flex; align-items: center;"></div>
       </a-card>
       <!--Add Submission Modal-->
       <a-modal v-model="addSubmissionModalVisible" title="Add a new Submission" width="800px">
@@ -130,6 +132,8 @@
     addNewSubmissionToCourse,
     getCoursesByQuery, deleteSubmission, editSubmission
   } from '../../../api/teacher'
+  import echarts from 'echarts'
+  // import _ from 'lodash'
   export default {
     name: 'SubmissionManagement',
     data () {
@@ -142,7 +146,45 @@
         cb(new Error('Please input a valid percentage'))
       }
       return {
-        // list used store all the course info of current teacher
+        // parameters for pie chart
+        option: {
+          title: {
+            text: 'Submission Distribution',
+            subtext: '',
+            left: 'center'
+          },
+          tooltip: {
+            trigger: 'item',
+            formatter: '{a} <br/>{b} : {c} ({d}%)'
+          },
+          grid: {
+            left: '20%'
+          },
+          legend: {
+            orient: 'vertical',
+            left: 'left',
+            data: []
+          },
+          series: [
+            {
+              name: 'Source from',
+              type: 'pie',
+              radius: '55%',
+              center: ['50%', '60%'],
+              data: [],
+              emphasis: {
+                itemStyle: {
+                  shadowBlur: 10,
+                  shadowOffsetX: 0,
+                  shadowColor: 'rgba(0, 0, 0, 0.5)'
+                }
+              }
+            }
+          ]
+        },
+        // pie chart data array
+        dataArray: [],
+      // list used store all the course info of current teacher
         courseList: [],
         // variable used to indicate the current selected course id
         selectedCourseId: '',
@@ -240,7 +282,8 @@
         // variable used to control whether to display the edit submission modal
         editSubmissionModalVisible: false,
         // variable used to indicate the submission to be edited
-        selectedSubmissionId: ''
+        selectedSubmissionId: '',
+        myChart: {}
       }
     },
     methods: {
@@ -268,6 +311,8 @@
           // console.log(response.length)
           this.submissionListPagination.total = response.results.length
           // console.log(this.submissionList)
+          // calculate the data for pie chart
+          this.calculateChartData()
         }).catch(error => {
           console.info(error)
           this.$notification.error({
@@ -420,7 +465,7 @@
             // give the feedback
             return this.$notification.success({
               message: 'Success',
-              description: 'Edit new submission Successful'
+              description: 'Edit the submission Successful'
             })
           }
         ).catch(error => {
@@ -433,11 +478,33 @@
             })
           }
         })
+      },
+      // function used to calculate the data necessary for the chart
+      calculateChartData () {
+        // clear the former data
+        this.option.series[0].data = []
+        for (let i = 0; i < this.submissionList.length; i++) {
+          // console.log(i)
+          // set legend
+          this.option.legend.data.push(this.submissionList[i].title)
+          // set the data used in table
+          const object = { value: this.submissionList[i].percentage, name: this.submissionList[i].title }
+          // console.log(object)
+          this.option.series[0].data.push(object)
+        }
+        // set the subtitle of the chart
+        this.option.title.subtext = this.selectedCourseName
+        // re-render
+        this.myChart.setOption(this.option)
       }
     },
     created () {
       // get all the course info before page rendering
       this.getCourses()
+    },
+    mounted () {
+      // chart initialization
+      this.myChart = echarts.init(document.getElementById('main'))
     }
   }
 </script>
