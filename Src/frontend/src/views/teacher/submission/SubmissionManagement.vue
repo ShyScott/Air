@@ -59,7 +59,9 @@
           </template>
         </a-table>
         <!--Area prepared for the pie chart-->
-        <div id="main" style="width: 800px;height:500px; margin-top: 20px; justify-content: center; display: flex; align-items: center;"></div>
+        <div style="justify-content: center; display: flex; align-items: center; flex-direction: row">
+          <div id="main" style="width: 800px;height:500px; margin-top: 20px;"></div>
+        </div>
       </a-card>
       <!--Add Submission Modal-->
       <a-modal v-model="addSubmissionModalVisible" title="Add a new Submission" width="800px">
@@ -138,7 +140,7 @@
     name: 'SubmissionManagement',
     data () {
       var checkPercentage = (rule, value, cb) => {
-        const regPercentage = /^([1-9][0-9]{0,1}|100)$/
+        const regPercentage = /^([0-9][0-9]{0,1}|100)$/
 
         if (regPercentage.test(value)) {
           return cb()
