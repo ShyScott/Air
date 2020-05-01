@@ -87,7 +87,11 @@ class UserViewSet(PermissionDictMixin, ModelViewSet):
         serializer.save()
 
         # Add duplicated students into the course
-        serializer.validated_data['course'].students.add(*duplicated_users)
+        course = serializer.validated_data['course']
+        course.students.add(*duplicated_users)
+
+        # Clear form_method and related properties of the course
+        course.clear_forming_options()
 
         duplicated_users_serializer = UserSerializer(duplicated_users, many=True, context={'request': request})
         headers = self.get_success_headers(serializer.validated_data)

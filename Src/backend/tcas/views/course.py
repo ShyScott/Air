@@ -103,6 +103,10 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         course.students.remove(serializer.data['user'])
+
+        # Clear form_method and related fields because student number is changed
+        course.clear_forming_options()
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['get'])

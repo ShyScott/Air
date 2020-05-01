@@ -31,3 +31,8 @@ class Course(models.Model):
 
     def __str__(self):
         return self.title
+
+    def clear_forming_options(self):
+        self.form_method = None
+        self.member_count_primary = self.member_count_secondary = self.team_count_primary = self.team_count_secondary = 0
+        self.save()
