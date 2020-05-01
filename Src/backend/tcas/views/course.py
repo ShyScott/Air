@@ -99,7 +99,7 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
             return CourseCreateSerializer
         elif self.action == 'remove_student':
             return CourseRemoveStudentSerializer
-        elif self.action == 'generate_teams':
+        elif self.action in ['generate_teams', 'confirm_teams']:
             return TeamSerializer
         elif self.action == 'single_students':
             return UserSerializer
@@ -190,3 +190,46 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         course = self.get_object()
         serializer = self.get_serializer(course.students.exclude(teams__course=course).all(), many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'])
+    def confirm_teams(self, request, *args, **kwargs):
+        course = self.get_object()
+        serializer = self.get_serializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Validate all teams and team members
+        teams = serializer.validated_data
+        team_nums = course.team_nums
+        students = list(course.students.all())
+
+        for team in teams:
+            members = team['members']
+            count = len(members)
+            if count not in team_nums:
+                raise ValidationError('There are teams that do not meet the forming requirements!')
+            team_nums.remove(count)
+
+            for member in members:
+                if member not in students:
+                    raise ValidationError('There are students that are in multiple teams, or are not in this course!')
+                students.remove(member)
+
+        if len(team_nums) > 0:
+            raise ValidationError('There are too few teams!')
+        if len(students) > 0:
+            raise ValidationError('There are too few students! (This may be a bug)')
+
+        # Remove all existing teams
+        course.teams.all().delete()
+
+        # Create teams
+        confirmed_teams = []
+        for team_data in teams:
+            members = team_data.pop('members')
+            confirmed_team = Team.objects.create(is_locked=True, **team_data)
+            confirmed_team.course = course
+            confirmed_team.save()
+            confirmed_team.members.set(members)
+            confirmed_teams.append(confirmed_team)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
