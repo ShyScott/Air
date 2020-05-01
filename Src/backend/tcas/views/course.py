@@ -10,8 +10,8 @@ from django.db.models import Value
 from django.db.models.functions import Length, Replace
 
 from .generic import PermissionDictMixin
-from tcas.models import Course, Team
-from tcas.serializers import CourseSerializer, CourseListSerializer, CourseRemoveStudentSerializer, TeamSerializer
+from tcas.models import Course, Team, User
+from tcas.serializers import CourseSerializer, CourseListSerializer, CourseRemoveStudentSerializer, TeamSerializer, UserSerializer
 from tcas.permissions import IsTeacher, IsLogin
 
 import random
@@ -92,6 +92,8 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
             return CourseRemoveStudentSerializer
         elif self.action == 'generate_teams':
             return TeamSerializer
+        elif self.action == 'single_students':
+            return UserSerializer
         return CourseSerializer
 
     @action(detail=True, methods=['post'])
@@ -172,3 +174,9 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
                 teams.append(team)
 
         return Response(TeamSerializer(teams, many=True).data)
+
+    @action(detail=True, methods=['get'])
+    def single_students(self, request, *args, **kwargs):
+        course = self.get_object()
+        serializer = self.get_serializer(course.students.exclude(teams__course=course, teams__is_generated=True).all(), many=True)
+        return Response(serializer.data)
