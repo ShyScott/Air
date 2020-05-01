@@ -179,5 +179,5 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
     @action(detail=True, methods=['get'])
     def single_students(self, request, *args, **kwargs):
         course = self.get_object()
-        serializer = self.get_serializer(course.students.exclude(teams__course=course, teams__is_generated=True).all(), many=True)
+        serializer = self.get_serializer(course.students.exclude(teams__course=course).all(), many=True)
         return Response(serializer.data)
