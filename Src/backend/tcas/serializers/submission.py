@@ -10,8 +10,9 @@ class SubmissionSerializer(serializers.ModelSerializer):
         model = Submission
         fields = '__all__'
 
-    def validate(self, attrs):
-        total = sum([sub.percentage for sub in attrs['course'].submissions.all()]) + attrs['percentage']
+    def validate(self, attrs: dict):
+        course = attrs.get('course') or self.instance.course
+        total = sum([(sub.percentage if sub != self.instance else 0) for sub in course.submissions.all()]) + attrs['percentage']
         if total > 100:
             raise serializers.ValidationError('The total percentage of the submissions of one course cannot exceed 100!')
         return attrs
