@@ -11,7 +11,14 @@ from django.db.models.functions import Length, Replace
 
 from .generic import PermissionDictMixin
 from tcas.models import Course, Team
-from tcas.serializers import CourseSerializer, CourseListSerializer, CourseRemoveStudentSerializer, TeamSerializer, UserSerializer
+from tcas.serializers import (
+    CourseSerializer,
+    CourseListSerializer,
+    CourseRemoveStudentSerializer,
+    CourseCreateSerializer,
+    TeamSerializer,
+    UserSerializer,
+)
 from tcas.permissions import IsTeacher, IsLogin
 
 import random
@@ -88,6 +95,8 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return CourseListSerializer
+        elif self.action == 'create':
+            return CourseCreateSerializer
         elif self.action == 'remove_student':
             return CourseRemoveStudentSerializer
         elif self.action == 'generate_teams':

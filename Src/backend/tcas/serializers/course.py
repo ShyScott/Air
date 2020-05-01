@@ -31,7 +31,7 @@ class CourseListSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(CourseListSerializer):
     """
-    Serializer to retrieve, create, update and delete one course (with verbose information)
+    Serializer to retrieve, update and delete one course (with verbose information)
     """
 
     form_method = serializers.ChoiceField([1, 2, 3, 4, 5], required=False)
@@ -72,6 +72,16 @@ class CourseSerializer(CourseListSerializer):
                 data['member_count_secondary'] * data['team_count_secondary'] != self.instance.students.count():
             raise serializers.ValidationError('Invalid combination of member counts and team counts!')
         return data
+
+
+class CourseCreateSerializer(serializers.ModelSerializer):
+    """
+    Serializer to create a new course
+    """
+
+    class Meta:
+        model = Course
+        fields = ['id', 'title']
 
     def create(self, validated_data):
         validated_data['instructor'] = self.context['request'].user
