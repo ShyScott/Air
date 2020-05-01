@@ -56,20 +56,24 @@ class CourseSerializer(CourseListSerializer):
             'floating_band',
         ]
 
-    def validate(self, data):
+    def validate(self, data: dict):
         """
         Validate whether the member counts satisfy the limitation of number of students
         in the course
         """
-        if self.instance is None:
-            return data
+        course = self.instance
+        form_method = data.get('form_method') or course.form_method
+        member_count_primary = data.get('member_count_primary') or course.member_count_primary
+        member_count_secondary = data.get('member_count_secondary') or course.member_count_secondary
+        team_count_primary = data.get('team_count_primary') or course.team_count_primary
+        team_count_secondary = data.get('team_count_secondary') or course.team_count_secondary
 
-        if (data['form_method'] == 4 or data['form_method'] == 5) and \
-                (data['member_count_primary'] % 2 > 0 or data['member_count_secondary'] % 2 > 0):
+        if (form_method == 4 or form_method == 5) and \
+                (member_count_primary % 2 > 0 or member_count_secondary % 2 > 0):
             raise serializers.ValidationError('Member counts must be even numbers!')
 
-        if data['member_count_primary'] * data['team_count_primary'] + \
-                data['member_count_secondary'] * data['team_count_secondary'] != self.instance.students.count():
+        if member_count_primary * team_count_primary + \
+                member_count_secondary * team_count_secondary != course.students.count():
             raise serializers.ValidationError('Invalid combination of member counts and team counts!')
         return data
 
