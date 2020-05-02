@@ -38,6 +38,13 @@ class Course(models.Model):
         return self.students.filter(teams__course=self).count()
 
     @property
+    def mean_gpa(self):
+        if self.form_method not in [3, 5]:
+            return None
+        students = list(self.students.all())
+        return sum([user.student_profile.gpa for user in students])/len(students)
+
+    @property
     def team_nums(self):
         team_nums = [self.member_count_primary for _ in range(self.team_count_primary)]
         team_nums.extend([self.member_count_secondary for _ in range(self.team_count_secondary)])
