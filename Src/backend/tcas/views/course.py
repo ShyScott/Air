@@ -13,7 +13,7 @@ from .generic import PermissionDictMixin
 from tcas.models import Course, Team
 from tcas.serializers import (
     CourseSerializer,
-    CourseListSerializer,
+    CourseReadOnlySerializer,
     CourseRemoveStudentSerializer,
     CourseCreateSerializer,
     TeamSerializer,
@@ -93,8 +93,8 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         return Course.objects.filter(students=self.request.user)
 
     def get_serializer_class(self):
-        if self.action == 'list':
-            return CourseListSerializer
+        if self.action in ['list', 'retrieve']:
+            return CourseReadOnlySerializer
         elif self.action == 'create':
             return CourseCreateSerializer
         elif self.action == 'remove_student':

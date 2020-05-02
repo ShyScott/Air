@@ -5,9 +5,9 @@ from .team import TeamSerializer
 from .user import UserSerializer
 
 
-class CourseListSerializer(serializers.ModelSerializer):
+class CourseReadOnlySerializer(serializers.ModelSerializer):
     """
-    Serializer to list the courses
+    Serializer to list and retrieve courses
     """
 
     students_count = serializers.ReadOnlyField(source='students.count')
@@ -23,12 +23,18 @@ class CourseListSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'duration',
-            'students_count',
-            'team_in',
-            'teams_count',
-            'formed_students_count',
+            'form_method',
+            'member_count_primary',
+            'team_count_primary',
+            'member_count_secondary',
+            'team_count_secondary',
+            'floating_band',
+            'is_confirmed',
             'instructor',
-            'is_confirmed'
+            'students_count',
+            'teams_count',
+            'team_in',
+            'formed_students_count',
         ]
 
     def get_formed_students_count(self, course):
@@ -42,17 +48,17 @@ class CourseListSerializer(serializers.ModelSerializer):
             return None
 
 
-class CourseSerializer(CourseListSerializer):
+class CourseSerializer(serializers.ModelSerializer):
     """
-    Serializer to retrieve, update and delete one course (with verbose information)
+    Serializer to update one course
     """
 
-    form_method = serializers.ChoiceField([1, 2, 3, 4, 5], required=False)
-    member_count_primary = serializers.IntegerField(min_value=0, required=False)
-    team_count_primary = serializers.IntegerField(min_value=0, required=False)
-    member_count_secondary = serializers.IntegerField(min_value=0, required=False)
-    team_count_secondary = serializers.IntegerField(min_value=0, required=False)
-    floating_band = serializers.FloatField(min_value=0, required=False)
+    form_method = serializers.ChoiceField([1, 2, 3, 4, 5])
+    member_count_primary = serializers.IntegerField(min_value=0)
+    team_count_primary = serializers.IntegerField(min_value=0)
+    member_count_secondary = serializers.IntegerField(min_value=0)
+    team_count_secondary = serializers.IntegerField(min_value=0)
+    floating_band = serializers.FloatField(min_value=0)
 
     class Meta:
         model = Course
@@ -60,7 +66,6 @@ class CourseSerializer(CourseListSerializer):
             'id',
             'title',
             'duration',
-            'students_count',
             'form_method',
             'member_count_primary',
             'team_count_primary',
