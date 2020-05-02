@@ -21,4 +21,7 @@ class Invitation(models.Model):
         related_name='+',
     )
     invite_time = models.DateTimeField(auto_now_add=True)
-    status = models.SmallIntegerField()
+    status = models.SmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ['id']
