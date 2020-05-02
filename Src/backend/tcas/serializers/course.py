@@ -12,7 +12,6 @@ class CourseReadOnlySerializer(serializers.ModelSerializer):
 
     students_count = serializers.ReadOnlyField(source='students.count')
     teams_count = serializers.ReadOnlyField(source='teams.count')
-    formed_students_count = serializers.SerializerMethodField()
     team_in = serializers.SerializerMethodField()
     instructor = UserSerializer()
     is_confirmed = serializers.BooleanField(read_only=True)
@@ -36,9 +35,6 @@ class CourseReadOnlySerializer(serializers.ModelSerializer):
             'team_in',
             'formed_students_count',
         ]
-
-    def get_formed_students_count(self, course):
-        return course.students.filter(teams__course=course).count()
 
     def get_team_in(self, course):
         try:

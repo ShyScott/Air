@@ -34,6 +34,10 @@ class Course(models.Model):
         return self.title
 
     @property
+    def formed_students_count(self):
+        return self.students.filter(teams__course=self).count()
+
+    @property
     def team_nums(self):
         team_nums = [self.member_count_primary for _ in range(self.team_count_primary)]
         team_nums.extend([self.member_count_secondary for _ in range(self.team_count_secondary)])
