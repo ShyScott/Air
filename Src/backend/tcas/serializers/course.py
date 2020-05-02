@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from tcas.models import Course, User, Team
 from .team import TeamSerializer
+from .user import UserSerializer
 
 
 class CourseListSerializer(serializers.ModelSerializer):
@@ -13,10 +14,11 @@ class CourseListSerializer(serializers.ModelSerializer):
     teams_count = serializers.ReadOnlyField(source='teams.count')
     formed_students_count = serializers.SerializerMethodField()
     team_in = serializers.SerializerMethodField()
+    instructor = UserSerializer()
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'duration', 'students_count', 'team_in', 'teams_count', 'formed_students_count']
+        fields = ['id', 'title', 'duration', 'students_count', 'team_in', 'teams_count', 'formed_students_count', 'instructor']
 
     def get_formed_students_count(self, course):
         return course.students.filter(teams__course=course).count()
