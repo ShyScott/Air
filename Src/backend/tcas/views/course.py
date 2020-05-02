@@ -124,7 +124,7 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         form_method = course.form_method
 
         # Edge cases
-        if course.form_method is None:
+        if form_method is None:
             raise ValidationError('Form method is not yet chosen!')
         if course.students.count() == 0:
             raise ValidationError('No student in this course!')
@@ -135,17 +135,17 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         random.shuffle(students)
         min_gpa = max_gpa = 0
 
-        if form_method == 3 or form_method == 5:
+        if form_method in [3, 5]:
             mean_gpa = sum([user.student_profile.gpa for user in students]) / len(students)
             min_gpa = mean_gpa - course.floating_band
             max_gpa = mean_gpa + course.floating_band
 
         # Form method 1: all teams are created by students themselves
-        if course.form_method == 1:
+        if form_method == 1:
             teams = TeamSerializer(course.teams.all(), many=True).data
 
         # Form method 2, 3: random generation (3 with GPA optimization)
-        elif course.form_method == 2 or course.form_method == 3:
+        elif form_method in [2, 3]:
             members_list = [[]]
 
             # Try to group all students. This may fail because of GPA optimization (too small floating bands)
