@@ -33,7 +33,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('djangoadmin/', admin.site.urls),
+    # path('djangoadmin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('swagger-ui/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
