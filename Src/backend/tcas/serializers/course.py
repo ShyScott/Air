@@ -34,7 +34,6 @@ class CourseReadOnlySerializer(serializers.ModelSerializer):
             'teams_count',
             'team_in',
             'formed_students_count',
-            'mean_gpa',
         ]
 
     def get_team_in(self, course):
@@ -90,9 +89,6 @@ class CourseSerializer(serializers.ModelSerializer):
         if member_count_primary * team_count_primary + \
                 member_count_secondary * team_count_secondary != course.students.count():
             raise serializers.ValidationError('Invalid combination of member counts and team counts!')
-
-        if form_method in [3, 5] and course.students.filter(student_profile__gpa__isnull=True).exists():
-            raise serializers.ValidationError('There is at least one student who does not have GPA!')
         return data
 
 
