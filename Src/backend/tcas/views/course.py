@@ -232,4 +232,7 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
             confirmed_team.members.set(members)
             confirmed_teams.append(confirmed_team)
 
+        course.is_confirmed = True
+        course.save()
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)

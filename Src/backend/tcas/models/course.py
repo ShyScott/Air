@@ -11,6 +11,7 @@ class Course(models.Model):
     member_count_secondary = models.IntegerField(default=0)
     team_count_secondary = models.IntegerField(default=0)
     floating_band = models.FloatField(default=0)
+    is_confirmed = models.BooleanField(default=False)
 
     instructor = models.ForeignKey(
         settings.AUTH_USER_MODEL,

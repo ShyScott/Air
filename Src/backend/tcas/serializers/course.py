@@ -15,10 +15,21 @@ class CourseListSerializer(serializers.ModelSerializer):
     formed_students_count = serializers.SerializerMethodField()
     team_in = serializers.SerializerMethodField()
     instructor = UserSerializer()
+    is_confirmed = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'duration', 'students_count', 'team_in', 'teams_count', 'formed_students_count', 'instructor']
+        fields = [
+            'id',
+            'title',
+            'duration',
+            'students_count',
+            'team_in',
+            'teams_count',
+            'formed_students_count',
+            'instructor',
+            'is_confirmed'
+        ]
 
     def get_formed_students_count(self, course):
         return course.students.filter(teams__course=course).count()
