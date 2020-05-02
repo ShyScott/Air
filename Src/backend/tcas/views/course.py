@@ -225,10 +225,10 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         # Create teams
         confirmed_teams = []
         for team_data in teams:
-            members = team_data.pop('members')
-            confirmed_team = Team.objects.create(is_locked=True, **team_data)
-            confirmed_team.course = course
-            confirmed_team.save()
+            team_raw = team_data.copy()
+            team_raw['course'] = course
+            members = team_raw.pop('members')
+            confirmed_team = Team.objects.create(is_locked=True, **team_raw)
             confirmed_team.members.set(members)
             confirmed_teams.append(confirmed_team)
 
