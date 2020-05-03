@@ -5,7 +5,28 @@ from django.contrib.auth.hashers import make_password
 from tcas.models import User, StudentProfile, Course
 
 
-class StudentProfileSerializer(serializers.ModelSerializer):
+class WeakValidationMixin:
+    """
+    Mixin with overrode `__init__` and `include_extra_kwargs` methods
+    to remove UniqueValidators with parameter `weak=True`.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.weak = kwargs.pop('weak', False)
+        super().__init__(*args, **kwargs)
+
+    def include_extra_kwargs(self, kwargs, extra_kwargs):
+        ret = super().include_extra_kwargs(kwargs, extra_kwargs)
+        if self.weak and ret.get('validators') is not None:
+            new_validators = []
+            for validator in ret['validators']:
+                if type(validator).__name__ != 'UniqueValidator':
+                    new_validators.append(validator)
+            ret['validators'] = new_validators
+        return ret
+
+
+class StudentProfileSerializer(WeakValidationMixin, serializers.ModelSerializer):
     """
     Serializer to retrieve and update student profiles
     """
@@ -18,16 +39,18 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         }
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(WeakValidationMixin, serializers.ModelSerializer):
     """
     Serializer to list and delete one user
     """
 
-    student_profile = StudentProfileSerializer()
-
     class Meta:
         model = User
         fields = ['id', 'username', 'student_profile']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['student_profile'] = StudentProfileSerializer(weak=self.weak)
 
     def to_representation(self, instance):
         """
@@ -44,22 +67,9 @@ class StudentBatchCreateSerializer(serializers.Serializer):
     Serializer to batch create students
     """
 
-    students = UserSerializer(many=True)
+    students = UserSerializer(many=True, weak=True)
     course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
     default_password = serializers.CharField()
-
-    def create(self, validated_data):
-        users = []
-        for user_data in validated_data['students']:
-            profile_data = user_data.pop('student_profile')
-            user = User.objects.create(**user_data)
-            StudentProfile.objects.create(user=user, **profile_data)
-            user.set_password(validated_data['default_password'])
-            user.save()
-            users.append(user)
-
-        validated_data['course'].students.add(*users)
-        return users
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -69,20 +79,3 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
-
-
-class StudentProfileWeakSerializer(serializers.Serializer):
-    student_id = serializers.CharField(max_length=64)
-    email = serializers.EmailField(max_length=254)
-    gpa = serializers.FloatField(min_value=0, max_value=4, required=False)
-
-
-class UserWeakSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
-    student_profile = StudentProfileWeakSerializer()
-
-
-class StudentBatchCreateWeakSerializer(serializers.Serializer):
-    students = UserWeakSerializer(many=True)
-    course = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all())
-    default_password = serializers.CharField()

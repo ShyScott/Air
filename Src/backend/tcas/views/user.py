@@ -12,8 +12,8 @@ from django.db.models.functions import Length, Replace
 from django_filters import rest_framework as filters
 
 from .generic import PermissionDictMixin
-from tcas.models import User, Course, Team
-from tcas.serializers import UserSerializer, ChangePasswordSerializer, StudentBatchCreateSerializer, StudentBatchCreateWeakSerializer
+from tcas.models import User, Course, StudentProfile
+from tcas.serializers import UserSerializer, ChangePasswordSerializer, StudentBatchCreateSerializer
 from tcas.permissions import IsTeacher, IsLogin, IsCurrentUser, IsInCurrentCourse
 
 
@@ -27,24 +27,6 @@ class UserFilter(filters.FilterSet):
 
     def filter_username(self, queryset, field_name, value):
         return queryset.filter(username__icontains=value).order_by(Length(Replace('username', Value(value))))
-
-
-def filter_duplicated_user(duplicated_users):
-    """
-    Find duplicated user according to user_data, and store the duplications into duplicated_users
-    """
-    def is_duplicated_user(user_data):
-        try:
-            duplicated_user = User.objects.get(
-                Q(username=user_data['username']) |
-                Q(student_profile__student_id=user_data['student_profile']['student_id']) |
-                Q(student_profile__email=user_data['student_profile']['email']))
-        except User.DoesNotExist:
-            return True
-        duplicated_users.append(duplicated_user)
-        return False
-
-    return is_duplicated_user
 
 
 class UserViewSet(PermissionDictMixin, ModelViewSet):
@@ -73,32 +55,47 @@ class UserViewSet(PermissionDictMixin, ModelViewSet):
         return context
 
     def create(self, request, *args, **kwargs):
-        serializer = StudentBatchCreateWeakSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Find and remove duplicated students from serializer
-        duplicated_users = []
-        filtered_users_data = list(filter(filter_duplicated_user(duplicated_users), serializer.data['students']))
-        filtered_data = serializer.data.copy()
-        filtered_data['students'] = filtered_users_data
-        serializer = self.get_serializer(data=filtered_data)
-
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-
-        # Add duplicated students into the course
         course = serializer.validated_data['course']
-        course.students.add(*duplicated_users)
+        password = serializer.validated_data['default_password']
+
+        # Find and remove duplicated students, and create User instance for others
+        duplicated_users = []
+        multiple_exist_users = []
+        course_add_users = []
+        for user_raw in serializer.validated_data['students']:
+            user_data = user_raw.copy()
+            try:
+                user = User.objects.get(
+                    Q(username=user_data['username']) |
+                    Q(student_profile__student_id=user_data['student_profile']['student_id']) |
+                    Q(student_profile__email=user_data['student_profile']['email']))
+                duplicated_users.append(user)
+            except User.DoesNotExist:
+                profile_data = user_data.pop('student_profile')
+                user = User.objects.create(**user_data)
+                StudentProfile.objects.create(user=user, **profile_data)
+                user.set_password(password)
+                user.save()
+            except User.MultipleObjectsReturned:
+                multiple_exist_users.append(user_data)
+                continue
+            course_add_users.append(user)
+
+        course.students.add(*course_add_users)
 
         # Clear form_method and related properties of the course
         course.clear_forming_options()
 
         duplicated_users_serializer = UserSerializer(duplicated_users, many=True, context={'request': request})
-        headers = self.get_success_headers(serializer.validated_data)
         return Response(
-            {'duplications': duplicated_users_serializer.data},
+            {
+                'duplications': duplicated_users_serializer.data,
+                'multiple_existings': multiple_exist_users,
+            },
             status=status.HTTP_201_CREATED,
-            headers=headers,
         )
 
     @action(detail=False, methods=['get'])
