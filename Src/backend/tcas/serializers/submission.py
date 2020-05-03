@@ -4,11 +4,13 @@ from tcas.models import Submission
 
 
 class SubmissionSerializer(serializers.ModelSerializer):
-    percentage = serializers.IntegerField(min_value=0, max_value=100)
 
     class Meta:
         model = Submission
         fields = '__all__'
+        extra_kwargs = {
+            'percentage': {'min_value': 0, 'max_value': 100},
+        }
 
     def validate(self, attrs: dict):
         course = attrs.get('course') or self.instance.course

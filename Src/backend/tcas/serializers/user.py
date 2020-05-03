@@ -9,11 +9,13 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     """
     Serializer to retrieve and update student profiles
     """
-    gpa = serializers.FloatField(min_value=0, max_value=4, required=False)
 
     class Meta:
         model = StudentProfile
         fields = ['student_id', 'email', 'gpa']
+        extra_kwargs = {
+            'gpa': {'min_value': 0, 'max_value': 4},
+        }
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -26,14 +28,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'student_profile']
-
-    # def create(self, validated_data: dict):
-    #     profile_data = validated_data.pop('student_profile')
-    #     user = super().create(validated_data)
-    #     user.set_password(self.context['password'])
-    #     user.save()
-    #     StudentProfile.objects.create(**profile_data)
-    #     return user
 
     def to_representation(self, instance):
         """

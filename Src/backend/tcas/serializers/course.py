@@ -14,7 +14,6 @@ class CourseReadOnlySerializer(serializers.ModelSerializer):
     teams_count = serializers.ReadOnlyField(source='teams.count')
     team_in = serializers.SerializerMethodField()
     instructor = UserSerializer()
-    is_confirmed = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Course
@@ -35,6 +34,7 @@ class CourseReadOnlySerializer(serializers.ModelSerializer):
             'team_in',
             'formed_students_count',
         ]
+        read_only_fields = ['is_confirmed']
 
     def get_team_in(self, course):
         try:
@@ -50,11 +50,6 @@ class CourseSerializer(serializers.ModelSerializer):
     """
 
     form_method = serializers.ChoiceField([1, 2, 3, 4, 5])
-    member_count_primary = serializers.IntegerField(min_value=0)
-    team_count_primary = serializers.IntegerField(min_value=0)
-    member_count_secondary = serializers.IntegerField(min_value=0)
-    team_count_secondary = serializers.IntegerField(min_value=0)
-    floating_band = serializers.FloatField(min_value=0)
 
     class Meta:
         model = Course
@@ -69,6 +64,15 @@ class CourseSerializer(serializers.ModelSerializer):
             'team_count_secondary',
             'floating_band',
         ]
+        min_kwargs = {'min_value': 0}
+        extra_kwargs = {
+            'duration': {'read_only': False},
+            'member_count_primary': min_kwargs,
+            'member_count_secondary': min_kwargs,
+            'team_count_primary': min_kwargs,
+            'team_count_secondary': min_kwargs,
+            'floating_band': min_kwargs,
+        }
 
     def validate(self, data: dict):
         """
