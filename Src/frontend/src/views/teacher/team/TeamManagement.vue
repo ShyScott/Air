@@ -37,7 +37,7 @@
       </div>
     </a-card>
     <!--Form option moda-->
-    <a-modal v-model="this.formOptionModalVisible" title="Form Options" width="800px">
+    <a-modal v-model="formOptionModalVisible" title="Form Options" width="800px" @cancel="cancelEditFormOptions">
       <!--footer area of the form options modal-->
       <template slot="footer">
         <a-button key="Cancel" @click="cancelEditFormOptions">Cancel</a-button>
@@ -59,21 +59,21 @@
             <a-input v-model="formOptionForm.coursename" :disabled="true"></a-input>
           </a-form-model-item>
           <!--Form Method-->
-          <a-form-model-item label="Forming Method" prop="form_method">
-            <a-select default-value="" style="width: 120px" @change="setFormingMethod">
-              <a-select-option value="1">
+          <a-form-model-item label="Forming Method" prop="formMethod">
+            <a-select v-model="formOptionForm.formMethod" style="width: 120px">
+              <a-select-option :value="1">
                 Method 1
               </a-select-option>
-              <a-select-option value="2">
+              <a-select-option :value="2">
                 Method 2
               </a-select-option>
-              <a-select-option value="3">
+              <a-select-option :value="3" :disabled="this.averageGpa === null">
                 Method 3
               </a-select-option>
-              <a-select-option value="4" :disabled="(this.currentNum % 2) === 0 ? false : true">
+              <a-select-option :value="4" :disabled="this.currentNum % 2 !== 0">
                 Method 4
               </a-select-option>
-              <a-select-option value="5" :disabled="(this.currentNum % 2) === 0 ? false : true">
+              <a-select-option :value="5" :disabled="this.averageGpa === null || this.currentNum % 2 !== 0">
                 Method 5
               </a-select-option>
             </a-select>
@@ -83,24 +83,25 @@
             <a-col :span="8"></a-col>
             <a-col :span="16">
               <a-alert message="Reminder" type="info">
-                <p slot="description">
-                  {{ this.alertContent }}
-                </p>
+                <span slot="description" v-html="alertContent" />
               </a-alert>
             </a-col>
           </a-row>
           <!--primary number-->
-          <a-form-model-item label="Primary Number" prop="primary_number">
-            <a-input v-model="formOptionForm.primary_number"></a-input>
+          <a-form-model-item label="Primary Number" prop="memberCountPrimary">
+            <a-input v-model="formOptionForm.memberCountPrimary" :addon-after="teamCountPrimaryText"></a-input>
           </a-form-model-item>
           <!--secondary number-->
-          <a-form-model-item label="Secondary Number" prop="secondary_number">
-            <a-input v-model="formOptionForm.secondary_number"></a-input>
+          <a-form-model-item label="Secondary Number" prop="memberCountSecondary">
+            <a-input v-model="formOptionForm.memberCountSecondary" :addon-after="teamCountSecondaryText"></a-input>
           </a-form-model-item>
           <!--GPA floating band-->
-          <a-form-model-item label="GPA Floating Band" prop="gpa_floating_band">
-            <!--TODO The adjustment of prefix-->
-            <a-input class="input-adjust" :prefix="this.prefixOfFloatingBand" v-model="formOptionForm.gpa_floating_band"></a-input>
+          <a-form-model-item label="GPA Floating Band" prop="gpaFloatingBand">
+            <a-input
+              :addon-before="prefixOfFloatingBand"
+              v-model="formOptionForm.gpaFloatingBand"
+              :disabled="formOptionForm.formMethod !== 3 && formOptionForm.formMethod !== 5"
+            />
           </a-form-model-item>
         </a-form-model>
       </div>
@@ -110,20 +111,11 @@
 
 <script>
   import { getTeacherCourses, getTeamsList, getMeanGPA } from '../../../api/teacher'
+
   export default {
     name: 'TeamManagement',
     data () {
-      // validation for positive integer
-      const checkInteger = (rule, value, cb) => {
-        const regInteger = /^[1-9]\d*$/
-
-        if (regInteger.test(value)) {
-          return cb()
-        }
-        cb(new Error('Please input a positive integer'))
-      }
-      // validation for positive real number
-      // TODO
+      const trigger = ['change', 'blur']
       return {
         // variable used to store all the courses
         courseList: [],
@@ -191,39 +183,83 @@
         // the form object used for the form option
         formOptionForm: {
           coursename: '',
-          form_method: '',
-          primary_number: 0,
-          secondary_number: 0,
-          gpa_floating_band: 0
+          formMethod: null,
+          memberCountPrimary: 1,
+          memberCountSecondary: 0,
+          teamCountPrimary: 0,
+          teamCountSecondary: 0,
+          gpaFloatingBand: 0
         },
         // validation rules for the form options form
         formOptionFormRules: {
-          form_method: [
-            { required: true, message: 'Please select the forming method', trigger: ['change', 'blur'] }
+          formMethod: [
+            { required: true, message: 'Please select the forming method', trigger }
           ],
-          primary_number: [
-            { required: true, message: 'Please input the primary number', trigger: 'blur' },
-            { validator: checkInteger, trigger: ['change', 'blur'] }
+          memberCountPrimary: [
+            { required: true, message: 'Please input the primary number', trigger },
+            { pattern: /^[1-9]\d*$/, message: 'Please input a positive integer', trigger },
+            {
+              validator: this.validateTeamNumbers,
+              message: 'Please input a valid pair of primary/secondary number!',
+              trigger: 'blur'
+            }
           ],
-          secondary_number: [
-            { required: true, message: 'Please input the secondary number', trigger: 'blur' },
-            { validator: checkInteger, trigger: ['change', 'blur'] }
+          memberCountSecondary: [
+            { required: true, message: 'Please input the secondary number', trigger },
+            { pattern: /^[0-9]\d*$/, message: 'Please input a natural number', trigger },
+            {
+              validator: () => {
+                this.$refs.formOptionFormRef.validateField(['memberCountPrimary'])
+                return true
+              },
+              message: 'Please input a valid pair of primary/secondary number!',
+              trigger: 'blur'
+            }
           ],
-          gpa_floating_band: [
-            { required: true, message: 'Please input the GPA Floating Band (0 is allowed)', trigger: ['blur', 'change'] }
+          gpaFloatingBand: [
+            { required: true, message: 'Please input the GPA Floating Band (0 is allowed)', trigger },
+            { pattern: /^\d+(\.\d{1,2})?$/, message: 'Please input a non-negative float number with no more than two decimal places', trigger }
           ]
         },
         // the info of course selected currently in the table
         selectedCourseId: '',
         selectedCourseName: '',
         currentNum: 0,
-        // The content in the alert area
-        // default content
-        alertContent: 'When the total number of students in the course is odd, method 4 and 5 are automatically disabled.',
         // average gpa
-        averageGpa: 0,
-        // floating band pre-fix
-        prefixOfFloatingBand: '0 ±'
+        averageGpa: 0
+      }
+    },
+    computed: {
+      // The content in the alert area
+      alertContent () {
+        const val = this.formOptionForm.formMethod
+        if (val === null) {
+          return `
+            When the total number of students in the course is odd, method 4 and 5
+            are automatically disabled. <br>
+            When there is at least one student in the course whose GPA is not given,
+            method 3 and 5 are disabled automatically.
+          `
+        }
+        const messages = {
+          1: 'Method 1: All the members are chosen by students themselves',
+          2: 'Method 2: The members are decided by system automatically',
+          3: 'Method 3: The members are decided by system automatically (GPA will be considered by the system in team formation)',
+          4: 'Method 4: A student can choose one friend and others are given by system randomly',
+          5: 'Method 5: A student can choose one friend and others are given by system randomly (GPA will be considered by system in team formation)'
+        }
+        return messages[val]
+      },
+      // floating band pre-fix
+      prefixOfFloatingBand () {
+        if (this.averageGpa === null) return ''
+        return `${this.averageGpa.toFixed(2)} ±`
+      },
+      teamCountPrimaryText () {
+        return `x ${this.formOptionForm.teamCountPrimary} team(s)`
+      },
+      teamCountSecondaryText () {
+        return `x ${this.formOptionForm.teamCountSecondary} team(s)`
       }
     },
     methods: {
@@ -267,16 +303,23 @@
       },
       // function executed when user click the form options button
       showFormOptionsModal (course) {
-        // console.log(course)
+        console.log(course)
         // set the course selected
         this.selectedCourseName = course.title
         this.formOptionForm.coursename = this.selectedCourseName
+        if (course.form_method !== null) {
+          console.log('here')
+          this.formOptionForm.formMethod = course.form_method
+          this.formOptionForm.memberCountPrimary = course.member_count_primary
+          this.formOptionForm.memberCountSecondary = course.member_count_secondary
+          this.formOptionForm.gpaFloatingBand = course.floating_band.toFixed(2)
+        }
         this.currentNum = course.students_count
+        this.validateTeamNumbers()
         this.selectedCourseId = course.id
         // get mean gpa
         getMeanGPA(this.selectedCourseId).then(({ data: response }) => {
           this.averageGpa = response.mean_gpa
-          this.prefixOfFloatingBand = this.averageGpa.toFixed(2) + '±'
         })
         // console.log(this.averageGpa)
         this.formOptionModalVisible = true
@@ -284,6 +327,7 @@
       // function executed when user click cancel button on the form options modal
       cancelEditFormOptions () {
         this.$refs.formOptionFormRef.resetFields()
+        this.formOptionForm.teamCountPrimary = this.formOptionForm.teamCountSecondary = 0
         this.formOptionModalVisible = false
         console.log('cancel')
       },
@@ -292,25 +336,39 @@
         this.formOptionModalVisible = false
         console.log('submit')
       },
-      // function used to set the forming method user select
-      setFormingMethod (value) {
-        this.formOptionForm.form_method = value
-        // console.log(value)
-        // set the alert content
-        if (this.formOptionForm.form_method === '1') {
-          this.alertContent = 'Method 1: All the members are chosen by students themselves'
+      validateTeamNumbers () {
+        const validatePairs = (memberCountPrimary, memberCountSecondary) => {
+          if (memberCountSecondary < 0) return false
+          let teamCountPrimary = Math.floor(this.currentNum / memberCountPrimary)
+          for (; teamCountPrimary > 0; --teamCountPrimary) {
+            const remain = this.currentNum - teamCountPrimary * memberCountPrimary
+            if ((remain === 0 && memberCountSecondary === 0) || (memberCountSecondary > 0 && remain % memberCountSecondary === 0)) {
+              this.formOptionForm.teamCountPrimary = teamCountPrimary
+              this.formOptionForm.memberCountSecondary = memberCountSecondary
+              const teamCountSecondary = remain === 0 ? 0 : Math.floor(remain / memberCountSecondary)
+              this.formOptionForm.teamCountSecondary = teamCountSecondary
+              if (teamCountSecondary === 0) this.formOptionForm.memberCountSecondary = 0
+              return true
+            }
+          }
+          return false
         }
-        if (this.formOptionForm.form_method === '2') {
-          this.alertContent = 'Method 2: The members are decided by system automatically'
-        }
-        if (this.formOptionForm.form_method === '3') {
-          this.alertContent = 'Method 3: A student can choose one friend and others are given by system randomly'
-        }
-        if (this.formOptionForm.form_method === '4') {
-          this.alertContent = 'Method 4: The members are decided by system automatically (GPA will be considered by the system in team formation)'
-        }
-        if (this.formOptionForm.form_method === '5') {
-          this.alertContent = 'Method 5: A student can choose one friend and others are given by system randomly (GPA will be considered by system in team formation)'
+
+        const memberCountPrimary = parseInt(this.formOptionForm.memberCountPrimary)
+        const memberCountSecondary = parseInt(this.formOptionForm.memberCountSecondary)
+        if (validatePairs(memberCountPrimary, memberCountSecondary)) return true
+
+        let delta = 1
+        while (true) {
+          const flag1 = memberCountPrimary + delta <= this.currentNum - memberCountPrimary
+          const flag2 = memberCountPrimary - delta > 0
+          if (flag1 || flag2) {
+            if (flag1 && validatePairs(memberCountPrimary, memberCountPrimary + delta)) return true
+            if (flag2 && validatePairs(memberCountPrimary, memberCountPrimary - delta)) return true
+          } else {
+            return false
+          }
+          ++delta
         }
       }
     },
