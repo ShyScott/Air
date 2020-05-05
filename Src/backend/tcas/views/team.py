@@ -8,7 +8,7 @@ from django_filters import rest_framework as filters
 
 from .generic import PermissionDictMixin
 from tcas.models import Team
-from tcas.serializers import TeamSerializer, TeamNameSerializer
+from tcas.serializers import TeamSerializer, TeamNameSerializer, TeamFormNewSerializer
 from tcas.permissions import IsTeacher, IsInCurrentCourse, IsInCurrentTeam
 
 
@@ -34,7 +34,7 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
         'quit': [IsTeacher | IsInCurrentTeam],
     }
 
-    @action(detail=False, methods=['post'], serializer_class=TeamSerializer)
+    @action(detail=False, methods=['post'], serializer_class=TeamFormNewSerializer)
     def form_new(self, request, *arg, **kwargs):
         """
         Form a new team (for students)
@@ -42,12 +42,8 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = self.request.user
-        if user.teams.filter(course=serializer.validated_data['course']).exists():
-            raise ValidationError('You are already in one team of the course!')
-
         team = serializer.save()
-        team.members.add(user)
+        team.members.add(request.user)
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
