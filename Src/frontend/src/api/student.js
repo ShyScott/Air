@@ -1,8 +1,9 @@
 import { axios } from '@/utils/request'
 
-export function getStudentCourses () {
+export function getStudentCourses (parameter) {
   return axios({
     url: '/courses/',
-    method: 'get'
+    method: 'get',
+    params: parameter
   })
 }

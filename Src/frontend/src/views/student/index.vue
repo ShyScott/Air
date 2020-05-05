@@ -23,7 +23,7 @@
             <a href="#" slot="extra" @click="showMoreCourseModal">More</a>
             <a-row :gutter="16">
               <!--Each row 3 items, at most 6 items rendered-->
-              <a-col :span="8" v-for="(item, i) in courseList" :key="item.id" v-if="i < 6">
+              <a-col :span="8" v-for="(item, i) in courseListForIndex" :key="item.id" v-if="i < 6">
                 <a-card hoverable style="width: 100%; margin-bottom: 10px">
                   <!--Course Card Image-->
                   <img
@@ -92,6 +92,8 @@
       return {
         // variable used to store the courses of current student
         courseList: [],
+        // variable used to store the courses of current student (dedicated for table)
+        courseListForIndex: [],
         // variable used to control whether to display the more courses info modal
         showMoreCourseModalVisible: false,
         // columns for the course info table
@@ -130,12 +132,12 @@
           onShowSizeChange: (current, pageSize) => {
             this.pageNumForCourse = current
             this.pageSizeForCourse = pageSize
-            this.getCourses()
+            this.getTableCourses()
           },
           onChange: (page, pageSize) => {
             this.pageSizeForCourse = pageSize
             this.pageNumForCourse = page
-            this.getCourses()
+            this.getTableCourses()
           }
         },
         // current page num for courses
@@ -148,6 +150,23 @@
       // function used to get the courses info of the current student
       getCourses () {
         getStudentCourses().then(({ data: response }) => {
+          this.courseList = response.results
+          this.courseListForIndex = response.results
+          this.courseListPagination.total = response.count
+          this.formatDuration()
+        }).catch(error => {
+          if (error.response) {
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to get available course information'
+            })
+          }
+        })
+      },
+      // function used to get the courses info of the current student for table
+      getTableCourses () {
+        const parameter = { page: this.pageNumForCourse, size: this.pageSizeForCourse }
+        getStudentCourses(parameter).then(({ data: response }) => {
           this.courseList = response.results
           this.courseListPagination.total = response.count
           this.formatDuration()
