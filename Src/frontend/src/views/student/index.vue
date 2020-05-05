@@ -68,7 +68,7 @@
     <!--Show more course info modal-->
     <template>
       <div>
-        <a-modal v-model="showMoreCourseModalVisible" title="Title" width="800px">
+        <a-modal v-model="showMoreCourseModalVisible" title="All Course Information" width="800px">
           <template slot="footer">
             <a-button key="back" type="primary" @click="handleMoreCourseModalCancel">
               Return

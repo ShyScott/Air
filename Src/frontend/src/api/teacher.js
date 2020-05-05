@@ -94,3 +94,10 @@ export function editSubmission (parameter, submissionId) {
     data: parameter
   })
 }
+// get all the teams info of current teacher
+export function getTeamsList () {
+  return axios({
+    url: '/teams/',
+    method: 'get'
+  })
+}
