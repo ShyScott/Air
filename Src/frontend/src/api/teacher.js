@@ -101,3 +101,10 @@ export function getTeamsList () {
     method: 'get'
   })
 }
+// function used to get the mean gpa of selected course
+export function getMeanGPA (courseId) {
+  return axios({
+    url: `/courses/${courseId}/mean_gpa/`,
+    method: 'get'
+  })
+}
