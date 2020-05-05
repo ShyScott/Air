@@ -34,6 +34,15 @@ class Course(models.Model):
         return self.title
 
     @property
+    def mean_gpa(self):
+        if self.form_method is None:
+            if self.students.filter(student_profile__gpa__isnull=True).exists():
+                return None
+        elif self.form_method not in [3, 5]:
+            return None
+        return self.students.aggregate(ret=models.Avg('student_profile__gpa'))['ret']
+
+    @property
     def formed_students_count(self):
         return self.students.filter(teams__course=self).count()
 

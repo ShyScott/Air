@@ -136,7 +136,7 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         min_gpa = max_gpa = 0
 
         if form_method in [3, 5]:
-            mean_gpa = sum([user.student_profile.gpa for user in students]) / len(students)
+            mean_gpa = course.mean_gpa
             min_gpa = mean_gpa - course.floating_band
             max_gpa = mean_gpa + course.floating_band
 
@@ -236,3 +236,8 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         course.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'])
+    def mean_gpa(self, request, *args, **kwargs):
+        course = self.get_object()
+        return Response({'mean_gpa': course.mean_gpa})
