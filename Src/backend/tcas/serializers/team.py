@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from tcas.models import Team, User
+from .user import UserSerializer
 
 
 class TeamSerializer(serializers.ModelSerializer):
@@ -10,6 +11,12 @@ class TeamSerializer(serializers.ModelSerializer):
         model = Team
         fields = ['id', 'name', 'is_locked', 'course', 'members', 'leader']
         read_only_fields = ['is_locked']
+
+    def __init__(self, *args, **kwargs):
+        with_member_detail = kwargs.pop('with_member_detail', False)
+        super().__init__(*args, **kwargs)
+        if with_member_detail:
+            self.fields['members'] = UserSerializer(many=True)
 
 
 class TeamFormNewSerializer(serializers.ModelSerializer):

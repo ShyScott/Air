@@ -39,7 +39,7 @@ class CourseReadOnlySerializer(serializers.ModelSerializer):
     def get_team_in(self, course):
         try:
             team = Team.objects.get(course=course, members=self.context['request'].user)
-            return TeamSerializer(team).data
+            return TeamSerializer(team, with_member_detail=True).data
         except Team.DoesNotExist:
             return None
 
