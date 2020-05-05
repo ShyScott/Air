@@ -50,8 +50,8 @@ class UserViewSet(PermissionDictMixin, ModelViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        if self.action == 'me':
-            context['full_info'] = True
+        context['with_profile_detail'] = self.action == 'me' or \
+                                         (self.action in ['list', 'retrieve'] and self.request.user.is_teacher)
         return context
 
     def create(self, request, *args, **kwargs):
@@ -89,7 +89,7 @@ class UserViewSet(PermissionDictMixin, ModelViewSet):
         # Clear form_method and related properties of the course
         course.clear_forming_options()
 
-        duplicated_users_serializer = UserSerializer(duplicated_users, many=True, context={'request': request})
+        duplicated_users_serializer = UserSerializer(duplicated_users, many=True, context={'with_profile_detail': True})
         return Response(
             {
                 'duplications': duplicated_users_serializer.data,

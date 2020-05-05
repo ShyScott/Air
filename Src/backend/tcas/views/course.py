@@ -180,7 +180,7 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
                 teams.append({
                     'name': 'Team %d' % (index+1),
                     'course': course.pk,
-                    'members': UserSerializer(members_list[index], many=True, context={'request': request}).data,
+                    'members': UserSerializer(members_list[index], many=True, context={'with_profile_detail': True}).data,
                 })
 
         return Response(teams)
@@ -188,7 +188,7 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
     @action(detail=True, methods=['get'])
     def single_students(self, request, *args, **kwargs):
         course = self.get_object()
-        serializer = self.get_serializer(course.students.exclude(teams__course=course).all(), many=True)
+        serializer = UserSerializer(course.students.exclude(teams__course=course).all(), many=True, context={'with_profile_detail': True})
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'])

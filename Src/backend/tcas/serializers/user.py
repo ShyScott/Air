@@ -57,7 +57,7 @@ class UserSerializer(WeakValidationMixin, serializers.ModelSerializer):
         Control the representation according to current user's role
         """
         rep = super().to_representation(instance)
-        if self.context.get('full_info') is None and not self.context['request'].user.is_teacher:
+        if not self.context.get('with_profile_detail', False):
             rep.pop('student_profile')
         return rep
 
