@@ -1,15 +1,16 @@
 from rest_framework import serializers
 
-from tcas.models import Team, User
+from tcas.models import Team, User, TeamMember
 from .user import UserSerializer
 
 
 class TeamSerializer(serializers.ModelSerializer):
     members = serializers.PrimaryKeyRelatedField(many=True, read_only=False, queryset=User.objects.exclude(student_profile=None).all())
+    voted_for = serializers.SerializerMethodField()
 
     class Meta:
         model = Team
-        fields = ['id', 'name', 'is_locked', 'course', 'members', 'leader']
+        fields = ['id', 'name', 'is_locked', 'course', 'members', 'leader', 'voted_for']
         read_only_fields = ['is_locked']
 
     def __init__(self, *args, **kwargs):
@@ -17,6 +18,13 @@ class TeamSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         if with_member_detail:
             self.fields['members'] = UserSerializer(many=True)
+
+    def get_voted_for(self, team):
+        try:
+            team_member = TeamMember.objects.get(user=self.context['request'].user, team=team)
+            return team_member.vote.pk if team_member.vote is not None else None
+        except (KeyError, TeamMember.DoesNotExist):
+            return None
 
 
 class TeamFormNewSerializer(serializers.ModelSerializer):
