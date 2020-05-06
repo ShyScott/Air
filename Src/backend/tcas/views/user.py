@@ -6,8 +6,8 @@ from rest_framework.response import Response
 
 from django.contrib.auth import update_session_auth_hash
 
-from django.db.models import Value, Q
-from django.db.models.functions import Length, Replace
+from django.db.models import Value, Q, Case, When
+from django.db.models.functions import Length, Replace, Least
 
 from django_filters import rest_framework as filters
 
@@ -18,15 +18,28 @@ from tcas.permissions import IsTeacher, IsLogin, IsCurrentUser, IsInCurrentCours
 
 
 class UserFilter(filters.FilterSet):
-    username = filters.CharFilter(method='filter_username')
+    search = filters.CharFilter(method='filter_search')
     course = filters.ModelChoiceFilter(field_name='courses_in', queryset=Course.objects.all())
 
     class Meta:
         model = User
-        fields = ['username', 'course']
+        fields = ['search', 'course']
 
-    def filter_username(self, queryset, field_name, value):
-        return queryset.filter(username__icontains=value).order_by(Length(Replace('username', Value(value))))
+    def filter_search(self, queryset, field_name, value):
+        max_length = 999999
+        return queryset.filter(
+            Q(username__icontains=value) | Q(student_profile__student_id__icontains=value)
+        ).annotate(
+            username_length=Case(
+                When(username__icontains=value, then=Length(Replace('username', Value(value)))),
+                default=Value(max_length),
+            ),
+        ).annotate(
+            student_id_length=Case(
+                When(student_profile__student_id__icontains=value, then=Length(Replace('student_profile__student_id', Value(value)))),
+                default=Value(max_length),
+            ),
+        ).order_by(Least('username_length', 'student_id_length'))
 
 
 class UserViewSet(PermissionDictMixin, ModelViewSet):
