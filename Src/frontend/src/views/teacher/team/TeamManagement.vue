@@ -1,114 +1,126 @@
 <template>
   <div>
-    <a-card>
-      <!--breadcrumb area-->
-      <a-breadcrumb>
-        <a-breadcrumb-item href="">
-          <a-icon @click="moveToIndex" type="home"/>
-          <span @click="moveToIndex">Main</span>
-        </a-breadcrumb-item>
-        <a-breadcrumb-item href="">
-          <a-icon type="team"/>
-          <span>Team Management</span>
-        </a-breadcrumb-item>
-      </a-breadcrumb>
-      <!--Table Area-->
-      <div style="margin-top: 25px">
-        <a-table :dataSource="this.courseList" :columns="this.teamInfoTableColumns" rowKey="id" :pagination="this.teaminfolistPagination">
-          <template slot="operation" slot-scope="text, record">
-            <!--tooltip for operation button-->
-            <a-tooltip placement="top">
-              <template slot="title">
-                <span>Click to do team formation settings</span>
-              </template>
-              <a href="#" @click="showFormOptionsModal(record)"><a-icon type="setting" />Form options</a>
-            </a-tooltip>
-            <!--tooltip for operation button-->
-            <a-tooltip>
-              <template slot="title">
-                <span>Click to confirm the team formation of this course</span>
-              </template>
-              <a class="a-adjust" href="#" @click="moveToConfirmationPage(record)"><a-icon type="save" />Confirm Teams</a>
-            </a-tooltip>
-          </template>
-        </a-table>
-      </div>
-    </a-card>
-    <!--Form option moda-->
-    <a-modal v-model="formOptionModalVisible" title="Form Options" width="800px" @cancel="cancelEditFormOptions">
-      <!--footer area of the form options modal-->
-      <template slot="footer">
-        <a-button key="Cancel" @click="cancelEditFormOptions">Cancel</a-button>
-        <a-button key="submit" type="primary" @click="handleEditFormOptionsOk">
-          Submit
-        </a-button>
-      </template>
-      <!--body area of the form-->
-      <div style="width: 640px">
-        <a-form-model
-          :model="formOptionForm"
-          :rules="formOptionFormRules"
-          ref="formOptionFormRef"
-          :label-col="labelCol"
-          :wrapper-col="wrapperCol"
-        >
-          <!--Course Name-->
-          <a-form-model-item label="Course Name">
-            <a-input v-model="formOptionForm.coursename" :disabled="true"></a-input>
-          </a-form-model-item>
-          <!--Form Method-->
-          <a-form-model-item label="Forming Method" prop="formMethod">
-            <a-select v-model="formOptionForm.formMethod" style="width: 120px">
-              <a-select-option :value="1">
-                Method 1
-              </a-select-option>
-              <a-select-option :value="2">
-                Method 2
-              </a-select-option>
-              <a-select-option :value="3" :disabled="this.averageGpa === null">
-                Method 3
-              </a-select-option>
-              <a-select-option :value="4" :disabled="this.currentNum % 2 !== 0">
-                Method 4
-              </a-select-option>
-              <a-select-option :value="5" :disabled="this.averageGpa === null || this.currentNum % 2 !== 0">
-                Method 5
-              </a-select-option>
-            </a-select>
-          </a-form-model-item>
-          <!--alert area-->
-          <a-row style="margin-bottom: 20px">
-            <a-col :span="8"></a-col>
-            <a-col :span="16">
-              <a-alert message="Reminder" type="info">
-                <span slot="description" v-html="alertContent" />
-              </a-alert>
-            </a-col>
-          </a-row>
-          <!--primary number-->
-          <a-form-model-item label="Primary Number" prop="memberCountPrimary">
-            <a-input v-model="formOptionForm.memberCountPrimary" :addon-after="teamCountPrimaryText"></a-input>
-          </a-form-model-item>
-          <!--secondary number-->
-          <a-form-model-item label="Secondary Number" prop="memberCountSecondary">
-            <a-input v-model="formOptionForm.memberCountSecondary" :addon-after="teamCountSecondaryText"></a-input>
-          </a-form-model-item>
-          <!--GPA floating band-->
-          <a-form-model-item label="GPA Floating Band" prop="gpaFloatingBand">
-            <a-input
-              :addon-before="prefixOfFloatingBand"
-              v-model="formOptionForm.gpaFloatingBand"
-              :disabled="formOptionForm.formMethod !== 3 && formOptionForm.formMethod !== 5"
-            />
-          </a-form-model-item>
-        </a-form-model>
-      </div>
-    </a-modal>
+    <a-spin :spinning="this.spinning" size="large">
+      <a-card>
+        <!--breadcrumb area-->
+        <a-breadcrumb>
+          <a-breadcrumb-item href="">
+            <a-icon @click="moveToIndex" type="home"/>
+            <span @click="moveToIndex">Main</span>
+          </a-breadcrumb-item>
+          <a-breadcrumb-item href="">
+            <a-icon type="team"/>
+            <span>Team Management</span>
+          </a-breadcrumb-item>
+        </a-breadcrumb>
+        <!--search bar-->
+        <div>
+          <a-input-search
+            style="margin-top: 20px; width: 50%"
+            v-model="courseQuery"
+            placeholder="Please input course name"
+            @search="queryCourse"
+            enterButton>
+          </a-input-search>
+        </div>
+        <!--Table Area-->
+        <div style="margin-top: 25px">
+          <a-table :dataSource="this.courseList" :columns="this.teamInfoTableColumns" rowKey="id" :pagination="this.teaminfolistPagination">
+            <template slot="operation" slot-scope="text, record">
+              <!--tooltip for operation button-->
+              <a-tooltip placement="top">
+                <template slot="title">
+                  <span>Click to do team formation settings</span>
+                </template>
+                <a href="#" @click="showFormOptionsModal(record)"><a-icon type="setting" />Form options</a>
+              </a-tooltip>
+              <!--tooltip for operation button-->
+              <a-tooltip>
+                <template slot="title">
+                  <span>Click to confirm the team formation of this course</span>
+                </template>
+                <a class="a-adjust" href="#" @click="moveToConfirmationPage(record)"><a-icon type="save" />Confirm Teams</a>
+              </a-tooltip>
+            </template>
+          </a-table>
+        </div>
+      </a-card>
+      <!--Form option modal-->
+      <a-modal v-model="formOptionModalVisible" title="Form Options" width="800px" @cancel="cancelEditFormOptions">
+        <!--footer area of the form options modal-->
+        <template slot="footer">
+          <a-button key="Cancel" @click="cancelEditFormOptions">Cancel</a-button>
+          <a-button key="submit" type="primary" @click="handleEditFormOptionsOk">
+            Submit
+          </a-button>
+        </template>
+        <!--body area of the form-->
+        <div style="width: 640px">
+          <a-form-model
+            :model="formOptionForm"
+            :rules="formOptionFormRules"
+            ref="formOptionFormRef"
+            :label-col="labelCol"
+            :wrapper-col="wrapperCol"
+          >
+            <!--Course Name-->
+            <a-form-model-item label="Course Name">
+              <a-input v-model="formOptionForm.coursename" :disabled="true"></a-input>
+            </a-form-model-item>
+            <!--Form Method-->
+            <a-form-model-item label="Forming Method" prop="formMethod">
+              <a-select v-model="formOptionForm.formMethod" style="width: 120px">
+                <a-select-option :value="1">
+                  Method 1
+                </a-select-option>
+                <a-select-option :value="2">
+                  Method 2
+                </a-select-option>
+                <a-select-option :value="3" :disabled="this.averageGpa === null">
+                  Method 3
+                </a-select-option>
+                <a-select-option :value="4" :disabled="this.currentNum % 2 !== 0">
+                  Method 4
+                </a-select-option>
+                <a-select-option :value="5" :disabled="this.averageGpa === null || this.currentNum % 2 !== 0">
+                  Method 5
+                </a-select-option>
+              </a-select>
+            </a-form-model-item>
+            <!--alert area-->
+            <a-row style="margin-bottom: 20px">
+              <a-col :span="8"></a-col>
+              <a-col :span="16">
+                <a-alert message="Reminder" type="info">
+                  <span slot="description" v-html="alertContent" />
+                </a-alert>
+              </a-col>
+            </a-row>
+            <!--primary number-->
+            <a-form-model-item label="Primary Number" prop="memberCountPrimary">
+              <a-input v-model="formOptionForm.memberCountPrimary" :addon-after="teamCountPrimaryText"></a-input>
+            </a-form-model-item>
+            <!--secondary number-->
+            <a-form-model-item label="Secondary Number" prop="memberCountSecondary">
+              <a-input v-model="formOptionForm.memberCountSecondary" :addon-after="teamCountSecondaryText"></a-input>
+            </a-form-model-item>
+            <!--GPA floating band-->
+            <a-form-model-item label="GPA Floating Band" prop="gpaFloatingBand">
+              <a-input
+                :addon-before="prefixOfFloatingBand"
+                v-model="formOptionForm.gpaFloatingBand"
+                :disabled="formOptionForm.formMethod !== 3 && formOptionForm.formMethod !== 5"
+              />
+            </a-form-model-item>
+          </a-form-model>
+        </div>
+      </a-modal>
+    </a-spin>
   </div>
 </template>
 
 <script>
-  import { getTeacherCourses, getMeanGPA, changeFormOption } from '../../../api/teacher'
+  import { getTeacherCourses, getMeanGPA, changeFormOption, queryCourseByName } from '../../../api/teacher'
 
   export default {
     name: 'TeamManagement',
@@ -158,12 +170,21 @@
           onShowSizeChange: (current, pageSize) => {
             this.pageNumForTeam = current
             this.pageSizeForTeam = pageSize
+            // if there is still content left in the search bar
+            if (this.courseQuery !== '') {
+              // execute function queryCourse instead of getCourses
+               return this.queryCourse()
+            }
             // re-render
             this.getCourses()
           },
           onChange: (page, pageSize) => {
             this.pageSizeForTeam = pageSize
             this.pageNumForTeam = page
+            if (this.courseQuery !== '') {
+              // execute function queryCourse instead of getCourses
+               return this.queryCourse()
+            }
             // re-render
             this.getCourses()
           }
@@ -225,7 +246,11 @@
         // average gpa
         averageGpa: 0,
         // the target course of the form options will be changed
-        courseToBeEdited: {}
+        courseToBeEdited: {},
+        // the content user input for query
+        courseQuery: '',
+        // control whether the spinning should be displayed or not
+        spinning: false
       }
     },
     computed: {
@@ -320,6 +345,7 @@
               message: 'Success',
               description: 'Team formation options submitted successfully'
             })
+          this.spinning = true
           setTimeout(() => { this.$router.push({ name: 'FormConfirmation', params: { courseId: this.selectedCourseId } }) }, 2000)
         }).catch(error => {
           // if error occurs
@@ -376,6 +402,16 @@
         this.selectedCourseId = course.id
         // console.log(this.selectedCourseId)
         this.$router.push({ name: 'FormConfirmation', params: { courseId: this.selectedCourseId } })
+      },
+      // function executed for the course query
+      queryCourse () {
+        // console.log(this.courseQuery)
+        const parameter = { title: this.courseQuery, page: this.pageNumForTeam, size: this.pageSizeForTeam }
+        queryCourseByName(parameter).then(({ data: response }) => {
+          // console.log(response)
+          this.courseList = response.results
+          this.teaminfolistPagination.total = response.count
+        })
       }
     },
     created () {

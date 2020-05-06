@@ -438,7 +438,7 @@
         getCoursesByQuery(parameter).then(({ data: response }) => {
           // console.log(response)
           this.courseList = response.results
-          console.log(this.courseList)
+          // console.log(this.courseList)
         })
       },
       // function used to reset the submission form model

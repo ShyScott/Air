@@ -36,10 +36,10 @@
       <!--Button area-->
       <div style="display: flex; justify-content: flex-end; flex-direction: row; margin-top: 30px; margin-right: 30px">
         <span style="margin-right: 25px">
-          <a-button type="primary"><a-icon type="disconnect" /> Cancel </a-button>
+          <a-button type="danger" @click="cancelConfirmation"><a-icon type="disconnect" /> Cancel </a-button>
         </span>
         <span style="margin-right: 25px">
-          <a-button type="primary"><a-icon type="reload" /> Regenerate </a-button>
+          <a-button type="default" :disabled="formMethod === 1" @click="regenerateTeams"><a-icon type="reload" /> Regenerate </a-button>
         </span>
         <span>
           <a-button type="primary"><a-icon type="lock" /> Confirm </a-button>
@@ -50,7 +50,7 @@
 </template>
 
 <script>
-  import { generateTeam, getNoTeamStudent } from '../../../api/teacher'
+  import { generateTeam, getCourseInfoById, getNoTeamStudent } from '../../../api/teacher'
 
   export default {
     name: 'FormConfirmation',
@@ -144,14 +144,16 @@
           }
         },
         pageNumForStudent: 1,
-        pageSizeForStudent: 5
+        pageSizeForStudent: 5,
+        // form method of current course
+        formMethod: 0
       }
     },
     methods: {
       // function used to get the team list of current course
       getGeneratedTeams () {
         generateTeam(this.selectedCourseId).then(({ data: response }) => {
-          // console.log(response)
+          console.log(response)
           this.teamList = response
         }).catch(error => {
           // if error occurs
@@ -180,7 +182,6 @@
         this.$router.push({ name: 'TeamManagement' })
       },
       // function used to get student list of those who still do not have a team
-      // TODO: The backend has no interface named team_in
       getStudentsWithoutTeam () {
         const courseId = this.selectedCourseId
         getNoTeamStudent(courseId).then(({ data: response }) => {
@@ -196,6 +197,30 @@
             })
           }
         })
+      },
+      // function used to be back to the team management page
+      cancelConfirmation () {
+        this.$router.push({ name: 'TeamManagement' })
+      },
+      // function executed when user click the regenerate button
+      regenerateTeams () {
+        this.getGeneratedTeams()
+      },
+      // function used to get the course's form method
+      getFormMethod () {
+        getCourseInfoById(this.selectedCourseId).then(({ data: response }) => {
+          // console.log(response)
+          this.formMethod = response.form_method
+          // console.log(this.formMethod)
+        }).catch(error => {
+          if (error.response) {
+            console.info(error.response)
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to get the course information'
+            })
+          }
+        })
       }
     },
     created () {
@@ -204,7 +229,10 @@
       this.selectedCourseId = courseId
       // get all the teams of current course
       this.getGeneratedTeams()
+      // get students without team yet
       this.getStudentsWithoutTeam()
+      // get the form method of current course
+      this.getFormMethod()
     }
   }
 </script>

@@ -117,15 +117,33 @@ export function changeFormOption (courseId, parameter) {
     data: parameter
   })
 }
+// function used to get those students who have no team yet from the back end
 export function getNoTeamStudent (courseId) {
   return axios({
     url: `/courses/${courseId}/single_students`,
     method: 'get'
   })
 }
+// function used to get the randomly-generated teams from the backend
 export function generateTeam (courseID) {
   return axios({
     url: `/courses/${courseID}/generate_teams`,
     method: 'get'
+  })
+}
+// function used for teacher to confirm the team formation of one course
+export function confirmTeamFormation (courseId, parameter) {
+  return axios({
+    url: `/courses/${courseId}/confirm_teams/`,
+    method: 'post',
+    data: parameter
+  })
+}
+// function used to query the course by course name
+export function queryCourseByName (parameter) {
+  return axios({
+    url: '/courses/',
+    method: 'get',
+    params: parameter
   })
 }
