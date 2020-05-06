@@ -2,14 +2,15 @@ from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import ValidationError
 
 from django_filters import rest_framework as filters
 
 from .generic import PermissionDictMixin
-from tcas.models import Team
-from tcas.serializers import TeamSerializer, TeamNameSerializer, TeamFormNewSerializer
+from tcas.models import User, Team, TeamMember
+from tcas.serializers import TeamSerializer, TeamNameSerializer, TeamFormNewSerializer, TeamVoteLeaderSerializer
 from tcas.permissions import IsTeacher, IsInCurrentCourse, IsInCurrentTeam
+
+from django.db.models import Count
 
 
 class TeamFilter(filters.FilterSet):
@@ -32,6 +33,7 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
         'form_new': [IsInCurrentCourse],
         'rename': [IsTeacher | IsInCurrentTeam],
         'quit': [IsTeacher | IsInCurrentTeam],
+        'vote_leader': [IsInCurrentTeam],
     }
 
     @action(detail=False, methods=['post'], serializer_class=TeamFormNewSerializer)
@@ -65,3 +67,19 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
             dismissed = True
             team.delete()
         return Response({'dismiss': dismissed})
+
+    @action(detail=True, methods=['patch'], serializer_class=TeamVoteLeaderSerializer)
+    def vote_leader(self, request, *arg, **kwargs):
+        team = self.get_object()
+        serializer = self.get_serializer(team, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        team_members = TeamMember.objects.filter(team=team)
+        team_members.filter(team=team).update(vote=serializer.validated_data['leader'])
+
+        # Check if all members have voted
+        if not team_members.filter(vote__isnull=True).exists():
+            leader_pk = team_members.values('vote').annotate(vote_count=Count('vote')).order_by('-vote_count').first()['vote']
+            team.leader = User.objects.get(pk=leader_pk)
+            team.save()
+
+        return Response(serializer.data)

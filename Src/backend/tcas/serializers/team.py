@@ -34,3 +34,19 @@ class TeamNameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
         fields = ['id', 'name']
+
+
+class TeamVoteLeaderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = ['id', 'leader']
+
+    def validate(self, attrs):
+        team = self.instance
+        if not team.is_locked:
+            raise serializers.ValidationError('This team is not confirmed by the course instructor!')
+        if team.leader is not None:
+            raise serializers.ValidationError('This team already has a leader!')
+        if not team.members.filter(pk=attrs['leader'].pk).exists():
+            raise serializers.ValidationError('This leader is not in the team!')
+        return attrs
