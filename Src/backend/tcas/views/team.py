@@ -2,6 +2,7 @@ from rest_framework import status
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 
 from django_filters import rest_framework as filters
 
@@ -61,6 +62,8 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
     @action(detail=True, methods=['get'])
     def quit(self, request, *arg, **kwargs):
         team = self.get_object()
+        if team.is_locked:
+            raise ValidationError('This team is already confirmed and locked by the course instructor!')
         team.members.remove(request.user)
         dismissed = False
         if team.members.count() == 0:
