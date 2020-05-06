@@ -55,7 +55,7 @@
                 <template slot="title">
                   <span>Click to vote a team leader for your team</span>
                 </template>
-                <a href="#" @click="showVoteTeamLeaderModal"><a-icon type="crown" />Vote leader</a>
+                <a href="#" @click="showVoteTeamLeaderModal(record)"><a-icon type="crown" />Vote leader</a>
               </a-tooltip>
             </span>
             <!--Case 3: The student already in a team, but the team not yet confirmed-->
@@ -97,11 +97,62 @@
             :model="createNewTeamForm"
             :rules="createNewTeamFormRules"
             ref="createNewTeamFormRef"
-            :label-col="labelCol"
-            :wrapper-col="wrapperCol"
+            :label-col="{ span: 5 }"
+            :wrapper-col="{ span: 16 }"
           >
             <a-form-model-item label="Team Name" prop="teamName">
               <a-input v-model="createNewTeamForm.teamName" allow-clear></a-input>
+            </a-form-model-item>
+          </a-form-model>
+        </a-modal>
+      </div>
+    </template>
+    <!--Invite modal-->
+    <template>
+      <div>
+        <a-modal width="800px" v-model="inviteModalVisible" title="Send Invitation" on-ok="handleInviteOk">
+          <template slot="footer">
+            <a-button key="cancel" @click="handleInviteCancel">
+              Cancel
+            </a-button>
+            <a-button key="submit" type="primary" @click="handleInviteOk">
+              Submit
+            </a-button>
+          </template>
+          <!--search bar for student search-->
+          <!--TODO: wait for the update of backend-->
+          <a-input-search style="width: 70%" placeholder="Please input student name/ID" v-model="inviteQueryContent" enter-button @search="onStudentSearch" />
+          <a-table style="margin-top: 30px"></a-table>
+        </a-modal>
+      </div>
+    </template>
+    <!--Vote team leader modal-->
+    <template>
+      <div>
+        <a-modal width="800px" v-model="voteLeaderModalVisible" title="Vote Team Leader" on-ok="handleVoteTeamLeaderOk">
+          <template slot="footer">
+            <a-button key="cancel" @click="handleVoteTeamLeaderCancel">
+              Cancel
+            </a-button>
+            <a-button key="submit" type="primary" @click="handleVoteTeamLeaderOk">
+              Vote
+            </a-button>
+          </template>
+          <!--Create new team modal-->
+          <a-form-model
+            :model="voteLeaderForm"
+            :rules="voteLeaderFormRules"
+            ref="voteLeaderFormRef"
+            :label-col="labelCol"
+            :wrapper-col="wrapperCol"
+          >
+            <a-form-model-item label="Choose your leader" prop="choice">
+              <a-select style="width: 80%" default-value="" v-model="voteLeaderForm.choice">
+                <a-icon slot="suffixIcon" type="crown" />
+                <a-select-option v-for="(item, i) in this.memberList" :key="i" :value="item.id">
+                  {{ item.username }}
+                </a-select-option>
+              </a-select>
             </a-form-model-item>
           </a-form-model>
         </a-modal>
@@ -111,7 +162,7 @@
 </template>
 
 <script>
-  import { createNewTeam, getStudentCourses, queryCourse } from '../../../api/student'
+  import { createNewTeam, exitTeam, getStudentCourses, queryCourse, voteTeamLeader } from '../../../api/student'
 
   export default {
     name: 'TeamManagement',
@@ -119,6 +170,15 @@
       return {
         // variable used to store course list
         courseList: [],
+        // variable used to store the student list
+        studentList: [],
+        // member list of the row selected in the course list
+        memberList: [],
+        // variable used to store the team selected
+        teamSelected: {},
+        // TODO:pagination settings for the student list
+        pageNumForStudentList: 1,
+        pageSizeForStudentList: 5,
         // page num
         pageNum: 1,
         // page size
@@ -205,7 +265,7 @@
         // variable used to control the display of create team modal
         createTeamModalVisible: false,
         // layout settings for the add submission form
-        labelCol: { span: 5 },
+        labelCol: { span: 8 },
         wrapperCol: { span: 16 },
         // form object for create new team form
         createNewTeamForm: {
@@ -220,7 +280,23 @@
         // variable used to store the id of course selected
         selectedCourseId: '',
         // query content input by the user
-        queryContent: ''
+        queryContent: '',
+        // variable used to control the show of invite modal
+        inviteModalVisible: false,
+        // query content input by user - in the send invitation modal
+        inviteQueryContent: '',
+        // variable used to control the display of vote team leader modal
+        voteLeaderModalVisible: false,
+        // form object used for the vote team leader modal
+        voteLeaderForm: {
+          choice: ''
+        },
+        // validation rules for the vote leader form
+        voteLeaderFormRules: {
+          choice: [
+            { required: true, message: 'Please choose one team member', trigger: ['blur', 'change'] }
+          ]
+        }
       }
     },
     methods: {
@@ -280,7 +356,6 @@
         }
       },
       // function used to control the show of creat team modal
-      // TODO
       showCreateTeamModal (course) {
         // store the selected course id
         this.selectedCourseId = course.id
@@ -289,21 +364,45 @@
       },
       // function used to control the show of vote team leader modal
       // TODO
-      showVoteTeamLeaderModal () {
-        console.log('Vote Team Leader')
+      showVoteTeamLeaderModal (course) {
+        // get all the members in this team currently
+        this.memberList = course.team_in.members
+        this.teamSelected = course.team_in
+        console.log(this.teamSelected)
+        this.voteLeaderModalVisible = true
+        // console.log('Vote Team Leader')
       },
       // function executed when user confirm to quit the team
-      // TODO
-      confirmExitCurrentTeam () {
-        console.log('Exit Team')
+      confirmExitCurrentTeam (course) {
+        this.teamSelected = course.team_in
+        exitTeam(this.teamSelected.id).then(({ data: response }) => {
+          this.$notification.success({
+            message: 'Success',
+            description: 'Exit the team successfully.'
+          })
+          // re-render
+          this.getCourses()
+        }).catch(error => {
+          // if error occurs
+          if (error.response) {
+            console.info(error.response)
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to exit the team.'
+            })
+          }
+        })
       },
       // function executed when user calcel to exit current team
       cancelExitCurrentTeam () {
-        console.log('Cancel')
+        return this.$notification.info({
+          message: 'Info',
+          description: 'You have canceled the exit operation.'
+        })
       },
       // function used to control the show of invite new member modal
       showInviteNewMember () {
-        console.log('Invite')
+        this.inviteModalVisible = true
       },
       // function executed when user click cancel button in the create new team modal
       handleCreateNewTeamCancel () {
@@ -345,9 +444,48 @@
           this.paginationForTeamTable.total = response.count
         })
       },
-      // function executed when search button is clicked
+      // TODO:function executed when search button is clicked
       onSearch () {
         this.queryCourseByCourseName()
+      },
+      // TODO:function executed when user click the cancel button in the send invitation modal
+      handleInviteCancel () {
+        this.inviteModalVisible = false
+      },
+      // TODO:function executed when user click the submit button in the send invitation modal
+      handleInviteOk () {
+        this.inviteModalVisible = false
+      },
+      // TODO:query student according to what user input
+      onStudentSearch () {
+      },
+      // function executed when user click the cancel button in the vote team leader modal
+      handleVoteTeamLeaderCancel () {
+        this.$refs.voteLeaderFormRef.resetFields()
+        this.voteLeaderModalVisible = false
+      },
+      // function executed when user click the vote button in the vote team leader modal
+      handleVoteTeamLeaderOk () {
+        // process the data
+        const parameter = { name: this.teamSelected.name, course: this.teamSelected.course, members: this.teamSelected.members, leader: this.voteLeaderForm.choice }
+        voteTeamLeader(this.teamSelected.id, parameter).then(({ data: response }) => {
+          console.log(response)
+          return this.$notification.success({
+            message: 'Success',
+            description: 'Vote team leader successful'
+          })
+        }).catch(error => {
+          // if error occurs
+          if (error.response) {
+            console.info(error.response)
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to vote the team leader'
+            })
+          }
+        })
+        this.$refs.voteLeaderFormRef.resetFields()
+        this.voteLeaderModalVisible = false
       }
     },
     created () {

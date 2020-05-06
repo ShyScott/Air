@@ -24,3 +24,18 @@ export function queryCourse (parameter) {
     params: parameter
   })
 }
+// function used to vote the team leader
+export function voteTeamLeader (teamId, parameter) {
+  return axios({
+    url: `/teams/${teamId}/`,
+    method: 'patch',
+    data: parameter
+  })
+}
+// function used to quit the team
+export function exitTeam (teamId) {
+  return axios({
+    url: `/teams/${teamId}/quit/`,
+    method: 'get'
+  })
+}
