@@ -395,7 +395,7 @@ export const teacherRoutes = [
     meta: { title: 'Team Management', icon: 'team' }
   },
   {
-    path: 'team/formConfirmation',
+    path: `team/formConfirmation/:courseId`,
     name: 'FormConfirmation',
     component: () => import('@/views/teacher/team/FormConfirmation'),
     meta: { title: 'Team Form Confirmation' },

@@ -28,7 +28,7 @@
               <template slot="title">
                 <span>Click to confirm the team formation of this course</span>
               </template>
-              <a class="a-adjust" href="#" @click="moveToConfirmationPage"><a-icon type="save" />Confirm Teams</a>
+              <a class="a-adjust" href="#" @click="moveToConfirmationPage(record)"><a-icon type="save" />Confirm Teams</a>
             </a-tooltip>
           </template>
         </a-table>
@@ -108,7 +108,7 @@
 </template>
 
 <script>
-  import { getTeacherCourses, getTeamsList, getMeanGPA, changeFormOption } from '../../../api/teacher'
+  import { getTeacherCourses, getMeanGPA, changeFormOption } from '../../../api/teacher'
 
   export default {
     name: 'TeamManagement',
@@ -146,8 +146,7 @@
             scopedSlots: { customRender: 'operation' }
           }
         ],
-        // pagination settings for team info table
-        // pagination settings for submission list table
+        // pagination settings for team list table
         teaminfolistPagination: {
           // default page size
           defaultPageSize: 5,
@@ -281,13 +280,6 @@
           })
         })
       },
-      // function used to get all the teams' info
-      // TODO
-      getTeams () {
-        getTeamsList().then(({ data: response }) => {
-          // console.log(response)
-        })
-      },
       // function executed when user click the form options button
       showFormOptionsModal (course) {
         // console.log(course)
@@ -321,14 +313,14 @@
       },
       // function executed when user click submit button on the form options modal
       handleEditFormOptionsOk () {
-        const parameter = { title: this.selectedCourseName, duration: this.courseToBeEdited.duration, form_method: this.formOptionForm.formMethod, member_count_primary: this.formOptionForm.memberCountPrimary, team_count_primary: this.formOptionForm.teamCountPrimary, member_count_secondary: this.formOptionForm.memberCountSecondary, team_count_secondary: this.formOptionForm.teamCountSecondary, floating_band: this.formOptionForm.gpaFloatingBand }
+        const parameter = { title: this.selectedCourseName, duration: this.courseToBeEdited.duration, form_method: this.formOptionForm.formMethod, member_count_primary: parseInt(this.formOptionForm.memberCountPrimary), team_count_primary: this.formOptionForm.teamCountPrimary, member_count_secondary: this.formOptionForm.memberCountSecondary, team_count_secondary: this.formOptionForm.teamCountSecondary, floating_band: parseFloat(this.formOptionForm.gpaFloatingBand) }
         changeFormOption(this.selectedCourseId, parameter).then(({ data: response }) => {
           // console.log(response)
             this.$notification.success({
               message: 'Success',
               description: 'Team formation options submitted successfully'
             })
-          setTimeout(this.moveToConfirmationPage, 2000)
+          setTimeout(() => { this.$router.push({ name: 'FormConfirmation', params: { courseId: this.selectedCourseId } }) }, 2000)
         }).catch(error => {
           // if error occurs
           if (error.response) {
@@ -379,13 +371,15 @@
         }
       },
       // function used to routes to the confirmation page after user submit form options or click the confirm button
-      moveToConfirmationPage () {
+      moveToConfirmationPage (course) {
+        // console.log(course)
+        this.selectedCourseId = course.id
+        // console.log(this.selectedCourseId)
         this.$router.push({ name: 'FormConfirmation', params: { courseId: this.selectedCourseId } })
       }
     },
     created () {
       this.getCourses()
-      this.getTeams()
     }
   }
 </script>

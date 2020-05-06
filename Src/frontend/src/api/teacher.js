@@ -95,10 +95,11 @@ export function editSubmission (parameter, submissionId) {
   })
 }
 // get all the teams info of current teacher
-export function getTeamsList () {
+export function getTeamsList (parameter) {
   return axios({
     url: '/teams/',
-    method: 'get'
+    method: 'get',
+    params: parameter
   })
 }
 // function used to get the mean gpa of selected course
@@ -112,7 +113,19 @@ export function getMeanGPA (courseId) {
 export function changeFormOption (courseId, parameter) {
   return axios({
     url: `/courses/${courseId}/`,
-    method: 'patch',
+    method: 'put',
     data: parameter
+  })
+}
+export function getNoTeamStudent (courseId) {
+  return axios({
+    url: `/courses/${courseId}/single_students`,
+    method: 'get'
+  })
+}
+export function generateTeam (courseID) {
+  return axios({
+    url: `/courses/${courseID}/generate_teams`,
+    method: 'get'
   })
 }
