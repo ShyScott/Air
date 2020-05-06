@@ -108,3 +108,11 @@ export function getMeanGPA (courseId) {
     method: 'get'
   })
 }
+// function used to submit and change the form options
+export function changeFormOption (courseId, parameter) {
+  return axios({
+    url: `/courses/${courseId}/`,
+    method: 'patch',
+    data: parameter
+  })
+}

@@ -393,6 +393,13 @@ export const teacherRoutes = [
     name: 'TeamManagement',
     component: () => import('@/views/teacher/team/TeamManagement'),
     meta: { title: 'Team Management', icon: 'team' }
+  },
+  {
+    path: 'team/formConfirmation',
+    name: 'FormConfirmation',
+    component: () => import('@/views/teacher/team/FormConfirmation'),
+    meta: { title: 'Team Form Confirmation' },
+    hidden: true
   }
 
 ]

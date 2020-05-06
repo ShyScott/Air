@@ -23,15 +23,13 @@
               </template>
               <a href="#" @click="showFormOptionsModal(record)"><a-icon type="setting" />Form options</a>
             </a-tooltip>
-            <a-popconfirm title="Are you sure to confirm the team formation of this course? If confirmed, no more changes would be allowed." @confirm="confirmTeamFormation(record)" @cancel="cancelTeamFormation">
-              <!--tooltip for operation button-->
-              <a-tooltip>
-                <template slot="title">
-                  <span>Click to confirm the team formation of this course</span>
-                </template>
-                <a class="a-adjust" href="#"><a-icon type="save" />Confirm Teams</a>
-              </a-tooltip>
-            </a-popconfirm>
+            <!--tooltip for operation button-->
+            <a-tooltip>
+              <template slot="title">
+                <span>Click to confirm the team formation of this course</span>
+              </template>
+              <a class="a-adjust" href="#" @click="moveToConfirmationPage"><a-icon type="save" />Confirm Teams</a>
+            </a-tooltip>
           </template>
         </a-table>
       </div>
@@ -110,7 +108,7 @@
 </template>
 
 <script>
-  import { getTeacherCourses, getTeamsList, getMeanGPA } from '../../../api/teacher'
+  import { getTeacherCourses, getTeamsList, getMeanGPA, changeFormOption } from '../../../api/teacher'
 
   export default {
     name: 'TeamManagement',
@@ -226,7 +224,9 @@
         selectedCourseName: '',
         currentNum: 0,
         // average gpa
-        averageGpa: 0
+        averageGpa: 0,
+        // the target course of the form options will be changed
+        courseToBeEdited: {}
       }
     },
     computed: {
@@ -288,23 +288,11 @@
           // console.log(response)
         })
       },
-      // function executed when user click confirm teams button
-      // TODO
-      confirmTeamFormation (course) {
-        console.log(course)
-      },
-      // function executed when user click cancel button of teams confirmation
-      cancelTeamFormation () {
-        // give the feedback
-        return this.$notification.info({
-          message: 'Info',
-          description: 'You have canceled the confirmation of current team formation'
-        })
-      },
       // function executed when user click the form options button
       showFormOptionsModal (course) {
-        console.log(course)
+        // console.log(course)
         // set the course selected
+        this.courseToBeEdited = course
         this.selectedCourseName = course.title
         this.formOptionForm.coursename = this.selectedCourseName
         if (course.form_method !== null) {
@@ -333,9 +321,28 @@
       },
       // function executed when user click submit button on the form options modal
       handleEditFormOptionsOk () {
+        const parameter = { title: this.selectedCourseName, duration: this.courseToBeEdited.duration, form_method: this.formOptionForm.formMethod, member_count_primary: this.formOptionForm.memberCountPrimary, team_count_primary: this.formOptionForm.teamCountPrimary, member_count_secondary: this.formOptionForm.memberCountSecondary, team_count_secondary: this.formOptionForm.teamCountSecondary, floating_band: this.formOptionForm.gpaFloatingBand }
+        changeFormOption(this.selectedCourseId, parameter).then(({ data: response }) => {
+          // console.log(response)
+            this.$notification.success({
+              message: 'Success',
+              description: 'Team formation options submitted successfully'
+            })
+          setTimeout(this.moveToConfirmationPage, 2000)
+        }).catch(error => {
+          // if error occurs
+          if (error.response) {
+            console.info(error.response)
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to submit the form options'
+            })
+          }
+        })
         this.formOptionModalVisible = false
         console.log('submit')
       },
+      // function used to validate whether the teacher's proposed team formation is valid or not, also, this function would given recommended formation of primary number and secondary number automatically
       validateTeamNumbers () {
         const validatePairs = (memberCountPrimary, memberCountSecondary) => {
           if (memberCountSecondary < 0) return false
@@ -370,6 +377,10 @@
           }
           ++delta
         }
+      },
+      // function used to routes to the confirmation page after user submit form options or click the confirm button
+      moveToConfirmationPage () {
+        this.$router.push({ name: 'FormConfirmation', params: { courseId: this.selectedCourseId } })
       }
     },
     created () {
