@@ -27,7 +27,7 @@ export function queryCourse (parameter) {
 // function used to vote the team leader
 export function voteTeamLeader (teamId, parameter) {
   return axios({
-    url: `/teams/${teamId}/`,
+    url: `/teams/${teamId}/vote_leader/`,
     method: 'patch',
     data: parameter
   })

@@ -42,6 +42,7 @@
             <span v-if="record.team_in !== null">
               <span style="margin-right: 10px" v-for="item in record.team_in.members" :key="item.id">
                 {{ item.username }}
+                <span v-if="record.team_in.leader === item.id"><a-icon type="crown" style="color: goldenrod" /></span>
               </span>
             </span>
           </template>
@@ -301,7 +302,7 @@
         // validation rules for the vote leader form
         voteLeaderFormRules: {
           choice: [
-            { required: true, message: 'Please choose one team member', trigger: ['blur', 'change'] }
+            { required: true, message: 'Please choose one team member', trigger: 'blur' }
           ]
         }
       }
@@ -469,15 +470,19 @@
       // function executed when user click the cancel button in the vote team leader modal
       handleVoteTeamLeaderCancel () {
         this.$refs.voteLeaderFormRef.resetFields()
+        // this.voteLeaderForm.choice = ''
         this.voteLeaderModalVisible = false
       },
       // function executed when user click the vote button in the vote team leader modal
       handleVoteTeamLeaderOk () {
         // process the data
-        const parameter = { name: this.teamSelected.name, course: this.teamSelected.course, members: this.teamSelected.members, leader: this.voteLeaderForm.choice }
+        const parameter = { leader: this.voteLeaderForm.choice }
         voteTeamLeader(this.teamSelected.id, parameter).then(({ data: response }) => {
-          console.log(response)
-          return this.$notification.success({
+          // console.log(response)
+          this.$refs.voteLeaderFormRef.resetFields()
+          this.voteLeaderModalVisible = false
+          this.getCourses()
+          this.$notification.success({
             message: 'Success',
             description: 'Vote team leader successful'
           })
@@ -485,14 +490,12 @@
           // if error occurs
           if (error.response) {
             console.info(error.response)
-            return this.$notification.error({
+            this.$notification.error({
               message: 'Error',
               description: 'Failed to vote the team leader'
             })
           }
         })
-        this.$refs.voteLeaderFormRef.resetFields()
-        this.voteLeaderModalVisible = false
       }
     },
     created () {
