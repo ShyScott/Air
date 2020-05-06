@@ -42,7 +42,7 @@
           <a-button type="default" :disabled="formMethod === 1" @click="regenerateTeams"><a-icon type="reload" /> Regenerate </a-button>
         </span>
         <span>
-          <a-button type="primary"><a-icon type="lock" /> Confirm </a-button>
+          <a-button type="primary" @click="submitTeamConfirmation"><a-icon type="lock" /> Confirm </a-button>
         </span>
       </div>
     </a-card>
@@ -50,7 +50,7 @@
 </template>
 
 <script>
-  import { generateTeam, getCourseInfoById, getNoTeamStudent } from '../../../api/teacher'
+  import { confirmTeamFormation, generateTeam, getCourseInfoById, getNoTeamStudent } from '../../../api/teacher'
 
   export default {
     name: 'FormConfirmation',
@@ -219,6 +219,17 @@
               message: 'Error',
               description: 'Failed to get the course information'
             })
+          }
+        })
+      },
+      // function used for teacher to confirm the team formation
+      submitTeamConfirmation () {
+        const parameter = this.teamList
+        confirmTeamFormation(this.selectedCourseId, parameter).then(({ data: response }) => {
+          console.log(response)
+        }).catch(error => {
+          if (error.response) {
+            console.log(error.response)
           }
         })
       }

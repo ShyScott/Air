@@ -19,6 +19,15 @@
       <!--Table area-->
       <div style="margin-top: 25px">
         <a-table :dataSource="this.courseList" :columns="this.teamTableColumns" rowKey="id" :pagination="this.paginationForTeamTable">
+          <!--Team member column-->
+          <template slot="teamMembers" slot-scope="text, record">
+            <span v-if="record.team_in !== null">
+              <span style="margin-right: 10px" v-for="item in record.team_in.members" :key="item.id">
+                {{ item.username }}
+              </span>
+            </span>
+          </template>
+          <!--Operation column-->
           <template slot="operation" slot-scope="text, record">
             <!--case 1: The student has not been in any team in this course-->
             <span v-if="record.team_in === null">
@@ -54,7 +63,7 @@
                   <template slot="title">
                     <span>Click to exit this team</span>
                   </template>
-                  <a href="#"><a-icon type="api" />Exit team</a>
+                  <a href="#" style="color: red"><a-icon type="api" />Exit team</a>
                 </a-tooltip>
               </a-popconfirm>
             </span>
@@ -62,11 +71,38 @@
         </a-table>
       </div>
     </a-card>
+    <!--Create team modal-->
+    <template>
+      <div>
+        <a-modal width="800px" v-model="createTeamModalVisible" title="Create New Team" on-ok="handleCreateNewTeamOk">
+          <template slot="footer">
+            <a-button key="cancel" @click="handleCreateNewTeamCancel">
+              Return
+            </a-button>
+            <a-button key="submit" type="primary" @click="handleCreateNewTeamOk">
+              Submit
+            </a-button>
+          </template>
+          <!--Create new team modal-->
+          <a-form-model
+            :model="createNewTeamForm"
+            :rules="createNewTeamFormRules"
+            ref="createNewTeamFormRef"
+            :label-col="labelCol"
+            :wrapper-col="wrapperCol"
+          >
+            <a-form-model-item label="Team Name" prop="teamName">
+              <a-input v-model="createNewTeamForm.teamName" allow-clear></a-input>
+            </a-form-model-item>
+          </a-form-model>
+        </a-modal>
+      </div>
+    </template>
   </div>
 </template>
 
 <script>
-  import { getStudentCourses } from '../../../api/student'
+  import { createNewTeam, getStudentCourses } from '../../../api/student'
 
   export default {
     name: 'TeamManagement',
@@ -92,7 +128,7 @@
             // Team name column
             title: 'Team Name',
             dataIndex: 'team_in.name',
-            width: '15%',
+            width: '10%',
             scopedSlots: { customRender: 'teamName' }
           },
           {
@@ -106,7 +142,7 @@
             // whether is confirmed or not
             title: 'Confirmation Status',
             dataIndex: 'is_confirmed',
-            width: '10%',
+            width: '15%',
             scopedSlots: { customRender: 'confirmation_status' }
           },
           {
@@ -143,7 +179,24 @@
             this.pageNum = page
             this.getCourses()
           }
-        }
+        },
+        // variable used to control the display of create team modal
+        createTeamModalVisible: false,
+        // layout settings for the add submission form
+        labelCol: { span: 5 },
+        wrapperCol: { span: 16 },
+        // form object for create new team form
+        createNewTeamForm: {
+          teamName: ''
+        },
+        // validation rules for create new team form
+        createNewTeamFormRules: {
+          teamName: [
+            { required: true, message: 'Please input your team name', trigger: ['blur', 'change'] }
+          ]
+        },
+        // variable used to store the id of course selected
+        selectedCourseId: ''
       }
     },
     methods: {
@@ -204,8 +257,11 @@
       },
       // function used to control the show of creat team modal
       // TODO
-      showCreateTeamModal () {
-        console.log('Create New Team')
+      showCreateTeamModal (course) {
+        // store the selected course id
+        this.selectedCourseId = course.id
+        // console.log(this.selectedCourseId)
+        this.createTeamModalVisible = true
       },
       // function used to control the show of vote team leader modal
       // TODO
@@ -224,6 +280,38 @@
       // function used to control the show of invite new member modal
       showInviteNewMember () {
         console.log('Invite')
+      },
+      // function executed when user click cancel button in the create new team modal
+      handleCreateNewTeamCancel () {
+        this.$refs.createNewTeamFormRef.resetFields()
+        this.createTeamModalVisible = false
+      },
+      // function executed when user click submit button in the create new team modal
+      handleCreateNewTeamOk () {
+        // console.log('submit')
+        this.submitNewTeam()
+        this.$refs.createNewTeamFormRef.resetFields()
+        this.getCourses()
+        this.createTeamModalVisible = false
+      },
+      // function used to create a new team
+      submitNewTeam () {
+        const parameter = { name: this.createNewTeamForm.teamName, course: this.selectedCourseId }
+        createNewTeam(parameter).then(({ data: response }) => {
+          return this.$notification.success({
+            message: 'Success',
+            description: 'Create new team successful'
+          })
+        }).catch(error => {
+          // if error occurs
+          if (error.response) {
+            console.info(error.response)
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to create new team'
+            })
+          }
+        })
       }
     },
     created () {

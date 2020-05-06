@@ -348,7 +348,7 @@ export const studentRoutes = [
   {
     path: 'assessment',
     name: 'Assessment',
-    meta: { title: 'Assessment', icon: 'like' },
+    meta: { title: 'Assessment Management', icon: 'like' },
     component: () => import('@/views/student/Assessment/Assessment')
   }
 ]
