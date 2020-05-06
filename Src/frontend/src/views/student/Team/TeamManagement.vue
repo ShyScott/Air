@@ -28,6 +28,15 @@
       <!--Table area-->
       <div style="margin-top: 25px">
         <a-table :dataSource="this.courseList" :columns="this.teamTableColumns" rowKey="id" :pagination="this.paginationForTeamTable">
+          <!--Team name column-->
+          <template slot="teamName" slot-scope="text, record">
+            <span v-if="record.team_in !== null">
+              {{ record.team_in.name }}
+              <!--icon used to show whether this course is locked or not-->
+              <span v-if="record.team_in.is_locked === false" style="color: #1A8FFF"><a-icon type="unlock" /></span>
+              <span v-else-if="record.team_in.is_locked === true" style="color: red"><a-icon type="lock" /></span>
+            </span>
+          </template>
           <!--Team member column-->
           <template slot="teamMembers" slot-scope="text, record">
             <span v-if="record.team_in !== null">
@@ -190,6 +199,7 @@
             title: 'Course Name',
             dataIndex: 'title',
             width: '15%',
+            align: 'center',
             scopedSlots: { customRender: 'title' }
           },
           {
@@ -197,27 +207,23 @@
             title: 'Team Name',
             dataIndex: 'team_in.name',
             width: '10%',
+            align: 'center',
             scopedSlots: { customRender: 'teamName' }
           },
           {
             // Member list
             title: 'Team Members',
             dataIndex: 'team_in.members',
-            width: '20%',
+            width: '35%',
+            align: 'center',
             scopedSlots: { customRender: 'teamMembers' }
-          },
-          {
-            // whether is confirmed or not
-            title: 'Confirmation Status',
-            dataIndex: 'is_confirmed',
-            width: '15%',
-            scopedSlots: { customRender: 'confirmation_status' }
           },
           {
             // Duration
             title: 'Duration',
             dataIndex: 'duration',
             width: '20%',
+            align: 'center',
             scopedSlots: { customRender: 'confirmation_status' }
           },
           {
@@ -225,6 +231,7 @@
             title: 'Operation',
             dataIndex: 'operation',
             width: '20%',
+            align: 'center',
             scopedSlots: { customRender: 'operation' }
           }
         ],
