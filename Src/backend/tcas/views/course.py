@@ -159,7 +159,7 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
             random.shuffle(pairs_list)
             total = 0
             for pair in pairs_list:
-                if pair.count() != 2:
+                if len(pair) != 2:
                     raise ValidationError('There exist teams which are not pairs of students!')
                 total += 2
             if total != course.students.count():
