@@ -80,11 +80,11 @@ class CourseSerializer(serializers.ModelSerializer):
         in the course
         """
         course = self.instance
-        form_method = data.get('form_method') or course.form_method
-        member_count_primary = data.get('member_count_primary') or course.member_count_primary
-        member_count_secondary = data.get('member_count_secondary') or course.member_count_secondary
-        team_count_primary = data.get('team_count_primary') or course.team_count_primary
-        team_count_secondary = data.get('team_count_secondary') or course.team_count_secondary
+        form_method = data.get('form_method', course.form_method)
+        member_count_primary = data.get('member_count_primary', course.member_count_primary)
+        member_count_secondary = data.get('member_count_secondary', course.member_count_secondary)
+        team_count_primary = data.get('team_count_primary', course.team_count_primary)
+        team_count_secondary = data.get('team_count_secondary', course.team_count_secondary)
 
         if form_method in [3, 5] and course.students.filter(student_profile__gpa__isnull=True).exists():
             raise serializers.ValidationError('There is at least one student who does not have GPA!')
