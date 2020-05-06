@@ -12,9 +12,18 @@
           <span>Team Management</span>
         </a-breadcrumb-item>
       </a-breadcrumb>
-      <!--view invitations button-->
-      <div style="margin-top: 50px; margin-right: 30px; display: flex; justify-content: flex-end; flex-direction: column; align-items: flex-end">
-        <a-button type="primary"><a-icon type="star" /> View Invitations</a-button>
+      <!--Operation area-->
+      <div style="margin-top: 45px">
+        <a-row>
+          <a-col :span="7">
+            <!--search bar-->
+            <a-input-search placeholder="Please input course name" v-model="queryContent" enter-button @search="onSearch" />
+          </a-col>
+          <a-col style="display: flex; justify-content: flex-end;" :span="17">
+            <!--view invitations button-->
+            <a-button type="primary"><a-icon type="star" /> View Invitations</a-button>
+          </a-col>
+        </a-row>
       </div>
       <!--Table area-->
       <div style="margin-top: 25px">
@@ -102,7 +111,7 @@
 </template>
 
 <script>
-  import { createNewTeam, getStudentCourses } from '../../../api/student'
+  import { createNewTeam, getStudentCourses, queryCourse } from '../../../api/student'
 
   export default {
     name: 'TeamManagement',
@@ -114,7 +123,6 @@
         pageNum: 1,
         // page size
         pageSize: 5,
-        // pagination for the team table
         // columns for the team table
         teamTableColumns: [
           {
@@ -172,11 +180,25 @@
           onShowSizeChange: (current, pageSize) => {
             this.pageNum = current
             this.pageSize = pageSize
+            // if there is still content left in the search bar
+            // execute the query function instead of getCourses()
+            if (this.queryContent !== '') {
+              // re-render
+              return this.queryCourseByCourseName()
+            }
+            // re-render
             this.getCourses()
           },
           onChange: (page, pageSize) => {
             this.pageSize = pageSize
             this.pageNum = page
+            // if there is still content left in the search bar
+            // execute the query function instead of getCourses()
+            if (this.queryContent !== '') {
+              // re-render
+              return this.queryCourseByCourseName()
+            }
+            // re-render
             this.getCourses()
           }
         },
@@ -196,7 +218,9 @@
           ]
         },
         // variable used to store the id of course selected
-        selectedCourseId: ''
+        selectedCourseId: '',
+        // query content input by the user
+        queryContent: ''
       }
     },
     methods: {
@@ -312,6 +336,18 @@
             })
           }
         })
+      },
+      // function used to query what user input
+      queryCourseByCourseName () {
+        const parameter = { title: this.queryContent, page: this.pageNum, size: this.pageSize }
+        queryCourse(parameter).then(({ data: response }) => {
+          this.courseList = response.results
+          this.paginationForTeamTable.total = response.count
+        })
+      },
+      // function executed when search button is clicked
+      onSearch () {
+        this.queryCourseByCourseName()
       }
     },
     created () {
