@@ -35,10 +35,7 @@ class Course(models.Model):
 
     @property
     def mean_gpa(self):
-        if self.form_method is None:
-            if self.students.filter(student_profile__gpa__isnull=True).exists():
-                return None
-        elif self.form_method not in [3, 5]:
+        if self.students.filter(student_profile__gpa__isnull=True).exists():
             return None
         return self.students.aggregate(ret=models.Avg('student_profile__gpa'))['ret']
 
