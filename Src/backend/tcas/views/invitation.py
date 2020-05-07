@@ -57,6 +57,10 @@ class InvitationViewSet(
 
         serializer = self.get_serializer(invitation, data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        invitation = serializer.save()
+        if invitation.status == 1:
+            invitation.team.members.add(request.user)
+            # Mark all un-answered invitations from other teams in the same course as the current team as 'outdated'
+            Invitation.objects.filter(team__course=invitation.team.course, invitee=request.user, status=0).update(status=-2)
 
         return Response(serializer.data)

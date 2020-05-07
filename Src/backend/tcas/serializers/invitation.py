@@ -41,9 +41,3 @@ class InvitationResponseSerializer(serializers.ModelSerializer):
         if self.instance.status != 0:
             raise serializers.ValidationError('The invitation was already responded!')
         return attrs
-
-    def update(self, instance, validated_data):
-        instance = super().update(instance, validated_data)
-        if instance.status == 1:
-            instance.team.members.add(instance.invitee)
-        return instance

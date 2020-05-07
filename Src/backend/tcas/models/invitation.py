@@ -21,6 +21,14 @@ class Invitation(models.Model):
         related_name='+',
     )
     invite_time = models.DateTimeField(auto_now_add=True)
+
+    '''
+    status
+    0  - Pending
+    1  - Accepted
+    -1 - Rejected
+    -2 - Outdated
+    '''
     status = models.SmallIntegerField(default=0)
 
     class Meta:
