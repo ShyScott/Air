@@ -12,7 +12,7 @@
           <span>Course Management</span>
         </a-breadcrumb-item>
       </a-breadcrumb>
-      <a-button class="addButton-adjust" type="primary" size="default" @click="MoveToAddCoursePage()">
+      <a-button class="addButton-adjust" type="primary" size="default" @click="MoveToAddCoursePage">
         <a-icon type="coffee"/>
         New Course
       </a-button>
@@ -22,6 +22,8 @@
       <a-table class="table-adjust" :columns="this.courseColumns" :dataSource="courseList" rowKey="id" :pagination="paginationForCourseTable">
         <template slot="name" slot-scope="text, record">
           <a @click="DisplayInfoOnStudentManageCard(record)">{{ record.title }}</a>
+          <span v-if="record.is_confirmed === true"><a-icon style="color: red; margin-left: 10px" type="lock"></a-icon></span>
+          <span v-else><a-icon style="color: goldenrod; margin-left: 10px" type="unlock"></a-icon></span>
         </template>
         <!--operation area of the table-->
         <template slot="operation" slot-scope="text, record">
@@ -55,11 +57,17 @@
         </a-form-item>
       </a-form>
       <div style="margin-bottom: 20px">
-        <a-button class="addButton-adjust" type="primary" size="default" style="margin-right: 20px" @click="ShowAddStudentModal">
+        <a-button
+          class="addButton-adjust"
+          type="primary"
+          size="default"
+          style="margin-right: 20px"
+          :disabled="this.isSelectedCourseConfirmed === true"
+          @click="ShowAddStudentModal">
           <a-icon type="user-add"/>
           Add a Student
         </a-button>
-        <a-button class="addButton-adjust" type="primary" size="default">
+        <a-button class="addButton-adjust" type="primary" size="default" :disabled="this.isSelectedCourseConfirmed === true">
           <a-icon type="file-done"/>
           Import students from a file
         </a-button>
@@ -175,6 +183,7 @@
           title: 'Course Name',
           dataIndex: 'title',
           width: '30%',
+          align: 'center',
           scopedSlots: { customRender: 'name' }
         },
           {
@@ -182,6 +191,7 @@
             title: 'Duration',
             dataIndex: 'duration',
             width: '25%',
+            align: 'center',
             scopedSlots: { customRender: 'duration' }
           },
           {
@@ -189,6 +199,7 @@
             title: 'Number',
             dataIndex: 'students_count',
             width: '25%',
+            align: 'center',
             scopedSlots: { customRender: 'students_count' }
           },
           {
@@ -196,6 +207,7 @@
             title: 'Operation',
             dataIndex: 'operation',
             width: '20%',
+            align: 'center',
             scopedSlots: { customRender: 'operation' }
           }
         ],
@@ -206,6 +218,7 @@
             title: 'Student Name',
             dataIndex: 'username',
             width: '20%',
+            align: 'center',
             scopedSlots: { customRender: 'username' }
           },
           {
@@ -213,6 +226,7 @@
             title: 'Email Address',
             dataIndex: 'student_profile.email',
             width: '20%',
+            align: 'center',
             scopedSlots: { customRender: 'email' }
           },
           {
@@ -220,6 +234,7 @@
             title: 'Student ID',
             dataIndex: 'student_profile.student_id',
             width: '20%',
+            align: 'center',
             scopedSlots: { customRender: 'id' }
           },
           {
@@ -227,6 +242,7 @@
             title: 'GPA',
             dataIndex: 'student_profile.gpa',
             width: '20%',
+            align: 'center',
             scopedSlots: { customRender: 'gpa' }
           },
           {
@@ -234,6 +250,7 @@
             title: 'Operation',
             dataIndex: 'operation',
             width: '20%',
+            align: 'center',
             scopedSlots: { customRender: 'operation' }
           }
         ],
@@ -355,7 +372,9 @@
           default_password: [
             { required: true, message: 'Please input the default password', trigger: 'blur' }
           ]
-        }
+        },
+        // variable used to indicate whether the course selected is confirmed
+        isSelectedCourseConfirmed: false
       }
     },
     computed: {
@@ -419,6 +438,12 @@
         this.studentManagementForm.chosedCourse = course.title
         // console.log(course.id)
         this.selectedCourseId = course.id
+        // check if the course is confirmed
+        if (course.is_confirmed === true) {
+          this.isSelectedCourseConfirmed = true
+        } else {
+          this.isSelectedCourseConfirmed = false
+        }
         // console.log(this.selectedCourseId)
         this.getStudentList(this.selectedCourseId)
         this.studentListQuery = ''

@@ -391,7 +391,7 @@
         // get all the members in this team currently
         this.memberList = course.team_in.members
         this.teamSelected = course.team_in
-        console.log(this.teamSelected)
+        // console.log(this.teamSelected)
         this.voteLeaderModalVisible = true
         // console.log('Vote Team Leader')
       },
@@ -435,10 +435,14 @@
       // function executed when user click submit button in the create new team modal
       handleCreateNewTeamOk () {
         // console.log('submit')
-        this.submitNewTeam()
-        this.$refs.createNewTeamFormRef.resetFields()
-        this.getCourses()
-        this.createTeamModalVisible = false
+        this.$refs.createNewTeamFormRef.validate(valid => {
+          if (valid) {
+            this.submitNewTeam()
+            this.$refs.createNewTeamFormRef.resetFields()
+            this.getCourses()
+            this.createTeamModalVisible = false
+          }
+        })
       },
       // function used to create a new team
       submitNewTeam () {
@@ -490,24 +494,28 @@
       },
       // function executed when user click the vote button in the vote team leader modal
       handleVoteTeamLeaderOk () {
-        // process the data
-        const parameter = { leader: this.voteLeaderForm.choice }
-        voteTeamLeader(this.teamSelected.id, parameter).then(({ data: response }) => {
-          // console.log(response)
-          this.$refs.voteLeaderFormRef.resetFields()
-          this.voteLeaderModalVisible = false
-          this.getCourses()
-          this.$notification.success({
-            message: 'Success',
-            description: 'Vote team leader successful'
-          })
-        }).catch(error => {
-          // if error occurs
-          if (error.response) {
-            console.info(error.response)
-            this.$notification.error({
-              message: 'Error',
-              description: 'Failed to vote the team leader'
+        this.$refs.voteLeaderFormRef.validate(valid => {
+          if (valid) {
+            // process the data
+            const parameter = { leader: this.voteLeaderForm.choice }
+            voteTeamLeader(this.teamSelected.id, parameter).then(({ data: response }) => {
+              // console.log(response)
+              this.$refs.voteLeaderFormRef.resetFields()
+              this.voteLeaderModalVisible = false
+              this.getCourses()
+              this.$notification.success({
+                message: 'Success',
+                description: 'Vote team leader successful'
+              })
+            }).catch(error => {
+              // if error occurs
+              if (error.response) {
+                console.info(error.response)
+                this.$notification.error({
+                  message: 'Error',
+                  description: 'Failed to vote the team leader'
+                })
+              }
             })
           }
         })
