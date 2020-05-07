@@ -147,3 +147,11 @@ export function queryCourseByName (parameter) {
     params: parameter
   })
 }
+// get team info by course name
+export function getTeamDistribution (parameter) {
+  return axios({
+    url: '/teams/',
+    method: 'get',
+    params: parameter
+  })
+}

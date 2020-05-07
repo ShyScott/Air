@@ -27,20 +27,30 @@
         <div style="margin-top: 25px">
           <a-table :dataSource="this.courseList" :columns="this.teamInfoTableColumns" rowKey="id" :pagination="this.teaminfolistPagination">
             <template slot="operation" slot-scope="text, record">
-              <!--tooltip for operation button-->
-              <a-tooltip placement="top">
-                <template slot="title">
-                  <span>Click to do team formation settings</span>
-                </template>
-                <a href="#" @click="showFormOptionsModal(record)"><a-icon type="setting" />Form options</a>
-              </a-tooltip>
-              <!--tooltip for operation button-->
-              <a-tooltip>
-                <template slot="title">
-                  <span>Click to confirm the team formation of this course</span>
-                </template>
-                <a class="a-adjust" href="#" @click="moveToConfirmationPage(record)"><a-icon type="save" />Confirm Teams</a>
-              </a-tooltip>
+              <span v-if="record.is_confirmed === false">
+                <!--tooltip for operation button-->
+                <a-tooltip placement="top">
+                  <template slot="title">
+                    <span>Click to do team formation settings</span>
+                  </template>
+                  <a href="#" @click="showFormOptionsModal(record)"><a-icon type="setting" />Form options</a>
+                </a-tooltip>
+                <!--tooltip for operation button-->
+                <a-tooltip>
+                  <template slot="title">
+                    <span>Click to confirm the team formation of this course</span>
+                  </template>
+                  <a class="a-adjust" href="#" @click="moveToConfirmationPage(record)"><a-icon type="save" />Confirm Teams</a>
+                </a-tooltip>
+              </span>
+              <span v-else>
+                <a-tooltip>
+                  <template slot="title">
+                    <span>Click to view the team distribution</span>
+                  </template>
+                  <a style="color: goldenrod" href="#" @click="showTeamDistributionModal(record)"><a-icon type="apartment" />Team Distribution</a>
+                </a-tooltip>
+              </span>
             </template>
           </a-table>
         </div>
@@ -115,12 +125,28 @@
           </a-form-model>
         </div>
       </a-modal>
+      <!--Team distribution modal-->
+      <a-modal v-model="teamDistributionModalVisible" width="800px" title="Team Distribution" on-ok="handTeamDistributionOk">
+        <template slot="footer">
+          <a-button key="submit" type="primary" @click="handTeamDistributionOk">
+            Return
+          </a-button>
+        </template>
+        <a-table :dataSource="teamDistribution" rowKey="id" :columns="teamDistributionColumns" :pagination="teamDistributionPagination">
+        </a-table>
+      </a-modal>
     </a-spin>
   </div>
 </template>
 
 <script>
-  import { getTeacherCourses, getMeanGPA, changeFormOption, queryCourseByName } from '../../../api/teacher'
+  import {
+    getTeacherCourses,
+    getMeanGPA,
+    changeFormOption,
+    queryCourseByName,
+    getTeamDistribution
+  } from '../../../api/teacher'
 
   export default {
     name: 'TeamManagement',
@@ -137,24 +163,28 @@
             title: 'Course Name',
             dataIndex: 'title',
             width: '25%',
+            align: 'center',
             scopedSlots: { customRender: 'title' }
           },
           {
             title: 'Number of Participants',
             dataIndex: 'students_count',
             width: '20%',
+            align: 'center',
             scopedSlots: { customRender: 'students_count' }
           },
           {
             title: 'Participant already in team',
             dataIndex: 'formed_students_count',
             width: '20%',
+            align: 'center',
             scopedSlots: { customRender: 'formed_students_count' }
           },
           {
             title: 'Operation',
             dataIndex: 'operation',
             width: '30%',
+            align: 'center',
             scopedSlots: { customRender: 'operation' }
           }
         ],
@@ -250,7 +280,59 @@
         // the content user input for query
         courseQuery: '',
         // control whether the spinning should be displayed or not
-        spinning: false
+        spinning: false,
+        // varibale used to control the show of team distribution table
+        teamDistributionModalVisible: false,
+        // course to be shown in the team distribution modal
+        courseToBeShown: '',
+        // page settings for the team distribution modal
+        pageNumForTeamDistribution: 1,
+        pageSizeForTeamDistribution: 4,
+        teamDistributionPagination: {
+          // default page size
+          defaultPageSize: 4,
+          // Show the number of total items
+          showTotal: (total) => `Total ${ total } items`,
+          total: 0,
+          showSizeChanger: true,
+          pageSizeOptions: ['4', '8', '12'],
+          onShowSizeChange: (current, pageSize) => {
+            this.pageNumForTeamDistribution = current
+            this.pageSizeForTeamDistribution = pageSize
+            this.getTeamInfo()
+          },
+          onChange: (page, pageSize) => {
+            this.pageSizeForTeamDistribution = pageSize
+            this.pageNumForTeamDistribution = page
+            this.getTeamInfo()
+          }
+        },
+        // variable used to store the team list of the selected course
+        teamDistribution: [],
+        // Columns settings for team distribution modal
+        teamDistributionColumns: [
+          {
+            title: 'Team Name',
+            dataIndex: 'name',
+            width: '25%',
+            align: 'center',
+            scopedSlots: { customRender: 'teamName' }
+          },
+          {
+            title: 'Team Members',
+            dataIndex: 'members',
+            width: '50%',
+            align: 'center',
+            scopedSlots: { customRender: 'teamMembers' }
+          },
+          {
+            title: 'Number',
+            dataIndex: 'members.length',
+            width: '25%',
+            align: 'center',
+            scopedSlots: { customRender: 'number' }
+          }
+        ]
       }
     },
     computed: {
@@ -411,6 +493,34 @@
           // console.log(response)
           this.courseList = response.results
           this.teaminfolistPagination.total = response.count
+        })
+      },
+      // function used to control the show of team distribution modal
+      showTeamDistributionModal (course) {
+        // console.log(course)
+        this.courseToBeShown = course.id
+        this.getTeamInfo()
+        this.teamDistributionModalVisible = true
+      },
+      // function executed when user click the return button in the team distribution modal
+      handTeamDistributionOk () {
+        this.teamDistributionModalVisible = false
+      },
+      // function used to get all the teams of one course
+      getTeamInfo () {
+        const parameter = { course: this.courseToBeShown, page: this.pageNumForTeamDistribution, size: this.pageSizeForTeamDistribution }
+        getTeamDistribution(parameter).then(({ data: response }) => {
+          this.teamDistribution = response.results
+          this.teamDistributionPagination.total = response.count
+          console.log(response)
+        }).catch(error => {
+          if (error.response) {
+            console.info(error.response)
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to get the team distribution'
+            })
+          }
         })
       }
     },
