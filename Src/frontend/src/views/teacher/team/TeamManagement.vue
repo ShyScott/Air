@@ -133,6 +133,11 @@
           </a-button>
         </template>
         <a-table :dataSource="teamDistribution" rowKey="id" :columns="teamDistributionColumns" :pagination="teamDistributionPagination">
+          <template slot="teamMembers" slot-scope="text, record">
+            <span style="margin-right: 15px" v-for="(item, i) in record.members" :key="i">
+              {{ item.username }}
+            </span>
+          </template>
         </a-table>
       </a-modal>
     </a-spin>
@@ -420,27 +425,35 @@
       },
       // function executed when user click submit button on the form options modal
       handleEditFormOptionsOk () {
-        const parameter = { title: this.selectedCourseName, duration: this.courseToBeEdited.duration, form_method: this.formOptionForm.formMethod, member_count_primary: parseInt(this.formOptionForm.memberCountPrimary), team_count_primary: this.formOptionForm.teamCountPrimary, member_count_secondary: this.formOptionForm.memberCountSecondary, team_count_secondary: this.formOptionForm.teamCountSecondary, floating_band: parseFloat(this.formOptionForm.gpaFloatingBand) }
-        changeFormOption(this.selectedCourseId, parameter).then(({ data: response }) => {
-          // console.log(response)
-            this.$notification.success({
-              message: 'Success',
-              description: 'Team formation options submitted successfully'
-            })
-          this.spinning = true
-          setTimeout(() => { this.$router.push({ name: 'FormConfirmation', params: { courseId: this.selectedCourseId } }) }, 2000)
-        }).catch(error => {
-          // if error occurs
-          if (error.response) {
-            console.info(error.response)
-            return this.$notification.error({
-              message: 'Error',
-              description: 'Failed to submit the form options'
+        this.$refs.formOptionFormRef.validate(valid => {
+          if (valid) {
+            const parameter = { title: this.selectedCourseName, duration: this.courseToBeEdited.duration, form_method: this.formOptionForm.formMethod, member_count_primary: parseInt(this.formOptionForm.memberCountPrimary), team_count_primary: this.formOptionForm.teamCountPrimary, member_count_secondary: this.formOptionForm.memberCountSecondary, team_count_secondary: this.formOptionForm.teamCountSecondary, floating_band: parseFloat(this.formOptionForm.gpaFloatingBand) }
+            changeFormOption(this.selectedCourseId, parameter).then(({ data: response }) => {
+              // console.log(response)
+              this.$notification.success({
+                message: 'Success',
+                description: 'Team formation options submitted successfully'
+              })
+              this.formOptionModalVisible = false
+              this.spinning = true
+              setTimeout(() => { this.$router.push({ name: 'FormConfirmation', params: { courseId: this.selectedCourseId } }) }, 2000)
+            }).catch(error => {
+              // if error occurs
+              if (error.response) {
+                console.info(error.response)
+                let errorInfo = 'Failed to change the form options'
+                if (error.response.data) {
+                  errorInfo = error.response.data[0]
+                  console.log(errorInfo)
+                }
+                this.$notification.error({
+                  message: 'Error',
+                  description: errorInfo
+                })
+              }
             })
           }
         })
-        this.formOptionModalVisible = false
-        console.log('submit')
       },
       // function used to validate whether the teacher's proposed team formation is valid or not, also, this function would given recommended formation of primary number and secondary number automatically
       validateTeamNumbers () {

@@ -40,7 +40,7 @@
                         name="file"
                         :multiple="false"
                         :directory="false"
-                        accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                        accept=".xls, .xlsx, .csv"
                         action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
                         :beforeUpload="checkIfFileExisted"
                         :remove="removeFile"

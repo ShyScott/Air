@@ -155,3 +155,10 @@ export function getTeamDistribution (parameter) {
     params: parameter
   })
 }
+// get course info by course id
+export function getCourseById (courseId) {
+  return axios({
+    url: `/courses/${courseId}`,
+    method: 'get'
+  })
+}

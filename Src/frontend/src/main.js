@@ -1,7 +1,7 @@
 // with polyfills
 import 'core-js/stable'
 import 'regenerator-runtime/runtime'
-import { FormModel, Timeline } from 'ant-design-vue'
+import { FormModel, Timeline, Result } from 'ant-design-vue'
 
 import Vue from 'vue'
 import App from './App.vue'
@@ -27,6 +27,7 @@ Vue.use(VueAxios)
 Vue.use(Dialog)
 Vue.use(FormModel)
 Vue.use(Timeline)
+Vue.use(Result)
 
 new Vue({
   router,
