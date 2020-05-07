@@ -8,7 +8,14 @@ from django_filters import rest_framework as filters
 
 from .generic import PermissionDictMixin
 from tcas.models import User, Team, TeamMember
-from tcas.serializers import TeamSerializer, TeamDetailSerializer, TeamNameSerializer, TeamFormNewSerializer, TeamVoteLeaderSerializer
+from tcas.serializers import (
+    TeamSerializer,
+    TeamDetailSerializer,
+    TeamNameSerializer,
+    TeamFormNewSerializer,
+    TeamVoteLeaderSerializer,
+    TeamLeaderBonusSerializer,
+)
 from tcas.permissions import IsTeacher, IsInCurrentCourse, IsInCurrentTeam
 
 from django.db.models import Count
@@ -22,7 +29,6 @@ class TeamFilter(filters.FilterSet):
 
 class TeamViewSet(PermissionDictMixin, ModelViewSet):
     queryset = Team.objects.all()
-    serializer_class = TeamSerializer
     filterset_class = TeamFilter
     permission_dict = {
         'list': [IsTeacher | IsInCurrentCourse],
@@ -35,6 +41,7 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
         'rename': [IsTeacher | IsInCurrentTeam],
         'quit': [IsTeacher | IsInCurrentTeam],
         'vote_leader': [IsInCurrentTeam],
+        'assess_leader': [IsInCurrentTeam],
     }
 
     def get_serializer_class(self):
@@ -46,6 +53,8 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
             return TeamNameSerializer
         if self.action == 'vote_leader':
             return TeamVoteLeaderSerializer
+        if self.action == 'assess_leader':
+            return TeamLeaderBonusSerializer
         return TeamSerializer
 
     @action(detail=False, methods=['post'])
@@ -96,4 +105,13 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
             team.leader = User.objects.get(pk=leader_pk)
             team.save()
 
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['put'])
+    def assess_leader(self, request, *args, **kwargs):
+        team = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        TeamMember.objects.filter(team=team, user=request.user).update(leader_bonus=serializer.data['bonus'])
         return Response(serializer.data)

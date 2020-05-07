@@ -63,3 +63,7 @@ class TeamVoteLeaderSerializer(serializers.ModelSerializer):
         if not team.members.filter(pk=attrs['leader'].pk).exists():
             raise serializers.ValidationError('This leader is not in the team!')
         return attrs
+
+
+class TeamLeaderBonusSerializer(serializers.Serializer):
+    bonus = serializers.ChoiceField([-2, -1, 0, 1, 2])
