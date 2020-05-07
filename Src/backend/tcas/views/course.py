@@ -238,7 +238,7 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         course.is_confirmed = True
         course.save()
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(TeamSerializer(confirmed_teams, many=True).data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['get'])
     def mean_gpa(self, request, *args, **kwargs):
