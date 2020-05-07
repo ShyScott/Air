@@ -45,6 +45,9 @@ class InvitationViewSet(
             return Invitation.objects.all()
         return Invitation.objects.filter(Q(inviter=self.request.user) | Q(invitee=self.request.user))
 
+    def perform_create(self, serializer):
+        serializer.save(inviter=self.request.user)
+
     @action(detail=True, methods=['put'], serializer_class=InvitationResponseSerializer)
     def respond(self, request, *args, **kwargs):
         invitation = self.get_object()

@@ -104,11 +104,9 @@ class CourseCreateSerializer(serializers.ModelSerializer):
     Serializer to create a new course
     """
 
-    instructor = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
-
     class Meta:
         model = Course
-        fields = ['id', 'title', 'instructor']
+        fields = ['id', 'title']
 
 
 class CourseRemoveStudentSerializer(serializers.Serializer):

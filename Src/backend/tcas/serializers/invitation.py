@@ -8,8 +8,6 @@ class InvitationSerializer(serializers.ModelSerializer):
     Serializer to list, retrieve and create invitations
     """
 
-    inviter = serializers.PrimaryKeyRelatedField(read_only=True, default=serializers.CurrentUserDefault())
-
     class Meta:
         model = Invitation
         fields = '__all__'

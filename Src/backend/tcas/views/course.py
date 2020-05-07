@@ -105,6 +105,9 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
             return UserSerializer
         return CourseSerializer
 
+    def perform_create(self, serializer):
+        serializer.save(instructor=self.request.user)
+
     @action(detail=True, methods=['post'])
     def remove_student(self, request, *args, **kwargs):
         course = self.get_object()
