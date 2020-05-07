@@ -4,7 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework import mixins
 
-from tcas.models import Invitation
+from tcas.models import Invitation, Course
 from tcas.serializers import InvitationSerializer, InvitationResponseSerializer
 from tcas.permissions import IsLogin, IsInCurrentTeam
 from .generic import PermissionDictMixin
@@ -17,10 +17,11 @@ from django_filters import rest_framework as filters
 class InvitationFilter(filters.FilterSet):
     inviter = filters.BooleanFilter(method='filter_role')
     invitee = filters.BooleanFilter(method='filter_role')
+    course = filters.ModelChoiceFilter(field_name='team__course', queryset=Course.objects.all())
 
     class Meta:
         model = Invitation
-        fields = ['inviter', 'invitee']
+        fields = ['inviter', 'invitee', 'course']
 
     def filter_role(self, queryset, field_name, value):
         return queryset.filter(**{field_name: self.request.user}) if value else queryset
