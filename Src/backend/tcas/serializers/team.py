@@ -13,18 +13,23 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'is_locked', 'course', 'members', 'leader', 'voted_for']
         read_only_fields = ['is_locked']
 
-    def __init__(self, *args, **kwargs):
-        with_member_detail = kwargs.pop('with_member_detail', False)
-        super().__init__(*args, **kwargs)
-        if with_member_detail:
-            self.fields['members'] = UserSerializer(many=True)
-
     def get_voted_for(self, team):
         try:
             team_member = TeamMember.objects.get(user=self.context['request'].user, team=team)
             return team_member.vote.pk if team_member.vote is not None else None
         except (KeyError, TeamMember.DoesNotExist):
             return None
+
+
+class TeamDetailSerializer(TeamSerializer):
+    """
+    Read-only serializer to get team information with detail of members
+    """
+    members = UserSerializer(many=True)
+
+    class Meta:
+        model = Team
+        fields = ['id', 'name', 'is_locked', 'course', 'members', 'leader', 'voted_for']
 
 
 class TeamFormNewSerializer(serializers.ModelSerializer):

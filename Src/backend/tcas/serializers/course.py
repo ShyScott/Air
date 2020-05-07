@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from tcas.models import Course, User, Team
-from .team import TeamSerializer
+from .team import TeamDetailSerializer
 from .user import UserSerializer
 
 
@@ -39,7 +39,7 @@ class CourseReadOnlySerializer(serializers.ModelSerializer):
     def get_team_in(self, course):
         try:
             team = Team.objects.get(course=course, members=self.context['request'].user)
-            return TeamSerializer(team, with_member_detail=True).data
+            return TeamDetailSerializer(team).data
         except Team.DoesNotExist:
             return None
 

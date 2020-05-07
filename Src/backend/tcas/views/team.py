@@ -8,7 +8,7 @@ from django_filters import rest_framework as filters
 
 from .generic import PermissionDictMixin
 from tcas.models import User, Team, TeamMember
-from tcas.serializers import TeamSerializer, TeamNameSerializer, TeamFormNewSerializer, TeamVoteLeaderSerializer
+from tcas.serializers import TeamSerializer, TeamDetailSerializer, TeamNameSerializer, TeamFormNewSerializer, TeamVoteLeaderSerializer
 from tcas.permissions import IsTeacher, IsInCurrentCourse, IsInCurrentTeam
 
 from django.db.models import Count
@@ -37,7 +37,18 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
         'vote_leader': [IsInCurrentTeam],
     }
 
-    @action(detail=False, methods=['post'], serializer_class=TeamFormNewSerializer)
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return TeamDetailSerializer
+        if self.action == 'form_new':
+            return TeamFormNewSerializer
+        if self.action == 'rename':
+            return TeamNameSerializer
+        if self.action == 'vote_leader':
+            return TeamVoteLeaderSerializer
+        return TeamSerializer
+
+    @action(detail=False, methods=['post'])
     def form_new(self, request, *arg, **kwargs):
         """
         Form a new team (for students)
@@ -51,7 +62,7 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    @action(detail=True, methods=['put'], serializer_class=TeamNameSerializer)
+    @action(detail=True, methods=['put'])
     def rename(self, request, *arg, **kwargs):
         team = self.get_object()
         serializer = self.get_serializer(team, data=request.data)
@@ -71,7 +82,7 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
             team.delete()
         return Response({'dismiss': dismissed})
 
-    @action(detail=True, methods=['patch'], serializer_class=TeamVoteLeaderSerializer)
+    @action(detail=True, methods=['patch'])
     def vote_leader(self, request, *arg, **kwargs):
         team = self.get_object()
         serializer = self.get_serializer(team, data=request.data)
