@@ -433,7 +433,7 @@
       },
       // when user want to search the target course
       handleSearch (value) {
-        console.log(value)
+        // console.log(value)
         const parameter = { title: value }
         getCoursesByQuery(parameter).then(({ data: response }) => {
           // console.log(response)

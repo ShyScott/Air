@@ -21,7 +21,7 @@
           </a-col>
           <a-col style="display: flex; justify-content: flex-end;" :span="17">
             <!--view invitations button-->
-            <a-button type="primary"><a-icon type="star" /> View Invitations</a-button>
+            <a-button type="primary" @click="() => { this.$router.push({ name: 'ViewInvitation' }) }"><a-icon type="star" /> View Invitations</a-button>
           </a-col>
         </a-row>
       </div>
@@ -33,8 +33,18 @@
             <span v-if="record.team_in !== null">
               {{ record.team_in.name }}
               <!--icon used to show whether this course is locked or not-->
-              <span v-if="record.team_in.is_locked === false" style="color: #1A8FFF"><a-icon type="unlock" /></span>
-              <span v-else-if="record.team_in.is_locked === true" style="color: red"><a-icon type="lock" /></span>
+              <span v-if="record.is_confirmed === 'NO'" style="color: #1A8FFF">
+                <a-tooltip>
+                  <template slot="title">This course's team formation has not been confirmed</template>
+                  <a-icon type="unlock" />
+                </a-tooltip>
+              </span>
+              <span v-else-if="record.is_confirmed === 'YES'" style="color: red">
+                <a-tooltip>
+                  <template slot="title">This course's team formation has been confirmed</template>
+                  <a-icon type="lock" />
+                </a-tooltip>
+              </span>
             </span>
           </template>
           <!--Team member column-->
@@ -42,7 +52,12 @@
             <span v-if="record.team_in !== null">
               <span style="margin-right: 10px" v-for="item in record.team_in.members" :key="item.id">
                 {{ item.username }}
-                <span v-if="record.team_in.leader === item.id"><a-icon type="crown" style="color: goldenrod" /></span>
+                <span v-if="record.team_in.leader === item.id">
+                  <a-tooltip>
+                    <template slot="title">Leader of the team</template>
+                    <a-icon type="crown" style="color: goldenrod" />
+                  </a-tooltip>
+                </span>
               </span>
             </span>
           </template>
@@ -59,13 +74,13 @@
               </a-tooltip>
             </span>
             <!--Case 2: The student has been in a team, and the team is confirmed-->
-            <span v-else-if="record.is_confirmed === 'YES'">
+            <span v-else-if="record.team_in.is_locked === true">
               <!--tooltip for operation button-->
               <a-tooltip>
                 <template slot="title">
                   <span>Click to vote a team leader for your team</span>
                 </template>
-                <a href="#" @click="showVoteTeamLeaderModal(record)"><a-icon type="crown" />Vote leader</a>
+                <a href="#" :disabled="record.team_in.leader !== null" @click="showVoteTeamLeaderModal(record)"><a-icon type="crown" />Vote leader</a>
               </a-tooltip>
             </span>
             <!--Case 3: The student already in a team, but the team not yet confirmed-->
@@ -74,7 +89,7 @@
                 <template slot="title">
                   <span>Click to invite new member</span>
                 </template>
-                <a href="#" style="margin-right: 10px" @click="showInviteNewMember"><a-icon type="user-add" />Invite</a>
+                <a href="#" style="margin-right: 10px" :disabled="record.form_method === 4 && record.team_in.members.length >= 2" @click="showInviteNewMember"><a-icon type="user-add" />Invite</a>
               </a-tooltip>
               <a-popconfirm title="Are you sure to exit this team?" @confirm="confirmExitCurrentTeam(record)" @cancel="cancelExitCurrentTeam">
                 <!--tooltip for operation button-->
