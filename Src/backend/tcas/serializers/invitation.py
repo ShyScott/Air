@@ -23,6 +23,8 @@ class InvitationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('The invitee is not in the course!')
         if invitee.teams.filter(course=course).exists():
             raise serializers.ValidationError('The invitee is already in one team of the course!')
+        if Invitation.objects.filter(team=attrs['team'], invitee=invitee, status=0).exists():
+            raise serializers.ValidationError('The invitee is already invited by one of your team members!')
         return attrs
 
 
