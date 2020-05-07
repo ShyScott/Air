@@ -77,7 +77,7 @@ class TeamViewSet(PermissionDictMixin, ModelViewSet):
         serializer = self.get_serializer(team, data=request.data)
         serializer.is_valid(raise_exception=True)
         team_members = TeamMember.objects.filter(team=team)
-        team_members.filter(team=team).update(vote=serializer.validated_data['leader'])
+        team_members.filter(user=request.user).update(vote=serializer.validated_data['leader'])
 
         # Check if all members have voted
         if not team_members.filter(vote__isnull=True).exists():
