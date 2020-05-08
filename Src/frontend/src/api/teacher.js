@@ -1,10 +1,10 @@
 import { axios } from '@/utils/request'
 // get all the courses instructed by teacher logging in
-export function getTeacherCourses (page, pagesize) {
+export function getTeacherCourses (params) {
   return axios({
     url: '/courses/',
     method: 'get',
-    params: { page: page, size: pagesize }
+    params
   })
 }
 // get the course information according to id given

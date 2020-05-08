@@ -19,7 +19,7 @@
             style="margin-top: 20px; width: 50%"
             v-model="courseQuery"
             placeholder="Please input course name"
-            @search="queryCourse"
+            @search="getCourses(true)"
             enterButton>
           </a-input-search>
         </div>
@@ -195,8 +195,8 @@
         ],
         // pagination settings for team list table
         teaminfolistPagination: {
-          // default page size
-          defaultPageSize: 5,
+          current: 1,
+          pageSize: 10,
           // Show the number of total items
           showTotal: (total) => `Total ${ total } items`,
           total: 0,
@@ -213,14 +213,9 @@
             // re-render
             this.getCourses()
           },
-          onChange: (page, pageSize) => {
-            this.pageSizeForTeam = pageSize
-            this.pageNumForTeam = page
-            if (this.courseQuery !== '') {
-              // execute function queryCourse instead of getCourses
-               return this.queryCourse()
-            }
-            // re-render
+          onChange: (current, pageSize) => {
+            this.teaminfolistPagination.current = current
+            this.teaminfolistPagination.pageSize = pageSize
             this.getCourses()
           }
         },
@@ -379,8 +374,14 @@
         this.$router.push('mainpage')
       },
       // function used to get all the courses
-      getCourses () {
-        getTeacherCourses(this.pageNumForTeam, this.pageSizeForTeam).then(({ data: response }) => {
+      getCourses (isSearch = false) {
+        if (isSearch) this.teaminfolistPagination.current = 1
+        const params = {
+          page: this.teaminfolistPagination.current,
+          size: this.teaminfolistPagination.pageSize
+        }
+        if (this.courseQuery !== '') params.title = this.courseQuery
+        getTeacherCourses(params).then(({ data: response }) => {
           this.courseList = response.results
           this.teaminfolistPagination.total = response.count
           // console.log(this.courseList)
