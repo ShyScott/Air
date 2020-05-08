@@ -20,7 +20,7 @@ router.beforeEach((to, from, next) => {
     if (store.getters.nickname === '') {
       store
         .dispatch('GetInfo')
-        .then(res => {
+        .then(() => {
           store.dispatch('GenerateRoutes', store.getters.isTeacher).then(() => {
             // 根据权限生成并添加可访问的路由表
             router.addRoutes(store.getters.addRouters)
