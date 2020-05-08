@@ -39,3 +39,19 @@ export function exitTeam (teamId) {
     method: 'get'
   })
 }
+// function used to query student by id or name
+export function queryStudent (parameter) {
+  return axios({
+    url: '/users/',
+    method: 'get',
+    params: parameter
+  })
+}
+// function executed to send invitation to target person
+export function inviteSomeone (parameter) {
+  return axios({
+    url: '/invitations/',
+    method: 'post',
+    data: parameter
+  })
+}

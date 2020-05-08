@@ -89,7 +89,7 @@
                 <template slot="title">
                   <span>Click to invite new member</span>
                 </template>
-                <a href="#" style="margin-right: 10px" :disabled="record.form_method === 4 && record.team_in.members.length >= 2" @click="showInviteNewMember"><a-icon type="user-add" />Invite</a>
+                <a href="#" style="margin-right: 10px" :disabled="record.form_method === 4 && record.team_in.members.length >= 2" @click="showInviteNewMember(record)"><a-icon type="user-add" />Invite</a>
               </a-tooltip>
               <a-popconfirm title="Are you sure to exit this team?" @confirm="confirmExitCurrentTeam(record)" @cancel="cancelExitCurrentTeam">
                 <!--tooltip for operation button-->
@@ -137,17 +137,18 @@
       <div>
         <a-modal width="800px" v-model="inviteModalVisible" title="Send Invitation" on-ok="handleInviteOk">
           <template slot="footer">
-            <a-button key="cancel" @click="handleInviteCancel">
-              Cancel
-            </a-button>
-            <a-button key="submit" type="primary" @click="handleInviteOk">
-              Submit
+            <a-button type="primary" key="cancel" @click="handleInviteCancel">
+              Return
             </a-button>
           </template>
           <!--search bar for student search-->
-          <!--TODO: wait for the update of backend-->
-          <a-input-search style="width: 70%" placeholder="Please input student name/ID" v-model="inviteQueryContent" enter-button @search="onStudentSearch" />
-          <a-table style="margin-top: 30px"></a-table>
+          <a-input-search style="width: 70%" placeholder="Please input student name / ID" v-model="inviteQueryContent" enter-button @search="onStudentSearch" />
+          <a-table style="margin-top: 30px" :dataSource="inviteSearchResults" rowKey="id" :columns="studentListColumns" :pagination="inviteSearchResultsPagination">
+            <!--operation area-->
+            <template slot="operation" slot-scope="text, record">
+              <a href="#" @click="inviteThisStudent(record)"> Invite </a>
+            </template>
+          </a-table>
         </a-modal>
       </div>
     </template>
@@ -187,7 +188,16 @@
 </template>
 
 <script>
-  import { createNewTeam, exitTeam, getStudentCourses, queryCourse, voteTeamLeader } from '../../../api/student'
+  import {
+    createNewTeam,
+    exitTeam,
+    getStudentCourses,
+    inviteSomeone,
+    queryCourse,
+    queryStudent,
+    voteTeamLeader
+  } from '../../../api/student'
+  import { mapGetters } from 'vuex'
 
   export default {
     name: 'TeamManagement',
@@ -201,9 +211,6 @@
         memberList: [],
         // variable used to store the team selected
         teamSelected: {},
-        // TODO:pagination settings for the student list
-        pageNumForStudentList: 1,
-        pageSizeForStudentList: 5,
         // page num
         pageNum: 1,
         // page size
@@ -319,7 +326,61 @@
           choice: [
             { required: true, message: 'Please choose one team member', trigger: 'blur' }
           ]
-        }
+        },
+        // variable used to store the course selected after user click invite
+        courseSelected: {},
+        // search results in invite modal
+        inviteSearchResults: [],
+        // columns settings for the student list
+        studentListColumns: [
+          {
+            title: 'Student Name',
+            dataIndex: 'username',
+            width: '35%',
+            align: 'center',
+            scopedSlots: { customRender: 'name' }
+          },
+          {
+            title: 'User ID',
+            dataIndex: 'id',
+            width: '35%',
+            align: 'center',
+            scopedSlots: { customRender: 'id' }
+          },
+          {
+            title: 'Operation',
+            dataIndex: 'operation',
+            width: '30%',
+            align: 'center',
+            scopedSlots: { customRender: 'operation' }
+          }
+        ],
+        // pageination settings for the invite search results
+        inviteSearchResultsPagination: {
+          // default page size
+          defaultPageSize: 5,
+          // Show the number of total items
+          showTotal: (total) => `Totally ${ total } items`,
+          total: 0,
+          showSizeChanger: true,
+          pageSizeOptions: ['5', '10', '12', '15', '25'],
+          onShowSizeChange: (current, pageSize) => {
+            this.pageNumForStudentList = current
+            this.pageSizeForStudentList = pageSize
+            this.searchStudent()
+          },
+          onChange: (page, pageSize) => {
+            this.pageSizeForStudentList = pageSize
+            this.pageNumForStudentList = page
+            this.searchStudent()
+          }
+        },
+        pageNumForStudentList: 1,
+        pageSizeForStudentList: 5,
+        // variable used to indicate whether the student is invited or not
+        isInvited: false,
+        // student selected to be invited
+        studentSelected: {}
       }
     },
     methods: {
@@ -424,7 +485,10 @@
         })
       },
       // function used to control the show of invite new member modal
-      showInviteNewMember () {
+      showInviteNewMember (course) {
+        this.courseSelected = course
+        // initially get all the students
+        this.searchStudent()
         this.inviteModalVisible = true
       },
       // function executed when user click cancel button in the create new team modal
@@ -479,12 +543,9 @@
       handleInviteCancel () {
         this.inviteModalVisible = false
       },
-      // TODO:function executed when user click the submit button in the send invitation modal
-      handleInviteOk () {
-        this.inviteModalVisible = false
-      },
       // TODO:query student according to what user input
       onStudentSearch () {
+        this.searchStudent()
       },
       // function executed when user click the cancel button in the vote team leader modal
       handleVoteTeamLeaderCancel () {
@@ -519,10 +580,86 @@
             })
           }
         })
+      },
+      // search student by ID / name
+      searchStudent () {
+        // process the data
+        const parameter = { search: this.inviteQueryContent, course: this.courseSelected.id, page: this.pageNumForStudentList, size: this.pageSizeForStudentList }
+        queryStudent(parameter).then(({ data: response }) => {
+          // console.log(response)
+          this.inviteSearchResults = response.results
+          // filter the inviter himself / herself
+          this.inviteSearchResults = this.inviteSearchResults.filter((student) => {
+            return student.username !== this.nickname
+          })
+          this.inviteSearchResultsPagination.total = response.count - 1
+        }).catch(error => {
+          // if error occurs
+          if (error.response) {
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to get students search results'
+            })
+          }
+        })
+      },
+      // function executed when user click the invite button in the invited modal
+      inviteThisStudent (student) {
+        this.studentSelected = student
+        this.submitInvitation()
+      },
+      // send Invitation
+      submitInvitation () {
+        // process the data
+        const parameter = {
+          course: {
+            title: this.courseSelected.title,
+            form_method: this.courseSelected.form_method,
+            member_count_primary: this.courseSelected.member_count_primary,
+            team_count_primary: this.courseSelected.team_count_primary,
+            member_count_secondary: this.courseSelected.member_count_secondary,
+            team_count_secondary: this.courseSelected.team_count_secondary,
+            floating_band: this.courseSelected.floating_band,
+            instructor: this.courseSelected.instructor
+          },
+          team: this.courseSelected.team_in.id,
+          invitee: this.studentSelected.id
+        }
+        // console.log(parameter)
+        // send request to back end
+        inviteSomeone(parameter).then(({ data: response }) => {
+          return this.$notification.success({
+            message: 'Success',
+            description: 'Successfully invite ' + this.studentSelected.username
+          })
+        }).catch(error => {
+          if (error.response) {
+            console.info(error.response)
+            let errorInfo = 'Failed to invite ' + this.studentSelected.username
+            if (error.response.data) {
+              errorInfo = error.response.data.non_field_errors[0]
+              console.log(errorInfo)
+              return this.$notification.warn({
+                message: 'Warning',
+                description: errorInfo
+              })
+            }
+            this.$notification.error({
+              message: 'Error',
+              description: errorInfo
+              })
+          }
+        })
       }
     },
     created () {
       this.getCourses()
+    },
+    computed: {
+      ...mapGetters([
+        'nickname',
+        'isTeacher'
+      ])
     }
   }
 </script>
