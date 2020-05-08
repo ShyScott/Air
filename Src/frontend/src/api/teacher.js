@@ -15,16 +15,7 @@ export function getCourseInfoById (courseId) {
   })
 }
 // get all the students of a course
-export function getStudentListOfTheCourse (courseId, page, pagesize) {
-  return axios({
-    url: '/users/',
-    method: 'get',
-    params: { course: courseId, page: page, size: pagesize }
-  })
-}
-
-// get the student info according to the query info
-export function getStudentByQuery (parameter) {
+export function getStudentListOfTheCourse (parameter) {
   return axios({
     url: '/users/',
     method: 'get',

@@ -196,15 +196,15 @@
         // pagination settings for team list table
         teaminfolistPagination: {
           current: 1,
-          pageSize: 10,
+          pageSize: 5,
           // Show the number of total items
           showTotal: (total) => `Total ${ total } items`,
           total: 0,
           showSizeChanger: true,
           pageSizeOptions: ['5', '10', '15', '20', '25'],
           onShowSizeChange: (current, pageSize) => {
-            this.pageNumForTeam = current
-            this.pageSizeForTeam = pageSize
+            this.teaminfolistPagination.current = current
+            this.teaminfolistPagination.pageSize = pageSize
             // if there is still content left in the search bar
             if (this.courseQuery !== '') {
               // execute function queryCourse instead of getCourses

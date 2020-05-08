@@ -52,7 +52,7 @@
       <a-form>
         <a-form-item style="margin-bottom: 5px">
           <div>
-            <a-input-search style="margin-top: 20px; width: 50%" v-model="studentListQuery" placeholder="Please input student name" @search="QueryStudent" enterButton></a-input-search>
+            <a-input-search style="margin-top: 20px; width: 50%" v-model="studentListQuery" placeholder="Please input student name" @search="getStudentList(true)" enterButton></a-input-search>
           </div>
         </a-form-item>
       </a-form>
@@ -132,7 +132,7 @@
 </template>
 
 <script>
-  import { getTeacherCourses, getCourseInfoById, getStudentListOfTheCourse, getStudentByQuery, deleteCourse, removeStudent, addStudentToTheCourse } from '../../../api/teacher'
+  import { getTeacherCourses, getCourseInfoById, getStudentListOfTheCourse, deleteCourse, removeStudent, addStudentToTheCourse } from '../../../api/teacher'
   import { mapGetters } from 'vuex'
   import pick from 'lodash.pick'
 
@@ -260,44 +260,42 @@
         studentList: [],
         // object used to adjust the pagination of the course table
         paginationForCourseTable: {
-          // default page size
-          defaultPageSize: 5,
+          current: 1,
+          pageSize: 5,
           // Show the number of total items
-          showTotal: (total) => `Totally ${ total } items`,
+          showTotal: (total) => `Total ${ total } items`,
           total: 0,
           showSizeChanger: true,
           pageSizeOptions: ['5', '10', '12', '15', '25'],
           onShowSizeChange: (current, pageSize) => {
-            this.pagenumForCourse = current
-            this.pagesizeForCourse = pageSize
+            this.paginationForCourseTable.current = current
+            this.paginationForCourseTable.pageSize = pageSize
             this.getCourses()
           },
-          onChange: (page, pageSize) => {
-            this.pagesizeForCourse = pageSize
-            this.pagenumForCourse = page
-            // console.log(this.pagesizeForCourse)
-            // console.log(this.pagenumForCourse)
+          onChange: (current, pageSize) => {
+            this.paginationForCourseTable.pageSize = pageSize
+            this.paginationForCourseTable.current = current
             this.getCourses()
           }
         },
         // object used to adjust the pagination of the student list table
         paginationForStudentListTable: {
-          // default page size
-          defaultPageSize: 5,
+          current: 1,
+          pageSize: 5,
           // Show the number of total items
-          showTotal: (total) => `Totally ${ total } items`,
+          showTotal: (total) => `Total ${ total } items`,
           total: 0,
           showSizeChanger: true,
           pageSizeOptions: ['5', '10', '15', '20', '25'],
           onShowSizeChange: (current, pageSize) => {
-            this.pagenumForStudentList = current
-            this.pagesizeForStudentList = pageSize
-            this.QueryStudent()
+            this.paginationForStudentListTable.current = current
+            this.paginationForStudentListTable.pageSize = pageSize
+            this.getStudentList()
           },
-          onChange: (page, pageSize) => {
-            this.pagesizeForStudentList = pageSize
-            this.pagenumForStudentList = page
-            this.QueryStudent()
+          onChange: (current, pageSize) => {
+            this.paginationForStudentListTable.pageSize = pageSize
+            this.paginationForStudentListTable.current = current
+            this.getStudentList()
           }
         },
         // Form object used in the students management
@@ -368,7 +366,8 @@
       },
       // function used to get all the courses available of current Teacher
       getCourses () {
-        getTeacherCourses(this.pagenumForCourse, this.pagesizeForCourse).then(({ data: response }) => {
+        const parameter = { page: this.paginationForCourseTable.current, size: this.paginationForCourseTable.pageSize }
+        getTeacherCourses(parameter).then(({ data: response }) => {
           // console.log(response)
           this.courseList = response.results
           // pagination settings
@@ -401,13 +400,36 @@
         })
       },
       // get the students list according to the course id given
-      getStudentList (courseId) {
-        getStudentListOfTheCourse(courseId, this.pagenumForStudentList, this.pagesizeForStudentList).then(({ data: response }) => {
+      getStudentList (isSearch = false) {
+        // if course is not selected yet
+        // give the warning
+        if (this.selectedCourseId === '') {
+          return this.$notification.info({
+            message: 'Reminder',
+            description: 'Please select the target course before searching'
+          })
+        }
+        // if user wants to search
+        if (isSearch) this.paginationForStudentListTable.current = 1
+        // process data
+        const parameter = {
+          course: this.selectedCourseId,
+          page: this.paginationForStudentListTable.current,
+          size: this.paginationForStudentListTable.pageSize
+        }
+        // check if the query content is empty
+        if (this.studentListQuery !== '') parameter.search = this.studentListQuery
+        getStudentListOfTheCourse(parameter).then(({ data: response }) => {
           this.studentList = response.results
           // pagination settings
           this.totalForStudentList = response.count
           this.paginationForStudentListTable.total = response.count
-          // console.log(this.studentList)
+        }).catch(error => {
+          console.info(error)
+          this.$notification.error({
+            message: 'Error',
+            description: 'Failed to get the information of students'
+          })
         })
       },
       // function used to fill the infomation supposed to be displayed in the Student Managemet Card
@@ -423,7 +445,7 @@
           this.isSelectedCourseConfirmed = false
         }
         // console.log(this.selectedCourseId)
-        this.getStudentList(this.selectedCourseId)
+        this.getStudentList()
         this.studentListQuery = ''
       },
       // function used to show the course info edit modal
@@ -432,40 +454,6 @@
         const target = { name: 'AddCourse' }
         this.$router.push(target)
       },
-      // function used to query the student info input by the user
-      QueryStudent () {
-        // if course is not selected yet
-        // give the warning
-        if (this.selectedCourseId === '') {
-          return this.$notification.info({
-            message: 'Reminder',
-            description: 'Please select the target course before searching'
-          })
-        }
-        // judge if user has input something
-        // if nothing, search by course id
-        if (this.studentListQuery === '') {
-          // console.log('Nothing')
-          return this.getStudentList(this.selectedCourseId)
-        }
-        // process data
-        const parameter = { search: this.studentListQuery, course: this.selectedCourseId, page: this.pagenumForStudentList, size: this.pagesizeForStudentList }
-        // if all the query info available, do the searching
-        getStudentByQuery(parameter).then(({ data: response }) => {
-          this.studentList = response.results
-          // pagination settings
-          this.totalForStudentList = response.count
-          this.paginationForStudentListTable.total = response.count
-          // console.log(response)
-        }).catch(error => {
-          if (error.response.status === 404) {
-            // reset the page num in case for 404 error
-            this.pagenumForStudentList = 1
-            // retry
-            this.QueryStudent()
-          }
-        })
-      },
       // function executed when user confirm to delete the course
       ConfirmCourseDelete (courseId) {
         // console.log(courseId)
@@ -473,6 +461,7 @@
           // solve the problem: if there is only 1 student left in the current page, delete this course will lead to a 404 since that current page is not existed anymore
           if (this.totalForCourse % this.pagesizeForCourse === 1) {
             this.pagenumForCourse -= 1
+            this.paginationForCourseTable.current -= 1
           }
           // re-render
           this.getCourses()
@@ -506,10 +495,11 @@
           // solve the problem: if there is only 1 student left in the current page, remove this student will lead to a 404 since that current page is not existed anymore
           if (this.totalForStudentList % this.pagesizeForStudentList === 1) {
             this.pagenumForStudentList -= 1
+            this.paginationForStudentListTable.current -= 1
           }
           // re-render 2 tables
           this.getCourses()
-          this.getStudentList(this.selectedCourseId)
+          this.getStudentList()
           this.$notification.success({
             message: 'Message',
             description: 'Student remove Successful'
@@ -570,7 +560,7 @@
               default_password: this.addStudentForm.default_password
             }
             addStudentToTheCourse(parameter).then(() => {
-              this.getStudentList(this.selectedCourseId)
+              this.getStudentList()
               this.getCourses()
               this.addStudentModalVisible = false
               this.$refs.addStudentFormRef.resetFields()
