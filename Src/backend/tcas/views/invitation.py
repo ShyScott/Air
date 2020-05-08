@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import mixins
 
 from tcas.models import Invitation, Course
-from tcas.serializers import InvitationSerializer, InvitationResponseSerializer
+from tcas.serializers import InvitationSerializer, InvitationResponseSerializer, InvitationDetailSerializer
 from tcas.permissions import IsLogin, IsInCurrentTeam
 from .generic import PermissionDictMixin
 
@@ -34,7 +34,6 @@ class InvitationViewSet(
     mixins.CreateModelMixin,
     GenericViewSet
 ):
-    serializer_class = InvitationSerializer
     filterset_class = InvitationFilter
     permission_dict = {
         'create': [IsInCurrentTeam],
@@ -46,10 +45,17 @@ class InvitationViewSet(
             return Invitation.objects.all()
         return Invitation.objects.filter(Q(inviter=self.request.user) | Q(invitee=self.request.user))
 
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return InvitationSerializer
+        if self.action == 'respond':
+            return InvitationResponseSerializer
+        return InvitationDetailSerializer
+
     def perform_create(self, serializer):
         serializer.save(inviter=self.request.user)
 
-    @action(detail=True, methods=['put'], serializer_class=InvitationResponseSerializer)
+    @action(detail=True, methods=['put'])
     def respond(self, request, *args, **kwargs):
         invitation = self.get_object()
         if invitation.invitee != request.user:

@@ -2,14 +2,29 @@ from rest_framework import serializers
 
 from tcas.models import Invitation
 from .course import CourseReadOnlySerializer
+from .team import TeamDetailSerializer
+from .user import UserSerializer
+
+
+class InvitationDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer to list and retrieve invitations
+    """
+
+    course = CourseReadOnlySerializer(source='team.course')
+    team = TeamDetailSerializer()
+    inviter = UserSerializer()
+    invitee = UserSerializer()
+
+    class Meta:
+        model = Invitation
+        fields = '__all__'
 
 
 class InvitationSerializer(serializers.ModelSerializer):
     """
-    Serializer to list, retrieve and create invitations
+    Serializer to create invitations
     """
-
-    course = CourseReadOnlySerializer(source='team.course', read_only=True)
 
     class Meta:
         model = Invitation
