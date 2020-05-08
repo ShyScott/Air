@@ -220,22 +220,22 @@
       ],
         // pagination settings for submission list table
         submissionListPagination: {
-            // default page size
-            defaultPageSize: 5,
+            current: 1,
+            pageSize: 5,
             // Show the number of total items
             showTotal: (total) => `Total ${ total } items`,
             total: 0,
             showSizeChanger: true,
             pageSizeOptions: ['5', '10', '15', '20', '25'],
             onShowSizeChange: (current, pageSize) => {
-              this.pageNumForSubmission = current
-              this.pageSizeForSubmission = pageSize
-              this.getSubmissions(this.selectedCourseId)
+              this.submissionListPagination.current = current
+              this.submissionListPagination.pageSize = pageSize
+              this.getSubmissions()
             },
-            onChange: (page, pageSize) => {
-              this.pageSizeForSubmission = pageSize
-              this.pageNumForSubmission = page
-              this.getSubmissions(this.selectedCourseId)
+            onChange: (current, pageSize) => {
+              this.submissionListPagination.pageSize = pageSize
+              this.submissionListPagination.current = current
+              this.getSubmissions()
             }
           },
         // current page num for submission list
@@ -307,8 +307,8 @@
         })
       },
       // function used to get the submission list of the current course
-      getSubmissions (courseId) {
-        getSubmissionList(courseId).then(({ data: response }) => {
+      getSubmissions () {
+        getSubmissionList(this.selectedCourseId).then(({ data: response }) => {
           this.submissionList = response.results
           // console.log(response.length)
           this.submissionListPagination.total = response.results.length
@@ -337,7 +337,7 @@
         this.selectedCourseId = value
         this.getCourseName()
         // console.log(this.selectedCourseId)
-        this.getSubmissions(this.selectedCourseId)
+        this.getSubmissions()
       },
       // function executed when user click the edit button
       showEditSubmissionModal (course) {
@@ -354,7 +354,7 @@
         // console.log(course.id)
         deleteSubmission(course.id).then(() => {
           // re-render
-          this.getSubmissions(this.selectedCourseId)
+          this.getSubmissions()
           // feedback
           return this.$notification.success({
             message: 'Success',
@@ -407,7 +407,7 @@
       addNewSubmission (parameter) {
         addNewSubmissionToCourse(parameter).then(() => {
           // re-render
-          this.getSubmissions(this.selectedCourseId)
+          this.getSubmissions()
           // reset the form
           this.$refs.addSubmissionFormRef.resetFields()
           // close modal
@@ -459,7 +459,7 @@
       editCurrentSubmission (parameter, submissionId) {
         editSubmission(parameter, submissionId).then(() => {
             // re-render
-            this.getSubmissions(this.selectedCourseId)
+            this.getSubmissions()
             // reset the form
             this.$refs.editSubmissionFormRef.resetFields()
             // close modal
