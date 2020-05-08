@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from django.contrib.auth.hashers import make_password
-
 from tcas.models import User, StudentProfile, Course
+
+from versatileimagefield.serializers import VersatileImageFieldSerializer
 
 
 class WeakValidationMixin:
@@ -43,10 +43,11 @@ class UserSerializer(WeakValidationMixin, serializers.ModelSerializer):
     """
     Serializer to list and delete one user
     """
+    avatar = VersatileImageFieldSerializer(sizes='user_avatar')
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'student_profile']
+        fields = ['id', 'username', 'avatar', 'student_profile']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,3 +80,14 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+
+class UserAvatarSerializer(serializers.ModelSerializer):
+    """
+    Serializer to update user's avatar
+    """
+    avatar = VersatileImageFieldSerializer(sizes='user_avatar')
+
+    class Meta:
+        model = User
+        fields = ['id', 'avatar']

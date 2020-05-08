@@ -13,7 +13,7 @@ from django_filters import rest_framework as filters
 
 from .generic import PermissionDictMixin
 from tcas.models import User, Course, StudentProfile
-from tcas.serializers import UserSerializer, ChangePasswordSerializer, StudentBatchCreateSerializer
+from tcas.serializers import UserSerializer, ChangePasswordSerializer, StudentBatchCreateSerializer, UserAvatarSerializer
 from tcas.permissions import IsTeacher, IsLogin, IsCurrentUser, IsInCurrentCourse
 
 
@@ -51,14 +51,17 @@ class UserViewSet(PermissionDictMixin, ModelViewSet):
         'create': [IsTeacher, IsInCurrentCourse],
         'me': [IsLogin],
         'change_password': [IsCurrentUser],
+        'avatar': [IsLogin],
         'others': [IsTeacher],
     }
 
     def get_serializer_class(self):
         if self.action == 'create':
             return StudentBatchCreateSerializer
-        elif self.action == 'change_password':
+        if self.action == 'change_password':
             return ChangePasswordSerializer
+        if self.action == 'avatar':
+            return UserAvatarSerializer
         return UserSerializer
 
     def get_serializer_context(self):
@@ -130,3 +133,11 @@ class UserViewSet(PermissionDictMixin, ModelViewSet):
         if user == request.user:
             update_session_auth_hash(request, user)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['put'])
+    def avatar(self, request, *arg, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(user, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

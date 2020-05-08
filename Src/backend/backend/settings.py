@@ -169,3 +169,14 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
+
+# django-versatileimagefield settings
+
+VERSATILEIMAGEFIELD_RENDITION_KEY_SETS = {
+    'user_avatar': [
+        ('medium', 'thumbcrop__400x400'),
+        ('small', 'thumbcrop__80x80'),
+    ]
+}
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'

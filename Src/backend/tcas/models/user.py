@@ -1,8 +1,14 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+
+from versatileimagefield.fields import VersatileImageField
 
 
 class User(AbstractUser):
+    avatar = VersatileImageField(
+        upload_to='avatars',
+        blank=True,
+    )
+
     class Meta:
         ordering = ['id']
 
