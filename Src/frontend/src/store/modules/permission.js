@@ -15,7 +15,7 @@ const permission = {
     GenerateRoutes ({ commit }, isTeacher) {
       return new Promise(resolve => {
         const routes = asyncRouterMap
-        routes[0].children = isTeacher ? teacherRoutes : studentRoutes
+        routes[0].children = routes[0].children.concat(isTeacher ? teacherRoutes : studentRoutes)
         commit('SET_ROUTERS', routes)
         resolve()
       })

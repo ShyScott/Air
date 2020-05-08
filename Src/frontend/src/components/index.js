@@ -23,7 +23,6 @@ import Trend from '@/components/Trend'
 import STable from '@/components/Table'
 import MultiTab from '@/components/MultiTab'
 import Result from '@/components/Result'
-import IconSelector from '@/components/IconSelector'
 import TagSelect from '@/components/TagSelect'
 import ExceptionPage from '@/components/Exception'
 import StandardFormRow from '@/components/StandardFormRow'
@@ -57,7 +56,6 @@ export {
   MultiTab,
   Result,
   ExceptionPage,
-  IconSelector,
   TagSelect,
   StandardFormRow,
   ArticleListContent,
