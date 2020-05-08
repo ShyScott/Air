@@ -144,9 +144,14 @@
           <!--search bar for student search-->
           <a-input-search style="width: 70%" placeholder="Please input student name / ID" v-model="inviteQueryContent" enter-button @search="onStudentSearch" />
           <a-table style="margin-top: 30px" :dataSource="inviteSearchResults" rowKey="id" :columns="studentListColumns" :pagination="inviteSearchResultsPagination">
+            <!--username column-->
+            <template slot="name" slot-scope="text, record">
+              <span>{{ record.username }}</span>
+              <span v-if="record.username === nickname"> (Yourself) </span>
+            </template>
             <!--operation area-->
             <template slot="operation" slot-scope="text, record">
-              <a href="#" @click="inviteThisStudent(record)"> Invite </a>
+              <a href="#" :disabled="record.id === userId" @click="inviteThisStudent(record)"> Invite </a>
             </template>
           </a-table>
         </a-modal>
@@ -193,7 +198,6 @@
     exitTeam,
     getStudentCourses,
     inviteSomeone,
-    queryCourse,
     queryStudent,
     voteTeamLeader
   } from '../../../api/student'
@@ -211,10 +215,6 @@
         memberList: [],
         // variable used to store the team selected
         teamSelected: {},
-        // page num
-        pageNum: 1,
-        // page size
-        pageSize: 5,
         // columns for the team table
         teamTableColumns: [
           {
@@ -260,35 +260,21 @@
         ],
         // object used to adjust the pagination of the course table
         paginationForTeamTable: {
-          // default page size
-          defaultPageSize: 5,
+          current: 1,
+          pageSize: 5,
           // Show the number of total items
           showTotal: (total) => `Totally ${ total } items`,
           total: 0,
           showSizeChanger: true,
           pageSizeOptions: ['5', '10', '12', '15', '25'],
           onShowSizeChange: (current, pageSize) => {
-            this.pageNum = current
-            this.pageSize = pageSize
-            // if there is still content left in the search bar
-            // execute the query function instead of getCourses()
-            if (this.queryContent !== '') {
-              // re-render
-              return this.queryCourseByCourseName()
-            }
-            // re-render
+            this.paginationForTeamTable.current = current
+            this.paginationForTeamTable.pageSize = pageSize
             this.getCourses()
           },
-          onChange: (page, pageSize) => {
-            this.pageSize = pageSize
-            this.pageNum = page
-            // if there is still content left in the search bar
-            // execute the query function instead of getCourses()
-            if (this.queryContent !== '') {
-              // re-render
-              return this.queryCourseByCourseName()
-            }
-            // re-render
+          onChange: (current, pageSize) => {
+            this.paginationForTeamTable.pageSize = pageSize
+            this.paginationForTeamTable.current = current
             this.getCourses()
           }
         },
@@ -341,8 +327,8 @@
             scopedSlots: { customRender: 'name' }
           },
           {
-            title: 'User ID',
-            dataIndex: 'id',
+            title: 'Student ID',
+            dataIndex: 'student_profile.student_id',
             width: '35%',
             align: 'center',
             scopedSlots: { customRender: 'id' }
@@ -357,26 +343,24 @@
         ],
         // pageination settings for the invite search results
         inviteSearchResultsPagination: {
-          // default page size
-          defaultPageSize: 5,
+          current: 1,
+          pageSize: 5,
           // Show the number of total items
           showTotal: (total) => `Totally ${ total } items`,
           total: 0,
           showSizeChanger: true,
           pageSizeOptions: ['5', '10', '12', '15', '25'],
           onShowSizeChange: (current, pageSize) => {
-            this.pageNumForStudentList = current
-            this.pageSizeForStudentList = pageSize
+            this.inviteSearchResultsPagination.current = current
+            this.inviteSearchResultsPagination.pageSize = pageSize
             this.searchStudent()
           },
-          onChange: (page, pageSize) => {
-            this.pageSizeForStudentList = pageSize
-            this.pageNumForStudentList = page
+          onChange: (current, pageSize) => {
+            this.inviteSearchResultsPagination.pageSize = pageSize
+            this.inviteSearchResultsPagination.current = current
             this.searchStudent()
           }
         },
-        pageNumForStudentList: 1,
-        pageSizeForStudentList: 5,
         // variable used to indicate whether the student is invited or not
         isInvited: false,
         // student selected to be invited
@@ -391,8 +375,15 @@
         this.$router.push('mainpage')
       },
       // function used to get the course info of current student
-      getCourses () {
-        const parameter = { page: this.pageNum, size: this.pageSize }
+      getCourses (isSearch = false) {
+        // reset the page num for the table
+        if (isSearch) this.paginationForTeamTable.current = 1
+        const parameter = {
+          page: this.paginationForTeamTable.current,
+          size: this.paginationForTeamTable.pageSize
+        }
+        // if user wants to search
+        if (this.queryContent !== '') parameter.title = this.queryContent
         getStudentCourses(parameter).then(({ data: response }) => {
           this.courseList = response.results
           this.paginationForTeamTable.total = response.count
@@ -528,30 +519,14 @@
           }
         })
       },
-      // function used to query what user input
-      queryCourseByCourseName () {
-        const parameter = { title: this.queryContent, page: this.pageNum, size: this.pageSize }
-        queryCourse(parameter).then(({ data: response }) => {
-          this.courseList = response.results
-          this.paginationForTeamTable.total = response.count
-        }).catch(error => {
-          // reset the page num in case for 404
-          // only when this is the first time 404, we can retry
-          if (error.response.status === 404) {
-            // reset the page num and retry
-            this.pageNum = 1
-            this.queryCourseByCourseName()
-          }
-        })
-      },
       onSearch () {
-        this.queryCourseByCourseName()
+        this.getCourses(true)
       },
       handleInviteCancel () {
         this.inviteModalVisible = false
       },
       onStudentSearch () {
-        this.searchStudent()
+        this.searchStudent(true)
       },
       // function executed when user click the cancel button in the vote team leader modal
       handleVoteTeamLeaderCancel () {
@@ -588,33 +563,27 @@
         })
       },
       // search student by ID / name
-      searchStudent () {
-        // reset the page num in case for 404 error
-        this.pageNumForStudentList = 1
+      searchStudent (isSearch = false) {
+        // reset the page num for search
+        if (isSearch) this.inviteSearchResultsPagination.current = 1
         // process the data
-        const parameter = { search: this.inviteQueryContent, course: this.courseSelected.id, page: this.pageNumForStudentList, size: this.pageSizeForStudentList }
+        const parameter = {
+          course: this.courseSelected.id,
+          page: this.inviteSearchResultsPagination.current,
+          size: this.inviteSearchResultsPagination.pageSize
+        }
+        // if user has input something for search
+        if (this.inviteQueryContent !== '') parameter.search = this.inviteQueryContent
         queryStudent(parameter).then(({ data: response }) => {
           // console.log(response)
           this.inviteSearchResults = response.results
-          // filter the inviter himself / herself
-          this.inviteSearchResults = this.inviteSearchResults.filter((student) => {
-            return student.username !== this.nickname
-          })
-          this.inviteSearchResultsPagination.total = response.count - 1
+          this.inviteSearchResultsPagination.total = response.count
         }).catch(error => {
           // if error occurs
           if (error.response) {
             return this.$notification.error({
               message: 'Error',
               description: 'Failed to get students search results'
-            }).catch(error => {
-              // reset the page num in case for 404
-              // only when this is the first time 404, we can retry
-              if (error.response.status === 404) {
-                // reset the page num and retry
-                this.pageNumForStudentList = 1
-                this.searchStudent()
-              }
             })
           }
         })
@@ -674,7 +643,7 @@
     computed: {
       ...mapGetters([
         'nickname',
-        'isTeacher'
+        'userId'
       ])
     }
   }

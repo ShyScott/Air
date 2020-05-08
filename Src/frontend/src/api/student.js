@@ -16,14 +16,6 @@ export function createNewTeam (parameter) {
     data: parameter
   })
 }
-// function used to query by team name
-export function queryCourse (parameter) {
-  return axios({
-    url: '/courses/',
-    method: 'get',
-    params: parameter
-  })
-}
 // function used to vote the team leader
 export function voteTeamLeader (teamId, parameter) {
   return axios({
