@@ -6,11 +6,11 @@ from rest_framework import status
 
 from django_filters import rest_framework as filters
 
-from django.db.models import Value
+from django.db.models import Value, Avg
 from django.db.models.functions import Length, Replace
 
 from .generic import PermissionDictMixin
-from tcas.models import Course, Team
+from tcas.models import Course, Team, TeamMember, Contribution
 from tcas.serializers import (
     CourseSerializer,
     CourseReadOnlySerializer,
@@ -244,3 +244,37 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
     def mean_gpa(self, request, *args, **kwargs):
         course = self.get_object()
         return Response({'mean_gpa': course.mean_gpa})
+
+    @action(detail=True, methods=['get'])
+    def export_contribution(self, request, *args, **kwargs):
+        course = self.get_object()
+        submissions = list(course.submissions.all())
+        # Check if the total percentage of all submissions is not 100
+        if sum([sub.percentage for sub in submissions]) != 100:
+            raise ValidationError('The total percentage of all submissions in this course is not 100%!')
+
+        export_data = []
+        for student in course.students.all():
+            team = Team.objects.get(course=course, members=student)
+            # Calculate contribution for this student
+            total_contrib = 0
+            contributions = Contribution.objects.filter(submission__course=course, team_member__user=student)
+            for sub in submissions:
+                try:
+                    level = contributions.get(submission=sub).level
+                except Contribution.DoesNotExist:
+                    level = 3
+                total_contrib += sub.percentage / 100 * Contribution.levels[level]
+
+            # Get the bonus for team leader
+            bonus = 0 if team.leader != student or team.members.count() == 1 \
+                else TeamMember.objects.filter(team__course=course, team__members=student).exclude(user=student).aggregate(avg=Avg('leader_bonus'))['avg']
+
+            export_data.append({
+                'username': student.username,
+                'student_id': student.student_profile.student_id,
+                'contribution': total_contrib,
+                'bonus': bonus,
+            })
+
+        return Response(export_data)
