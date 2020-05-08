@@ -380,7 +380,9 @@
         // variable used to indicate whether the student is invited or not
         isInvited: false,
         // student selected to be invited
-        studentSelected: {}
+        studentSelected: {},
+        // number of trys to search course by name
+        searchCourseTryNum: 0
       }
     },
     methods: {
@@ -447,7 +449,6 @@
         this.createTeamModalVisible = true
       },
       // function used to control the show of vote team leader modal
-      // TODO
       showVoteTeamLeaderModal (course) {
         // get all the members in this team currently
         this.memberList = course.team_in.members
@@ -533,17 +534,22 @@
         queryCourse(parameter).then(({ data: response }) => {
           this.courseList = response.results
           this.paginationForTeamTable.total = response.count
+        }).catch(error => {
+          // reset the page num in case for 404
+          // only when this is the first time 404, we can retry
+          if (error.response.status === 404) {
+            // reset the page num and retry
+            this.pageNum = 1
+            this.queryCourseByCourseName()
+          }
         })
       },
-      // TODO:function executed when search button is clicked
       onSearch () {
         this.queryCourseByCourseName()
       },
-      // TODO:function executed when user click the cancel button in the send invitation modal
       handleInviteCancel () {
         this.inviteModalVisible = false
       },
-      // TODO:query student according to what user input
       onStudentSearch () {
         this.searchStudent()
       },
@@ -583,6 +589,8 @@
       },
       // search student by ID / name
       searchStudent () {
+        // reset the page num in case for 404 error
+        this.pageNumForStudentList = 1
         // process the data
         const parameter = { search: this.inviteQueryContent, course: this.courseSelected.id, page: this.pageNumForStudentList, size: this.pageSizeForStudentList }
         queryStudent(parameter).then(({ data: response }) => {

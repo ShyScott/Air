@@ -292,34 +292,12 @@
           onShowSizeChange: (current, pageSize) => {
             this.pagenumForStudentList = current
             this.pagesizeForStudentList = pageSize
-            // if search bar has been input something, do not run the function getStudentList
-            if (this.studentListQuery) {
-              getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(({ data: response }) => {
-                this.studentList = response.results
-                // pagination settings
-                this.totalForStudentList = response.count
-                this.paginationForStudentListTable.total = response.count
-                // console.log(response)
-              })
-            } else {
-              this.getStudentList(this.selectedCourseId)
-            }
+            this.QueryStudent()
           },
           onChange: (page, pageSize) => {
             this.pagesizeForStudentList = pageSize
             this.pagenumForStudentList = page
-            // if search bar has been input something, do not run the function getStudentList
-            if (this.studentListQuery) {
-              getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(({ data: response }) => {
-                this.studentList = response.results
-                // pagination settings
-                this.totalForStudentList = response.count
-                this.paginationForStudentListTable.total = response.count
-                // console.log(response)
-              })
-            } else {
-              this.getStudentList(this.selectedCourseId)
-            }
+            this.QueryStudent()
           }
         },
         // Form object used in the students management
@@ -468,15 +446,24 @@
         // if nothing, search by course id
         if (this.studentListQuery === '') {
           // console.log('Nothing')
-          this.getStudentList(this.selectedCourseId)
+          return this.getStudentList(this.selectedCourseId)
         }
+        // process data
+        const parameter = { search: this.studentListQuery, course: this.selectedCourseId, page: this.pagenumForStudentList, size: this.pagesizeForStudentList }
         // if all the query info available, do the searching
-        getStudentByQuery(this.studentListQuery, this.selectedCourseId).then(({ data: response }) => {
+        getStudentByQuery(parameter).then(({ data: response }) => {
           this.studentList = response.results
           // pagination settings
           this.totalForStudentList = response.count
           this.paginationForStudentListTable.total = response.count
           // console.log(response)
+        }).catch(error => {
+          if (error.response.status === 404) {
+            // reset the page num in case for 404 error
+            this.pagenumForStudentList = 1
+            // retry
+            this.QueryStudent()
+          }
         })
       },
       // function executed when user confirm to delete the course

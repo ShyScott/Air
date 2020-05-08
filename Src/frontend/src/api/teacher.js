@@ -24,11 +24,11 @@ export function getStudentListOfTheCourse (courseId, page, pagesize) {
 }
 
 // get the student info according to the query info
-export function getStudentByQuery (queryName, courseId) {
+export function getStudentByQuery (parameter) {
   return axios({
     url: '/users/',
     method: 'get',
-    params: { username: queryName, course: courseId }
+    params: parameter
   })
 }
 
