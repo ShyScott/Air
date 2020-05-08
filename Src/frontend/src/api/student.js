@@ -55,3 +55,18 @@ export function inviteSomeone (parameter) {
     data: parameter
   })
 }
+// get courses by query
+export function getCoursesByQuery (query) {
+  return axios({
+    url: '/courses/',
+    method: 'get',
+    params: query
+  })
+}
+export function getInvitation (parameter) {
+  return axios({
+    url: '/invitations/',
+    method: 'get',
+    params: parameter
+  })
+}

@@ -607,6 +607,14 @@
             return this.$notification.error({
               message: 'Error',
               description: 'Failed to get students search results'
+            }).catch(error => {
+              // reset the page num in case for 404
+              // only when this is the first time 404, we can retry
+              if (error.response.status === 404) {
+                // reset the page num and retry
+                this.pageNumForStudentList = 1
+                this.searchStudent()
+              }
             })
           }
         })

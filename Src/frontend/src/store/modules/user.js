@@ -12,7 +12,8 @@ const user = {
     avatar: '',
     isTeacher: true,
     roles: [],
-    info: {}
+    info: {},
+    id: null
   },
 
   mutations: {
@@ -34,6 +35,9 @@ const user = {
     },
     SET_IS_TEACHER: (state, isTeacher) => {
       state.isTeacher = isTeacher
+    },
+    SET_USER_ID: (state, id) => {
+      state.id = id
     }
   },
 
@@ -82,6 +86,7 @@ const user = {
 
           getMyInfo().then(({ data: user }) => {
             commit('SET_NAME', { name: user.username, welcome: welcome() })
+            commit('SET_USER_ID', user.id)
             // commit('SET_AVATAR', user.avatar)
             // If the user identity is a student
             if (user.student_profile) {
