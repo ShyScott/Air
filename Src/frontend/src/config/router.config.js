@@ -13,17 +13,11 @@ export const asyncRouterMap = [
       {
         path: '/account',
         component: RouteView,
-        redirect: '/account/center',
+        redirect: '/account/settings',
         name: 'account',
         hidden: true,
         meta: { title: '个人页', icon: 'user', keepAlive: true },
         children: [
-          {
-            path: '/account/center',
-            name: 'center',
-            component: () => import('@/views/account/center/Index'),
-            meta: { title: '个人中心', keepAlive: true, permission: [ 'user' ] }
-          },
           {
             path: '/account/settings',
             name: 'settings',
