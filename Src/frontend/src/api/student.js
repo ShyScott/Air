@@ -102,3 +102,11 @@ export function submitAssessmentResults (parameter) {
     data: parameter
   })
 }
+// function used to submit the assessment towards leader
+export function submitLeaderAssessment (teamId, parameter) {
+  return axios({
+    url: `/teams/${teamId}/assess_leader/`,
+    method: 'put',
+    data: parameter
+  })
+}

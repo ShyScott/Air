@@ -38,17 +38,50 @@
             </span>
             <span>
               <a-icon style="color: #1A8FFF" type="rocket"></a-icon>
-              <a href="#"> Assess team leader </a>
+              <a href="#" @click="showAssessLeaderModal(record)"> Assess team leader </a>
             </span>
           </template>
         </a-table>
       </div>
     </a-card>
+    <!--Assess leader modal-->
+    <a-modal width="800px" v-model="assessLeaderModalVisible" title="Assess Team Leader" on-ok="handleOk">
+      <template slot="footer">
+        <a-button key="back" @click="handleCancel">
+          Cancel
+        </a-button>
+        <a-button key="submit" type="primary" @click="handleOk">
+          Submit
+        </a-button>
+      </template>
+      <a-form-model
+        v-model="assessLeaderForm"
+        ref="assessLeaderRef"
+        :label-col="labelCol"
+        :wrapper-col="wrapperCol"
+      >
+        <a-form-model-item label="Submission Title">
+          <a-input :disabled="true" v-model="assessLeaderForm.courseTitle"></a-input>
+        </a-form-model-item>
+        <template v-if="selectedCourse !== null">
+          <a-form-model-item>
+            <span v-for="(item, i) in selectedCourse.team_in.members" :key="i">
+              <span style="margin-left: 36px; margin-right: 20px" v-if="item.id === selectedCourse.team_in.leader">
+                Rate for leader {{ item.username }} :
+              </span>
+            </span>
+            <a-rate v-model="assessLeaderForm.rateForLeader" :tooltips="desc" :allow-clear="false">
+              <a-icon slot="character" type="smile" />
+            </a-rate>
+          </a-form-model-item>
+        </template>
+      </a-form-model>
+    </a-modal>
   </div>
 </template>
 
 <script>
-  import { getStudentCourses } from '../../../api/student'
+  import { getStudentCourses, submitLeaderAssessment } from '../../../api/student'
   import { mapGetters } from 'vuex'
 
   export default {
@@ -113,7 +146,21 @@
             align: 'center',
             scopedSlots: { customRender: 'operation' }
           }
-        ]
+        ],
+        // variable used to control the display of assess leader modal
+        assessLeaderModalVisible: false,
+        // form object for assess team leader modal
+        assessLeaderForm: {
+          courseTitle: '',
+          rateForLeader: 5
+        },
+        // layout settings for the add submission form
+        labelCol: { span: 5 },
+        wrapperCol: { span: 16 },
+        // course selected in the course list
+        selectedCourse: null,
+        // description for the leader rate level
+        desc: ['VERY BAD', 'BAD', 'FAIR', 'GOOD', 'VERY GOOD']
       }
     },
     methods: {
@@ -138,7 +185,7 @@
             return item.team_in !== null && item.team_in.leader !== null
           })
           this.paginationForCourseTable.total = this.courseList.length
-          console.log(this.courseList)
+          // console.log(this.courseList)
         }).catch(error => {
           if (error.response) {
             console.info(error.response)
@@ -156,6 +203,43 @@
       // function used to move the assess submission page
       moveToAssessSubmissionPage (courseId) {
         this.$router.push({ name: 'AssessSubmission', params: { courseId: courseId } })
+      },
+      // function used to show assess leader modal
+      showAssessLeaderModal (course) {
+        this.selectedCourse = course
+        this.assessLeaderForm.courseTitle = course.title
+        this.assessLeaderModalVisible = true
+      },
+      // function executed when user press the cancel button in assess leader modal
+      handleCancel () {
+        // reset and hide the modal
+        this.assessLeaderForm.rateForLeader = 5
+        this.assessLeaderModalVisible = false
+      },
+      // function executed when user press the submit button in assess leader modal
+      handleOk () {
+        this.assessLeader()
+        // reset and hide the modal
+        this.assessLeaderForm.rateForLeader = 5
+        this.assessLeaderModalVisible = false
+      },
+      // submit the leader assessment
+      assessLeader () {
+        // process data
+        const level = this.assessLeaderForm.rateForLeader - 3
+        const parameter = { bonus: level }
+        submitLeaderAssessment(this.selectedCourse.team_in.id, parameter).then(() => {
+          this.$notification.success({
+            message: 'Success',
+            description: 'Submit the leader assessment successfully'
+          })
+        }).catch(error => {
+          console.info(error.response)
+          this.$notification.error({
+            message: 'Error',
+            description: 'Failed to submit the assessment to leader'
+          })
+        })
       }
     },
     created () {

@@ -48,8 +48,8 @@
         </a-form-model-item>
         <template v-if="this.selectedCourse !== null">
           <a-form-model-item v-for="(item, i) in selectedCourse.team_in.members" :key="i">
-            <span style="margin-left: 40px">
-              Rate for {{ item.username }} :
+            <span style="margin-left: 27px">
+              Rate for leader {{ item.username }} :
               <a-rate :allow-clear="false" :count="4" v-model="assessSubmissionForm.rateForEachOne[i]" :tooltips="desc">
                 <a-icon slot="character" type="smile" />
               </a-rate>
