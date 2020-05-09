@@ -55,10 +55,27 @@ export function getCoursesByQuery (query) {
     params: query
   })
 }
+// get invitee's invitations
 export function getInvitation (parameter) {
   return axios({
     url: '/invitations/',
     method: 'get',
     params: parameter
+  })
+}
+// get invitations info by course id
+export function getInvitationsByCourseId (parameter) {
+  return axios({
+    url: `/invitations/`,
+    method: 'get',
+    params: parameter
+  })
+}
+// function used to respond to the invitation request
+export function respondToRequest (invitationId, parameter) {
+  return axios({
+    url: `/invitations/${invitationId}/respond/`,
+    method: 'put',
+    data: parameter
   })
 }

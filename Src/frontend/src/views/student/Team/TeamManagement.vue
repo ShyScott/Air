@@ -504,7 +504,7 @@
       submitNewTeam () {
         const parameter = { name: this.createNewTeamForm.teamName, course: this.selectedCourseId }
         createNewTeam(parameter).then(({ data: response }) => {
-          return this.$notification.success({
+          this.$notification.success({
             message: 'Success',
             description: 'Create new team successful'
           })
@@ -512,7 +512,7 @@
           // if error occurs
           if (error.response) {
             console.info(error.response)
-            return this.$notification.error({
+            this.$notification.error({
               message: 'Error',
               description: 'Failed to create new team'
             })
