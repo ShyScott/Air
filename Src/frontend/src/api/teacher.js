@@ -153,3 +153,10 @@ export function getCourseById (courseId) {
     method: 'get'
   })
 }
+// export contribution info
+export function exportContribution (courseId) {
+  return axios({
+    url: `/courses/${courseId}/export_contribution/`,
+    method: 'get'
+  })
+}
