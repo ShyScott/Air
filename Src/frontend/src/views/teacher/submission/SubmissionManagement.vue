@@ -285,7 +285,9 @@
         editSubmissionModalVisible: false,
         // variable used to indicate the submission to be edited
         selectedSubmissionId: '',
-        myChart: {}
+        myChart: {},
+        // data for chart
+        chartDataList: []
       }
     },
     methods: {
@@ -308,10 +310,15 @@
       },
       // function used to get the submission list of the current course
       getSubmissions () {
-        getSubmissionList(this.selectedCourseId).then(({ data: response }) => {
+        const parameter = {
+          course: this.selectedCourseId,
+          page: this.submissionListPagination.current,
+          size: this.submissionListPagination.pageSize
+        }
+        getSubmissionList(parameter).then(({ data: response }) => {
           this.submissionList = response.results
           // console.log(response.length)
-          this.submissionListPagination.total = response.results.length
+          this.submissionListPagination.total = response.count
           // console.log(this.submissionList)
           // calculate the data for pie chart
           this.calculateChartData()
@@ -413,7 +420,7 @@
           // close modal
           this.addSubmissionModalVisible = false
           // give the feedback
-            return this.$notification.success({
+          this.$notification.success({
               message: 'Success',
               description: 'Add new submission Successful'
             })
@@ -483,21 +490,25 @@
       },
       // function used to calculate the data necessary for the chart
       calculateChartData () {
-        // clear the former data
-        this.option.series[0].data = []
-        for (let i = 0; i < this.submissionList.length; i++) {
-          // console.log(i)
-          // set legend
-          this.option.legend.data.push(this.submissionList[i].title)
-          // set the data used in table
-          const object = { value: this.submissionList[i].percentage, name: this.submissionList[i].title }
-          // console.log(object)
-          this.option.series[0].data.push(object)
-        }
-        // set the subtitle of the chart
-        this.option.title.subtext = this.selectedCourseName
-        // re-render
-        this.myChart.setOption(this.option)
+        getSubmissionList({ course: this.selectedCourseId, page: 1, size: 100 }).then(({ data: response }) => {
+          this.chartDataList = response.results
+          // console.log(this.chartDataList)
+          // clear the former data
+          this.option.series[0].data = []
+          for (let i = 0; i < this.chartDataList.length; i++) {
+            // console.log(i)
+            // set legend
+            this.option.legend.data.push(this.chartDataList[i].title)
+            // set the data used in table
+            const object = { value: this.chartDataList[i].percentage, name: this.chartDataList[i].title }
+            // console.log(object)
+            this.option.series[0].data.push(object)
+          }
+          // set the subtitle of the chart
+          this.option.title.subtext = this.selectedCourseName
+          // re-render
+          this.myChart.setOption(this.option)
+        })
       }
     },
     created () {

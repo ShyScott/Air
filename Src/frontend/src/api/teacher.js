@@ -47,11 +47,11 @@ export function addStudentToTheCourse (parameter) {
   })
 }
 // get the submission list of current course
-export function getSubmissionList (courseId) {
+export function getSubmissionList (parameter) {
   return axios({
     url: `/submissions/`,
     method: 'get',
-    params: { course: courseId }
+    params: parameter
   })
 }
 // add new submission to the current course

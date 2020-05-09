@@ -79,3 +79,26 @@ export function respondToRequest (invitationId, parameter) {
     data: parameter
   })
 }
+// function used to get the submissions of one course
+export function getSubmissionList (parameter) {
+  return axios({
+    url: '/submissions/',
+    method: 'get',
+    params: parameter
+  })
+}
+// function use course id to get course info
+export function getCourseInfoById (courseId) {
+  return axios({
+    url: `/courses/${courseId}/`,
+    method: 'get'
+  })
+}
+// function used to submit the results of submission assessment
+export function submitAssessmentResults (parameter) {
+  return axios({
+    url: '/contributions/',
+    method: 'post',
+    data: parameter
+  })
+}

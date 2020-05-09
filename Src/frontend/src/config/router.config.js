@@ -90,6 +90,13 @@ export const studentRoutes = [
     component: () => import('@/views/student/Assessment/Assessment')
   },
   {
+    path: `assessment/assessSubmission/:courseId`,
+    name: 'AssessSubmission',
+    component: () => import('@/views/student/Assessment/AssessSubmission'),
+    meta: { title: 'Assess Submission' },
+    hidden: true
+  },
+  {
     path: `team/viewInvitation`,
     name: 'ViewInvitation',
     component: () => import('@/views/student/Team/ViewInvitation'),

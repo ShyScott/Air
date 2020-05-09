@@ -34,7 +34,7 @@
           <template slot="operation" slot-scope="text, record">
             <span style="margin-right: 15px" v-if="record.team_in.leader === userId">
               <a-icon style="color: #1A8FFF" type="solution"></a-icon>
-              <a href="#"> Assess submissions </a>
+              <a href="#" @click="moveToAssessSubmissionPage(record.id)"> Assess submissions </a>
             </span>
             <span>
               <a-icon style="color: #1A8FFF" type="rocket"></a-icon>
@@ -152,6 +152,10 @@
       // executed when search button is pressed
       onSearch () {
         this.getCourses(true)
+      },
+      // function used to move the assess submission page
+      moveToAssessSubmissionPage (courseId) {
+        this.$router.push({ name: 'AssessSubmission', params: { courseId: courseId } })
       }
     },
     created () {
