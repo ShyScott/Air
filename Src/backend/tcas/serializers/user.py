@@ -43,7 +43,7 @@ class UserSerializer(WeakValidationMixin, serializers.ModelSerializer):
     """
     Serializer to list and delete one user
     """
-    avatar = VersatileImageFieldSerializer(sizes='user_avatar')
+    avatar = VersatileImageFieldSerializer(sizes='user_avatar', read_only=True)
 
     class Meta:
         model = User
