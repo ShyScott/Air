@@ -128,10 +128,12 @@
         if (valid) {
           this.submitLoading = true
           const { form } = this
+          const profile = pick(form, ['student_id', 'email', 'gpa'])
+          if (form.gpa === '') delete profile.gpa
           const parameter = {
             students: [{
               username: form.username,
-              student_profile: pick(form, ['student_id', 'email', 'gpa'])
+              student_profile: profile
             }],
             course: this.selectedCourse.id,
             default_password: form.default_password
