@@ -108,6 +108,7 @@ class UserViewSet(PermissionDictMixin, ModelViewSet):
         duplicated_users_serializer = UserSerializer(duplicated_users, many=True, context={'with_student_gpa': True})
         return Response(
             {
+                'added_students_count': len(course_add_users),
                 'duplications': duplicated_users_serializer.data,
                 'multiple_existings': multiple_exist_users,
             },
