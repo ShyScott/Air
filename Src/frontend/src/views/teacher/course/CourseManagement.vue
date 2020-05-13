@@ -67,16 +67,19 @@
         <a-button
           class="addButton-adjust"
           type="primary"
-          size="default"
           style="margin-right: 20px"
           :disabled="selectedCourse.is_confirmed"
-          @click="addStudent">
-          <a-icon type="user-add"/>
-          Add a Student
+          @click="addStudent"
+        >
+          <a-icon type="user-add"/>Add a Student
         </a-button>
-        <a-button class="addButton-adjust" type="primary" size="default" :disabled="selectedCourse.is_confirmed">
-          <a-icon type="file-done"/>
-          Import students from a file
+        <a-button
+          class="addButton-adjust"
+          type="primary"
+          @click="importStudentsFromFile"
+          :disabled="selectedCourse.is_confirmed"
+        >
+          <a-icon type="file-done"/>Import students from a file
         </a-button>
       </div>
 
@@ -85,7 +88,10 @@
           <!--Add delete button to operation slot-->
           <template slot="operation" slot-scope="text, record">
             <!--Operation Area-->
-            <a-popconfirm title="Are you sure to remove this student from the course?" @confirm="ConfirmStudentRemove(selectedCourse.id, record.id)">
+            <a-popconfirm
+              title="Are you sure to remove this student from the course?"
+              @confirm="ConfirmStudentRemove(selectedCourse.id, record.id)"
+            >
               <a-tooltip title="Click to delete the student from this course">
                 <a class="a-adjust"><a-icon type="delete" />Remove</a>
               </a-tooltip>
@@ -102,6 +108,7 @@
 <script>
   import { getTeacherCourses, getStudentListOfTheCourse, deleteCourse, removeStudent } from '@/api/teacher'
   import AddStudentModal from './modal/AddStudentModal'
+  import { mapGetters } from 'vuex'
 
   export default {
     name: 'CourseManagement',
@@ -168,9 +175,6 @@
             this.getCourses()
           }
         },
-
-        // Info of the selected course
-        selectedCourse: null,
 
         // Loading state for student table
         studentLoading: false,
@@ -245,6 +249,7 @@
         searchStudentLoading: false
       }
     },
+    computed: mapGetters(['selectedCourse']),
     methods: {
       // function used to move to main page
       moveToIndex () {
@@ -271,19 +276,21 @@
       // function used to fill the information supposed to be displayed in the Student Management Card
       // course is the info of course selected
       selectCourse (course) {
-        this.selectedCourse = course
+        this.$store.dispatch('SetSelectedCourse', course)
         this.searchStudent = ''
         this.getStudents()
       },
       // function used to route to the add course page
       addCourse () {
-        const target = { name: 'AddCourse' }
+        this.$store.dispatch('SetEditCourseMode', 3)
+        const target = { name: 'EditCourse' }
         this.$router.push(target)
       },
       // function used to show the course info edit modal
       editCourse (course) {
-        // console.log(course.id)
-        const target = { name: 'AddCourse' }
+        this.$store.dispatch('SetEditCourseMode', 1)
+        this.$store.dispatch('SetSelectedCourse', course)
+        const target = { name: 'EditCourse' }
         this.$router.push(target)
       },
       // function executed when user confirm to delete the course
@@ -340,7 +347,12 @@
       },
       // function used to show the Add student modal
       addStudent () {
-        this.$refs.addStudentModal.show(this.selectedCourse)
+        this.$refs.addStudentModal.show()
+      },
+      importStudentsFromFile () {
+        this.$store.dispatch('SetEditCourseMode', 2)
+        const route = { name: 'EditCourse' }
+        this.$router.push(route)
       },
       // function executed when user confirm to remove the student from the course
       ConfirmStudentRemove (courseId, studentId) {
@@ -379,6 +391,8 @@
     created () {
       // get all the courses belonging to the current teacher after initialization
       this.getCourses()
+      // get all students if has selected courses
+      if (this.selectedCourse !== null) this.getStudents()
     }
   }
 </script>

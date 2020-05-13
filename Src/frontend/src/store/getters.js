@@ -9,7 +9,9 @@ const getters = {
   multiTab: state => state.app.multiTab,
   lang: state => state.i18n.lang,
   isTeacher: state => state.user.isTeacher,
-  userId: state => state.user.id
+  userId: state => state.user.id,
+  selectedCourse: state => state.tcas.selectedCourse,
+  editCourseMode: state => state.tcas.editCourseMode
 }
 
 export default getters

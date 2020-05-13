@@ -91,6 +91,7 @@ const user = {
     Logout ({ commit, state }) {
       return new Promise((resolve) => {
         commit('SET_TOKEN', '')
+        commit('SET_SELECTED_COURSE', null)
         Vue.ls.remove(ACCESS_TOKEN)
         return resolve()
       })

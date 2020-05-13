@@ -7,6 +7,27 @@ export function getTeacherCourses (params) {
     params
   })
 }
+export function createCourse (data) {
+  return axios({
+    url: '/courses/',
+    method: 'post',
+    data
+  })
+}
+export function editCourse (courseId, data) {
+  return axios({
+    url: `/courses/${courseId}/`,
+    method: 'patch',
+    data
+  })
+}
+export function importStudents (data) {
+  return axios({
+    url: '/users/',
+    method: 'post',
+    data
+  })
+}
 // get the course information according to id given
 export function getCourseInfoById (courseId) {
   return axios({
@@ -26,7 +47,7 @@ export function getStudentListOfTheCourse (parameter) {
 // delete the course selected by teacher
 export function deleteCourse (courseId) {
   return axios({
-    url: `/courses/${courseId}`,
+    url: `/courses/${courseId}/`,
     method: 'delete'
   })
 }
@@ -39,11 +60,11 @@ export function removeStudent (courseId, studentId) {
   })
 }
 // add a student to a selected course
-export function addStudentToTheCourse (parameter) {
+export function addStudentToTheCourse (data) {
   return axios({
     url: `/users/`,
     method: 'post',
-    data: parameter
+    data
   })
 }
 // get the submission list of current course
@@ -55,11 +76,11 @@ export function getSubmissionList (parameter) {
   })
 }
 // add new submission to the current course
-export function addNewSubmissionToCourse (parameter) {
+export function addNewSubmissionToCourse (data) {
   return axios({
     url: '/submissions/',
     method: 'post',
-    data: parameter
+    data
   })
 }
 // get courses by query

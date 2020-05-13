@@ -122,17 +122,11 @@ export const teacherRoutes = [
     meta: { title: 'Course Management', icon: 'solution' }
   },
   {
-    path: 'course/addCourse',
-    name: 'AddCourse',
-    component: () => import('@/views/teacher/course/AddCourse'),
+    path: 'course/editCourse',
+    name: 'EditCourse',
+    component: () => import('@/views/teacher/course/EditCourse'),
     meta: { title: 'Course Management' },
     hidden: true
-  },
-  {
-    path: 'contribution',
-    name: 'ViewContribution',
-    component: () => import('@/views/teacher/contribution/ViewContribution'),
-    meta: { title: 'View Contribution', icon: 'like' }
   },
   {
     path: 'submission',
@@ -152,6 +146,12 @@ export const teacherRoutes = [
     component: () => import('@/views/teacher/team/FormConfirmation'),
     meta: { title: 'Team Form Confirmation' },
     hidden: true
+  },
+  {
+    path: 'contribution',
+    name: 'ViewContribution',
+    component: () => import('@/views/teacher/contribution/ViewContribution'),
+    meta: { title: 'View Contribution', icon: 'like' }
   }
 
 ]

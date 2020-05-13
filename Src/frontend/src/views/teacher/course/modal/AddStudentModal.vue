@@ -18,7 +18,7 @@
       >
         <!--Course name-->
         <a-form-model-item label="Course name">
-          <a-input :value="selectedCourse.title" disabled />
+          <a-input :value="selectedCourse === null ? '' : selectedCourse.title" disabled />
         </a-form-model-item>
         <!--Student name-->
         <a-form-model-item label="Student name" prop="username">
@@ -48,6 +48,7 @@
 <script>
   import pick from 'lodash.pick'
   import { addStudentToTheCourse } from '@/api/teacher'
+  import { mapGetters } from 'vuex'
 
   export default {
     name: 'AddStudentModal',
@@ -72,7 +73,6 @@
 
       return {
         visible: false,
-        selectedCourse: { title: '' },
         form: {
           username: '',
           student_id: '',
@@ -85,7 +85,7 @@
           // validation for username
           username: [
             { required: true, message: `Please input the student's name`, trigger: 'blur' },
-            { pattern: /^[A-Za-z]*(\s[A-Za-z]*)*$/, message: 'Please input a valid Student Name', trigger: 'blur' }
+            { pattern: /^[A-Za-z]+( +[A-Za-z]+)*$/, message: 'Please input a valid Student Name', trigger: 'blur' }
           ],
           student_id: [
             { required: true, message: `Please input the student's ID`, trigger: 'blur' }
@@ -112,9 +112,9 @@
         submitLoading: false
       }
     },
+    computed: mapGetters(['selectedCourse']),
     methods: {
-      show (selectedCourse) {
-        this.selectedCourse = selectedCourse
+      show () {
         this.visible = true
       },
       close () {
