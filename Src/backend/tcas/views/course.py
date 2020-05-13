@@ -114,7 +114,20 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         serializer = CourseRemoveStudentSerializer(data=request.data, context={'course': course})
         serializer.is_valid(raise_exception=True)
 
-        course.students.remove(serializer.data['user'])
+        student = serializer.data['user']
+        course.students.remove(student)
+
+        # Remove student from related teams
+        try:
+            team = course.teams.get(members=student)
+            team.members.remove(student)
+            if team.leader == student:
+                team.leader = None
+                team.save()
+            if team.members.count() == 0:
+                team.delete()
+        except Team.DoesNotExist:
+            pass
 
         # Clear form_method and related fields because student number is changed
         course.clear_forming_options()
