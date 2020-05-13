@@ -14,10 +14,10 @@
           </a-row>
         </a-card>
         <a-card title="Your Courses" class="card-border">
-          <a href="#" slot="extra" @click="moveToCoursePage">More</a>
+          <a slot="extra" @click="moveToCoursePage">More</a>
           <a-row :gutter="16">
             <!--Each row 3 items, at most 6 items rendered-->
-            <a-col :span="8" v-for="(item, i) in courseList.results" :key="item.id" v-if="i < 6">
+            <a-col :span="8" v-for="item in courseList.results" :key="item.id">
               <a-card hoverable style="width: 100%; margin-bottom: 10px">
                 <!--Course Card Image-->
                 <img
@@ -54,7 +54,7 @@
 
 <script>
   import { mapGetters } from 'vuex'
-  import { getTeacherCourses } from '../../api/teacher'
+  import { getTeacherCourses } from '@/api/teacher'
   export default {
     name: 'Index',
     data () {
@@ -74,7 +74,7 @@
       // function used to get all the courses available of current Teacher
       getCourses () {
         // default: display 6 courses on the main page
-        getTeacherCourses(1, 6).then(response => {
+        getTeacherCourses({ size: 6 }).then(response => {
           this.courseList = response.data
           // console.log(this.courseList)
         }).catch(error => {
@@ -88,11 +88,6 @@
       // function used to move to the detailed page of course
       moveToCoursePage () {
         this.$router.push('course')
-      },
-      // function used to move to the index page of teacher
-      moveToIndex () {
-        this.$router.push('mainpage')
-        // console.log('12323121')
       }
     }
   }
