@@ -10,14 +10,14 @@
           <a-menu-item>
             <router-link :to="{ name: 'settings' }">
               <a-icon type="setting"/>
-              <span>账户设置</span>
+              <span>Account Settings</span>
             </router-link>
           </a-menu-item>
           <a-menu-divider/>
           <a-menu-item>
             <a href="javascript:;" @click="handleLogout">
               <a-icon type="logout"/>
-              <span>退出登录</span>
+              <span>Logout</span>
             </a>
           </a-menu-item>
         </a-menu>
@@ -39,8 +39,8 @@ export default {
     ...mapActions(['Logout']),
     handleLogout () {
       this.$confirm({
-        title: '提示',
-        content: '真的要注销登录吗 ?',
+        title: 'Confirmation',
+        content: 'Are you really want to logout?',
         onOk: () => {
           return this.Logout({}).then(() => {
             setTimeout(() => {
@@ -48,7 +48,7 @@ export default {
             }, 16)
           }).catch(err => {
             this.$message.error({
-              title: '错误',
+              title: 'Error',
               description: err.message
             })
           })

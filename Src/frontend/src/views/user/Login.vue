@@ -7,15 +7,15 @@
       :form="form"
       @submit="handleSubmit"
     >
-      <a-alert v-if="isLoginError" type="error" showIcon style="margin-bottom: 24px;" message="账户或密码错误（admin/ant.design )" />
+      <a-alert v-if="isLoginError" type="error" showIcon style="margin-bottom: 24px;" message="Wrong username or password!" />
       <a-form-item>
         <a-input
           size="large"
           type="text"
-          placeholder="账户: admin"
+          placeholder="Username"
           v-decorator="[
             'username',
-            {rules: [{ required: true, message: '请输入帐户名或邮箱地址' }], validateTrigger: 'change'}
+            {rules: [{ required: true, message: 'Please input your username' }], validateTrigger: 'change'}
           ]"
         >
           <a-icon slot="prefix" type="user" :style="{ color: 'rgba(0,0,0,.25)' }"/>
@@ -27,10 +27,10 @@
           size="large"
           type="password"
           autocomplete="false"
-          placeholder="密码: admin or ant.design"
+          placeholder="Password"
           v-decorator="[
             'password',
-            {rules: [{ required: true, message: '请输入密码' }], validateTrigger: 'blur'}
+            {rules: [{ required: true, message: 'Please input your password' }], validateTrigger: 'blur'}
           ]"
         >
           <a-icon slot="prefix" type="lock" :style="{ color: 'rgba(0,0,0,.25)' }"/>
@@ -38,7 +38,7 @@
       </a-form-item>
 
       <a-form-item>
-        <a-checkbox v-decorator="['rememberMe', { valuePropName: 'checked' }]">自动登录</a-checkbox>
+        <a-checkbox v-decorator="['rememberMe', { valuePropName: 'checked' }]">Remember me</a-checkbox>
       </a-form-item>
 
       <a-form-item style="margin-top:24px">
@@ -49,7 +49,7 @@
           class="login-button"
           :loading="loginBtn"
           :disabled="loginBtn"
-        >确定</a-button>
+        >Login</a-button>
       </a-form-item>
     </a-form>
   </div>
@@ -96,17 +96,6 @@ export default {
       })
     },
     loginSuccess () {
-      // check res.homePage define, set $router.push name res.homePage
-      // Why not enter onComplete
-      /*
-      this.$router.push({ name: 'analysis' }, () => {
-        console.log('onComplete')
-        this.$notification.success({
-          message: '欢迎',
-          description: `${timeFix()}，欢迎回来`
-        })
-      })
-      */
       this.$router.push({ path: '/' })
       this.isLoginError = false
     },
