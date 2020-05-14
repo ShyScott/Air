@@ -52,34 +52,30 @@ const user = {
           commit('SET_NAME', user.username)
           commit('SET_USER_ID', user.id)
           commit('SET_AVATAR', user.avatar.small)
+
+          // set common app style
+          commit('SET_SIDEBAR_TYPE', true)
+          commit('TOGGLE_THEME', 'dark')
+          commit('TOGGLE_CONTENT_WIDTH', 'Fluid')
+          commit('TOGGLE_FIXED_HEADER_HIDDEN', false)
+          commit('TOGGLE_WEAK', false)
+          commit('TOGGLE_COLOR', '#1a8fff')
+          commit('TOGGLE_MULTI_TAB', false)
+
           // If the user identity is a student
           if (user.student_profile) {
             commit('SET_IS_TEACHER', false)
             // Set the layout for students
             // save the default UI settings dedicated for student
-            commit('SET_SIDEBAR_TYPE', true)
-            commit('TOGGLE_THEME', 'dark')
             commit('TOGGLE_LAYOUT_MODE', 'topmenu')
-            commit('TOGGLE_FIXED_HEADER', false)
+            commit('TOGGLE_FIXED_HEADER', true)
             commit('TOGGLE_FIXED_SIDERBAR', false)
-            commit('TOGGLE_CONTENT_WIDTH', 'Fluid')
-            commit('TOGGLE_FIXED_HEADER_HIDDEN', true)
-            commit('TOGGLE_WEAK', false)
-            commit('TOGGLE_COLOR', '#1a8fff')
-            commit('TOGGLE_MULTI_TAB', false)
           } else {
             // if the user identity is a teacher
             commit('SET_IS_TEACHER', true)
-            commit('SET_SIDEBAR_TYPE', true)
-            commit('TOGGLE_THEME', 'dark')
             commit('TOGGLE_LAYOUT_MODE', 'sidemenu')
-            commit('TOGGLE_FIXED_HEADER', false)
-            commit('TOGGLE_FIXED_SIDERBAR', false)
-            commit('TOGGLE_CONTENT_WIDTH', 'Fluid')
-            commit('TOGGLE_FIXED_HEADER_HIDDEN', false)
-            commit('TOGGLE_WEAK', false)
-            commit('TOGGLE_COLOR', '#1a8fff')
-            commit('TOGGLE_MULTI_TAB', false)
+            commit('TOGGLE_FIXED_HEADER', true)
+            commit('TOGGLE_FIXED_SIDERBAR', true)
           }
 
           resolve()
