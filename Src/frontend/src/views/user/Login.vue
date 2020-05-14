@@ -64,7 +64,8 @@ export default {
     return {
       isLoginError: false,
       form: this.$form.createForm(this),
-      loginBtn: false
+      csrfToken: '',
+      loginBtn: true
     }
   },
   methods: {
@@ -82,6 +83,7 @@ export default {
 
       validateFields(validateFieldsKey, { force: true }, (err, values) => {
         if (!err) {
+          values.csrfmiddlewaretoken = this.csrfToken
           Login(values)
             .then((res) => this.loginSuccess(res))
             .catch(err => this.requestFailed(err))
@@ -102,6 +104,33 @@ export default {
     requestFailed () {
       this.isLoginError = true
     }
+  },
+  mounted () {
+    const failedToGetToken = () => {
+      this.$notification.error({
+        message: 'Error',
+        description: 'Failed to retrieve critical information from back-end for login process. Please contact admin.'
+      })
+      console.warn('Warning: failed to get CSRF token')
+    }
+
+    // get the first csrf token from backend
+    this.axios({
+      method: 'get',
+      baseURL: '/api-auth',
+      url: '/login/'
+    }).then(response => {
+      const tokenReg = /csrfmiddlewaretoken['"].+value=['"](.+)['"]/
+      const token = response.data.match(tokenReg)
+      if (token) {
+        this.csrfToken = token[1]
+        this.loginBtn = false
+      } else {
+        failedToGetToken()
+      }
+    }).catch(() => {
+      failedToGetToken()
+    })
   }
 }
 </script>

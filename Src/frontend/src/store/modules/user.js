@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import { login, getMyInfo } from '@/api/auth'
+import { login, logout, getMyInfo } from '@/api/auth'
 import { ACCESS_TOKEN } from '@/store/mutation-types'
 
 const user = {
@@ -34,9 +34,19 @@ const user = {
     Login ({ commit }, userInfo) {
       return new Promise((resolve, reject) => {
         login(userInfo).then(response => {
-          const token = 'Bearer ' + response.data.access
-          // 设置 Vue-ls 存储的 ACCESS_TOKEN 超时时间为 30 分钟
-          Vue.ls.set(ACCESS_TOKEN, token, 30 * 60 * 1000)
+          // 这是使用 JWT 时的 Token
+          // const token = 'Bearer ' + response.data.access
+
+          // 使用 session 时无需 Token，但是在 router 中无法直接判断 session 的有效性
+          // 所以还是设置一个非空串 token，方便在 router.beforeEach() 中判断登录状态
+          const token = '1'
+
+          // 设置 Vue-ls 存储的 ACCESS_TOKEN 超时时间为 1 小时（使用 JWT 认证时）
+          // Vue.ls.set(ACCESS_TOKEN, token, 60 * 60 * 1000)
+
+          // 使用 session 时不能设置 Vue-ls 的超时
+          Vue.ls.set(ACCESS_TOKEN, token)
+
           commit('SET_TOKEN', token)
           resolve()
         }).catch(error => {
@@ -86,13 +96,19 @@ const user = {
     // 登出
     Logout ({ commit, state }) {
       return new Promise((resolve) => {
-        commit('SET_TOKEN', '')
-        commit('SET_SELECTED_COURSE', null)
-        Vue.ls.remove(ACCESS_TOKEN)
-        return resolve()
+        logout().then(() => {
+          resolve()
+        }).catch(() => {
+          resolve()
+        }).finally(() => {
+          // reset all fields to default
+          commit('SET_TOKEN', '')
+          Vue.ls.remove(ACCESS_TOKEN)
+          commit('SET_SELECTED_COURSE', null)
+          commit('SET_EDIT_COURSE_MODE', 3)
+        })
       })
     }
-
   }
 }
 
