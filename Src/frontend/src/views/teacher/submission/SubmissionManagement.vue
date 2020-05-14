@@ -18,7 +18,7 @@
         <div style="margin-top: 20px">
           <span style="margin-right: 15px">Target Course: </span>
           <a-select
-            placeholder="Please select the course"
+            placeholder="Select the course. Input the course name to filter."
             style="width: 400px"
             show-search
             :filterOption="false"
@@ -51,7 +51,7 @@
               <!--tooltip for operation button-->
               <a-tooltip>
                 <template slot="title">
-                  <span>Click to delete this course</span>
+                  <span>Click to delete this submission</span>
                 </template>
                 <a class="a-adjust" href="#"><a-icon type="delete" />Delete</a>
               </a-tooltip>
