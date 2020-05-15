@@ -23,7 +23,7 @@
 
         </a-col>
         <a-col :md="24" :lg="8" :style="{ minHeight: '180px' }">
-          <div class="ant-upload-preview" @click="$refs.modal.edit(1)" >
+          <div class="ant-upload-preview" @click="$refs.modal.edit()" >
             <a-icon type="cloud-upload-o" class="upload-icon"/>
             <div class="mask">
               <a-icon type="plus" />
