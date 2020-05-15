@@ -91,7 +91,7 @@ class UserAvatarSerializer(serializers.ModelSerializer):
     """
     Serializer to update user's avatar
     """
-    avatar = VersatileImageFieldSerializer(sizes='user_avatar')
+    avatar = VersatileImageFieldSerializer(sizes='user_avatar', allow_null=True)
 
     class Meta:
         model = User

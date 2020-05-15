@@ -174,7 +174,7 @@ SIMPLE_JWT = {
 
 VERSATILEIMAGEFIELD_RENDITION_KEY_SETS = {
     'user_avatar': [
-        ('medium', 'thumbcrop__400x400'),
+        ('medium', 'thumbcrop__200x200'),
         ('small', 'thumbcrop__80x80'),
     ]
 }
