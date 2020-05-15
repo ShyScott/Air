@@ -256,7 +256,7 @@
             { required: true, message: 'Please input the secondary number', trigger },
             { pattern: /^[0-9]\d*$/, message: 'Please input a natural number', trigger },
             {
-              validator: () => {
+              validator () {
                 this.$refs.formOptionFormRef.validateField(['memberCountPrimary'])
                 return true
               },
@@ -459,7 +459,8 @@
       // function used to validate whether the teacher's proposed team formation is valid or not, also, this function would given recommended formation of primary number and secondary number automatically
       validateTeamNumbers () {
         const validatePairs = (memberCountPrimary, memberCountSecondary) => {
-          if (memberCountSecondary < 0) return false
+          if (memberCountPrimary <= 0 || memberCountSecondary < 0) return false
+          if ([4, 5].includes(this.formOptionForm.formMethod) && (memberCountPrimary < 4 || memberCountPrimary % 2 > 0 || memberCountSecondary < 4 || memberCountSecondary % 2 > 0)) return false
           let teamCountPrimary = Math.floor(this.currentNum / memberCountPrimary)
           for (; teamCountPrimary > 0; --teamCountPrimary) {
             const remain = this.currentNum - teamCountPrimary * memberCountPrimary
@@ -479,9 +480,10 @@
         const memberCountSecondary = parseInt(this.formOptionForm.memberCountSecondary)
         if (validatePairs(memberCountPrimary, memberCountSecondary)) return true
 
-        let delta = 1
+        const step = this.formOptionForm.formMethod >= 4 ? 2 : 1
+        let delta = step
         while (true) {
-          const flag1 = memberCountPrimary + delta <= this.currentNum - memberCountPrimary
+          const flag1 = memberCountPrimary + delta <= this.currentNum
           const flag2 = memberCountPrimary - delta > 0
           if (flag1 || flag2) {
             if (flag1 && validatePairs(memberCountPrimary, memberCountPrimary + delta)) return true
@@ -489,7 +491,7 @@
           } else {
             return false
           }
-          ++delta
+          delta += step
         }
       },
       // function used to routes to the confirmation page after user submit form options or click the confirm button
