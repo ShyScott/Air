@@ -81,6 +81,11 @@ class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 
+    def validate_old_password(self, value):
+        # Check old password
+        if not self.context['request'].user.check_password(value):
+            raise serializers.ValidationError('Wrong old password')
+
 
 class UserAvatarSerializer(serializers.ModelSerializer):
     """

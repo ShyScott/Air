@@ -14,7 +14,7 @@ from django_filters import rest_framework as filters
 from .generic import PermissionDictMixin
 from tcas.models import User, Course, StudentProfile
 from tcas.serializers import UserSerializer, ChangePasswordSerializer, StudentBatchCreateSerializer, UserAvatarSerializer
-from tcas.permissions import IsTeacher, IsLogin, IsCurrentUser, IsInCurrentCourse
+from tcas.permissions import IsTeacher, IsLogin, IsInCurrentCourse
 
 
 class UserFilter(filters.FilterSet):
@@ -50,7 +50,7 @@ class UserViewSet(PermissionDictMixin, ModelViewSet):
         'retrieve': [IsLogin],
         'create': [IsTeacher, IsInCurrentCourse],
         'me': [IsLogin],
-        'change_password': [IsCurrentUser],
+        'change_password': [IsLogin],
         'avatar': [IsLogin],
         'others': [IsTeacher],
     }
@@ -120,14 +120,11 @@ class UserViewSet(PermissionDictMixin, ModelViewSet):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=False, methods=['put'])
     def change_password(self, request, *args, **kwargs):
-        user = self.get_object()
-        serializer = ChangePasswordSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        # Check old password
-        if not user.check_password(serializer.validated_data['old_password']):
-            raise ValidationError('Wrong old password')
+        user = request.user
         user.set_password(serializer.validated_data['new_password'])
         user.save()
         # Refresh token for current user
