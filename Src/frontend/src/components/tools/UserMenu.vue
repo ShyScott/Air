@@ -8,7 +8,7 @@
         </span>
         <a-menu slot="overlay" class="user-dropdown-menu-wrapper">
           <a-menu-item>
-            <router-link :to="{ name: 'settings' }">
+            <router-link :to="{ name: 'Settings' }">
               <a-icon type="setting"/>
               <span>Account Settings</span>
             </router-link>
@@ -33,7 +33,6 @@ export default {
   name: 'UserMenu',
   computed: {
     ...mapGetters(['nickname', 'avatar'])
-
   },
   methods: {
     ...mapActions(['Logout']),

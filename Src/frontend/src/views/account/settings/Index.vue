@@ -1,155 +1,167 @@
 <template>
   <div class="page-header-index-wide">
-    <a-card :bordered="false" :bodyStyle="{ padding: '16px 0', height: '100%' }" :style="{ height: '100%' }">
-      <div class="account-settings-info-main" :class="device">
-        <div class="account-settings-info-left">
-          <a-menu
-            :mode="device == 'mobile' ? 'horizontal' : 'inline'"
-            :style="{ border: '0', width: device == 'mobile' ? '560px' : 'auto'}"
-            :selectedKeys="selectedKeys"
-            type="inner"
-            @openChange="onOpenChange"
-          >
-            <a-menu-item key="/account/settings/base">
-              <router-link :to="{ name: 'BaseSettings' }">
-                基本设置
-              </router-link>
-            </a-menu-item>
-            <a-menu-item key="/account/settings/security">
-              <router-link :to="{ name: 'SecuritySettings' }">
-                安全设置
-              </router-link>
-            </a-menu-item>
-            <a-menu-item key="/account/settings/custom">
-              <router-link :to="{ name: 'CustomSettings' }">
-                个性化
-              </router-link>
-            </a-menu-item>
-            <a-menu-item key="/account/settings/binding">
-              <router-link :to="{ name: 'BindingSettings' }">
-                账户绑定
-              </router-link>
-            </a-menu-item>
-            <a-menu-item key="/account/settings/notification">
-              <router-link :to="{ name: 'NotificationSettings' }">
-                新消息通知
-              </router-link>
-            </a-menu-item>
-          </a-menu>
-        </div>
-        <div class="account-settings-info-right">
-          <div class="account-settings-info-title">
-            <span>{{ $route.meta.title }}</span>
-          </div>
-          <route-view></route-view>
-        </div>
+    <a-card :bodyStyle="{ height: '100%' }" :style="{ height: '100%' }">
+      <div class="account-settings-info-title">
+        <span>Account Settings</span>
       </div>
+
+      <a-row :gutter="16">
+        <a-col :md="24" :lg="16">
+
+          <a-form-model ref="form" layout="vertical" :model="form" :rules="rules">
+            <a-form-model-item label="Old password" prop="old_password">
+              <a-input v-model="form.old_password" type="password" />
+            </a-form-model-item>
+            <a-form-model-item label="New password" prop="new_password">
+              <a-input v-model="form.new_password" type="password" />
+            </a-form-model-item>
+
+            <a-form-item>
+              <a-button type="primary" @click="submit">Update</a-button>
+            </a-form-item>
+          </a-form-model>
+
+        </a-col>
+        <a-col :md="24" :lg="8" :style="{ minHeight: '180px' }">
+          <div class="ant-upload-preview" @click="$refs.modal.edit(1)" >
+            <a-icon type="cloud-upload-o" class="upload-icon"/>
+            <div class="mask">
+              <a-icon type="plus" />
+            </div>
+            <img :src="avatarMedium"/>
+          </div>
+        </a-col>
+
+      </a-row>
+
     </a-card>
+
+    <avatar-modal ref="modal" />
   </div>
 </template>
 
 <script>
-import { PageView, RouteView } from '@/layouts'
-import { mixinDevice } from '@/utils/mixin.js'
+  import { changePassword } from '@/api/users'
+  import AvatarModal from './AvatarModal'
+  import { mapGetters } from 'vuex'
 
-export default {
-  components: {
-    RouteView,
-    PageView
-  },
-  mixins: [mixinDevice],
-  data () {
-    return {
-      // horizontal  inline
-      mode: 'inline',
-
-      openKeys: [],
-      selectedKeys: [],
-
-      // cropper
-      preview: {},
-      option: {
-        img: '/avatar2.jpg',
-        info: true,
-        size: 1,
-        outputType: 'jpeg',
-        canScale: false,
-        autoCrop: true,
-        // 只有自动截图开启 宽度高度才生效
-        autoCropWidth: 180,
-        autoCropHeight: 180,
-        fixedBox: true,
-        // 开启宽度和高度比例
-        fixed: true,
-        fixedNumber: [1, 1]
-      },
-
-      pageTitle: ''
-    }
-  },
-  mounted () {
-    this.updateMenu()
-  },
-  methods: {
-    onOpenChange (openKeys) {
-      this.openKeys = openKeys
+  export default {
+    name: 'Settings',
+    components: {
+      AvatarModal
     },
-    updateMenu () {
-      const routes = this.$route.matched.concat()
-      this.selectedKeys = [ routes.pop().path ]
-    }
-  },
-  watch: {
-    '$route' (val) {
-      this.updateMenu()
+    data () {
+      const validatePasswords = (rule, value, cb) => {
+        if (this.form.old_password === '' && this.form.new_password === '' && value === '') {
+          return cb()
+        }
+        if (value === '') {
+          return cb(new Error('This field is required'))
+        }
+        cb()
+      }
+      return {
+        form: {
+          old_password: '',
+          new_password: ''
+        },
+        rules: {
+          old_password: [{
+            validator: validatePasswords,
+            trigger: 'blur'
+          }],
+          new_password: [{
+            validator: validatePasswords,
+            trigger: 'blur'
+          }]
+        }
+      }
+    },
+    computed: mapGetters(['avatarMedium']),
+    methods: {
+      async submit () {
+        const valid = await this.$refs.form.validate()
+        if (valid) {
+          changePassword(this.form).then(() => {
+            this.$notification.success({
+              message: 'Success',
+              description: 'Change password successfully!'
+            })
+            this.$refs.form.resetFields()
+          }).catch(err => {
+            const data = err.response.data
+            this.$notification.error({
+              message: 'Error',
+              description: (data && data.old_password) ? data.old_password[0] : 'Failed to change password!'
+            })
+          })
+        }
+      }
     }
   }
-}
 </script>
 
 <style lang="less" scoped>
-  .account-settings-info-main {
-    width: 100%;
-    display: flex;
-    height: 100%;
-    overflow: auto;
-
-    &.mobile {
-      display: block;
-
-      .account-settings-info-left {
-        border-right: unset;
-        border-bottom: 1px solid #e8e8e8;
-        width: 100%;
-        height: 50px;
-        overflow-x: auto;
-        overflow-y: scroll;
-      }
-      .account-settings-info-right {
-        padding: 20px 40px;
-      }
-    }
-
-    .account-settings-info-left {
-      border-right: 1px solid #e8e8e8;
-      width: 224px;
-    }
-
-    .account-settings-info-right {
-      flex: 1 1;
-      padding: 8px 40px;
-
-      .account-settings-info-title {
-        color: rgba(0,0,0,.85);
-        font-size: 20px;
-        font-weight: 500;
-        line-height: 28px;
-        margin-bottom: 12px;
-      }
-      .account-settings-info-view {
-        padding-top: 12px;
-      }
-    }
+  .account-settings-info-title {
+    color: rgba(0,0,0,.85);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 28px;
+    margin-bottom: 24px;
   }
 
+  .avatar-upload-wrapper {
+    height: 200px;
+    width: 100%;
+  }
+
+  .ant-upload-preview {
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 180px;
+    border-radius: 50%;
+    box-shadow: 0 0 4px #ccc;
+
+    .upload-icon {
+      position: absolute;
+      top: 0;
+      right: 10px;
+      font-size: 1.4rem;
+      padding: 0.5rem;
+      background: rgba(222, 221, 221, 0.7);
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+    }
+
+    .mask {
+      opacity: 0;
+      position: absolute;
+      background: rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      transition: opacity 0.4s;
+
+      &:hover {
+        opacity: 1;
+      }
+
+      i {
+        font-size: 2rem;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-left: -1rem;
+        margin-top: -1rem;
+        color: #d6d6d6;
+      }
+    }
+
+    img, .mask {
+      width: 100%;
+      max-width: 180px;
+      height: 100%;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+  }
 </style>

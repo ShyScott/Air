@@ -61,7 +61,7 @@ const user = {
         getMyInfo().then(({ data: user }) => {
           commit('SET_NAME', user.username)
           commit('SET_USER_ID', user.id)
-          commit('SET_AVATAR', user.avatar.small)
+          commit('SET_AVATAR', user.avatar)
 
           // set common app style
           commit('SET_SIDEBAR_TYPE', true)
