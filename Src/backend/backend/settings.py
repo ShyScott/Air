@@ -133,6 +133,15 @@ AUTH_USER_MODEL = 'tcas.User'
 LOGIN_URL = '/api-auth/login/'
 LOGOUT_URL = '/api-auth/logout/'
 
+# Session setting
+
+SESSION_COOKIE_AGE = 3600
+
+# Setup support for proxy headers - must uncomment in production!
+
+# USE_X_FORWARDED_HOST = True
+# SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Django REST Framework settings
 
 REST_FRAMEWORK = {
