@@ -68,13 +68,17 @@ def group_students(students, members_list, team_nums, current_student, current_t
 
 class CourseFilter(filters.FilterSet):
     title = filters.CharFilter(method='filter_title')
+    assessible = filters.BooleanFilter(method='filter_assessible')
 
     class Meta:
         model = Course
-        fields = ['title']
+        fields = ['title', 'assessible']
 
     def filter_title(self, queryset, field_name, value):
         return queryset.filter(title__icontains=value).order_by(Length(Replace('title', Value(value))))
+
+    def filter_assessible(self, queryset, field_name, value):
+        return queryset if not value else queryset.filter(teams__members=self.request.user, teams__leader__isnull=False)
 
 
 class CourseViewSet(PermissionDictMixin, ModelViewSet):
