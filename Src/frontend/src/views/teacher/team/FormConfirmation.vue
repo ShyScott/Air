@@ -99,23 +99,6 @@
         // pagination for the table list
         pageSizeForTeam: 5,
         pageNumForTeam: 1,
-        // columns used for team list table
-        teamListColumns: [
-          {
-            title: 'Team Name',
-            dataIndex: 'name',
-            width: '40%',
-            align: 'center',
-            scopedSlots: { customRender: 'teamName' }
-          },
-          {
-            title: 'Team member',
-            dataIndex: 'members',
-            width: '60%',
-            align: 'center',
-            scopedSlots: { customRender: 'teamMember' }
-          }
-        ],
         // columns used for student with no team list table
         studentlistColumns: [
           {
@@ -190,13 +173,51 @@
         currentCourseInfo: {}
       }
     },
+    computed: {
+
+      // columns used for team list table
+      teamListColumns () {
+        const columns = [
+          {
+            title: 'Team Name',
+            dataIndex: 'name',
+            width: '40%',
+            align: 'center',
+            scopedSlots: { customRender: 'teamName' }
+          },
+          {
+            title: 'Team member',
+            dataIndex: 'members',
+            width: '60%',
+            align: 'center',
+            scopedSlots: { customRender: 'teamMember' }
+          }
+        ]
+        if ([3, 5].includes(this.formMethod)) {
+          columns[0].width = '25%'
+          columns.push({
+            title: 'Average GPA',
+            dataIndex: 'avgGPA',
+            width: '15%',
+            align: 'center'
+          })
+        }
+        return columns
+      }
+    },
     methods: {
       // function used to get the team list of current course
       getGeneratedTeams () {
         this.teamList = []
         generateTeam(this.selectedCourseId).then(({ data: response }) => {
           // console.log(response)
-          this.teamList = response
+          this.teamList = response.map(team => {
+            const sumGPA = team.members.reduce((sumGPA, member) => {
+              return sumGPA + member.student_profile.gpa
+            }, 0)
+            team.avgGPA = (sumGPA / team.members.length).toFixed(2)
+            return team
+          })
         }).catch(error => {
           // if error occurs
           if (error.response) {
