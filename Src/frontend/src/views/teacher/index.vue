@@ -3,49 +3,20 @@
     <template>
       <!--This is the area for the rendering of course cards-->
       <div style="background-color: #f1f2f5;">
-        <a-card class="card-border" style="margin-bottom: 25px; margin-top: 10px">
-          <a-row>
-            <a-col>
-              <!--WelcomeArea-->
-              <p style="font-size: 60px; margin-left: 20px; margin-bottom: 15px">
-                <a-icon type="smile" style="font-size: 60px" />
-                Welcome {{ this.nickname }}</p>
-            </a-col>
-          </a-row>
+        <a-card :bordered="false" style="margin-bottom: 25px; margin-top: 10px">
+          <a-avatar :size="64" :src="avatar" />
+          <span style="font-size: 48px; margin-bottom: 15px; vertical-align: middle">
+            Welcome back, {{ nickname }}
+          </span>
         </a-card>
-        <a-card title="Your Courses" class="card-border">
+        <a-card
+          :bordered="false"
+          style="margin-bottom: 25px"
+          :bodyStyle="{ padding: '8px 0 0 0' }"
+          title="Recent Courses"
+        >
           <a slot="extra" @click="moveToCoursePage">More</a>
-          <a-row :gutter="16">
-            <!--Each row 3 items, at most 6 items rendered-->
-            <a-col :span="8" v-for="item in courseList.results" :key="item.id">
-              <a-card hoverable style="width: 100%; margin-bottom: 10px">
-                <!--Course Card Image-->
-                <img
-                  alt="example"
-                  src="https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png"
-                  slot="cover"
-                />
-                <a-card-meta :title="item.title" description="This is the description">
-                  <a-avatar
-                    slot="avatar"
-                    src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-                  />
-                </a-card-meta>
-              </a-card>
-            </a-col>
-          </a-row>
-        </a-card>
-        <!--Quick Navigation Area-->
-        <a-card title="Qucik Navigation" style="margin-top: 25px;">
-          <a-row>
-            <a-col>
-              <a-row :gutter="16" style="text-align: center">
-                <a-col :span="8"><a href="#">Add a new course</a></a-col>
-                <a-col :span="8"><a href="#">Import Students</a></a-col>
-                <a-col :span="8"><a href="#">Export Contribution</a></a-col>
-              </a-row>
-            </a-col>
-          </a-row>
+          <a-table :dataSource="courseList" :columns="columns" :pagination="false" rowKey="id" size="middle" />
         </a-card>
       </div>
     </template>
@@ -55,16 +26,35 @@
 <script>
   import { mapGetters } from 'vuex'
   import { getTeacherCourses } from '@/api/teacher'
+  import { convertDuration } from '@/utils/util'
+  import moment from 'moment'
   export default {
     name: 'Index',
     data () {
       return {
-        courseList: []
+        courseList: [],
+        columns: [
+          {
+            title: 'Course Name',
+            dataIndex: 'title',
+            align: 'center'
+          },
+          {
+            title: 'Duration',
+            dataIndex: 'duration',
+            align: 'center'
+          },
+          {
+            title: 'Students Count',
+            dataIndex: 'students_count',
+            align: 'center'
+          }
+        ]
       }
     },
     computed: {
       ...mapGetters([
-        'nickname'
+        'nickname', 'avatar'
       ])
     },
     created () {
@@ -74,11 +64,13 @@
       // function used to get all the courses available of current Teacher
       getCourses () {
         // default: display 6 courses on the main page
-        getTeacherCourses({ size: 6 }).then(response => {
-          this.courseList = response.data
+        getTeacherCourses({ size: 8, ordering: '-duration' }).then(response => {
+          this.courseList = response.data.results.map(course => {
+            course.duration = convertDuration(moment(course.duration))
+            return course
+          })
           // console.log(this.courseList)
-        }).catch(error => {
-          console.info(error)
+        }).catch(() => {
           this.$notification.error({
             message: 'Error',
             description: 'Failed to get the information of available courses'
@@ -87,16 +79,13 @@
       },
       // function used to move to the detailed page of course
       moveToCoursePage () {
-        this.$router.push('course')
+        this.$router.push({ name: 'CourseManagement' })
       }
     }
   }
 </script>
 
 <style lang="less" scoped>
-  .card-border {
-    border: 0px;
-  }
   .breadcrumb-adjust {
     margin-bottom: 35px;
   }

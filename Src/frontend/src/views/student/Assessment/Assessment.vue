@@ -32,11 +32,11 @@
           </template>
           <!--operation area-->
           <template slot="operation" slot-scope="text, record">
-            <span style="margin-right: 15px" v-if="record.team_in.leader === userId">
+            <span v-if="record.team_in.leader === userId">
               <a-icon style="color: #1A8FFF" type="solution"></a-icon>
               <a href="#" @click="moveToAssessSubmissionPage(record.id)"> Assess submissions </a>
             </span>
-            <span>
+            <span v-else>
               <a-icon style="color: #1A8FFF" type="rocket"></a-icon>
               <a href="#" @click="showAssessLeaderModal(record)"> Assess team leader </a>
             </span>
@@ -95,7 +95,7 @@
           current: 1,
           pageSize: 5,
           // Show the number of total items
-          showTotal: (total) => `Totally ${ total } items`,
+          showTotal: (total) => `Total ${ total } items`,
           total: 0,
           showSizeChanger: true,
           pageSizeOptions: ['5', '10', '12', '15', '25'],

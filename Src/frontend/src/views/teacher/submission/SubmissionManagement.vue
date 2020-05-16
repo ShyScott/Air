@@ -205,10 +205,10 @@
         },
         {
           // Percentage column
-          title: 'Percentage (%)',
+          title: 'Percentage',
           dataIndex: 'percentage',
           width: '30%',
-          scopedSlots: { customRender: 'percentage' }
+          customRender: text => text + '%'
         },
         {
           // operation column

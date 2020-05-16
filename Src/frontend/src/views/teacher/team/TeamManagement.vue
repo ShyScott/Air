@@ -172,14 +172,14 @@
             scopedSlots: { customRender: 'title' }
           },
           {
-            title: 'Number of Participants',
+            title: 'Students Count',
             dataIndex: 'students_count',
             width: '20%',
             align: 'center',
             scopedSlots: { customRender: 'students_count' }
           },
           {
-            title: 'Participant already in team',
+            title: 'Teamed Students Count',
             dataIndex: 'formed_students_count',
             width: '20%',
             align: 'center',
@@ -326,7 +326,7 @@
             scopedSlots: { customRender: 'teamMembers' }
           },
           {
-            title: 'Number',
+            title: 'Members Count',
             dataIndex: 'members.length',
             width: '25%',
             align: 'center',

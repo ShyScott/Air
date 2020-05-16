@@ -30,28 +30,28 @@
             </a-select>
           </a-col>
           <a-col :offset="21">
-            <a-button :disabled="contributionList === null" @click="exportToExcel" type="primary"><a-icon type="export" />Export</a-button>
+            <a-button :disabled="contributionList.length === 0" @click="exportToExcel" type="primary"><a-icon type="export" />Export</a-button>
           </a-col>
         </a-row>
       </div>
       <!--table area-->
       <a-table
         id="outTable"
+        size="middle"
         style="margin-top: 20px"
-        :dataSource="contributionList"
+        :dataSource="contributionListPreview"
         :columns="contributionListColumns"
         :pagination="pagination"
         rowKey="student_id"
-      >
-      </a-table>
+        @change="handleTableChange"
+      />
     </a-card>
   </div>
 </template>
 
 <script>
 
-  import { exportContribution, getTeacherCourses } from '../../../api/teacher'
-  import FileSaver from 'file-saver'
+  import { exportContribution, getTeacherCourses } from '@/api/teacher'
   import XLSX from 'xlsx'
 
   export default {
@@ -61,16 +61,19 @@
         // variable used to store the course info
         courseList: [],
         // course has been selected currently
-        selectedCourseId: '',
+        selectedCourseId: null,
         // list for contributions
-        contributionList: null,
+        contributionList: [],
+        // list for previewing contributions
+        contributionListPreview: [],
         // pagination settings for contribution list
         pagination: {
-          disabled: true,
-          defaultPageSize: 150,
+          current: 1,
+          pageSize: 10,
           total: 0,
           showTotal: (total) => `Total ${ total } items`,
-          hideOnSinglePage: true
+          showSizeChanger: true,
+          pageSizeOptions: ['10', '12', '15', '20']
         },
         // columns settings for the contribution list
         contributionListColumns: [
@@ -90,7 +93,8 @@
             title: 'Contribution',
             dataIndex: 'contribution',
             width: '25%',
-            align: 'center'
+            align: 'center',
+            customRender: text => (parseFloat(text) * 100).toFixed(2) + '%'
           },
           {
             title: 'Bonus',
@@ -130,19 +134,17 @@
         exportContribution(this.selectedCourseId).then(({ data: response }) => {
           this.contributionList = response
           this.pagination.total = response.length
-          // console.log(this.contributionList)
+          this.handleTableChange({ current: 1 })
         }).catch(error => {
           var errorInfo = 'Failed to get contribution information'
           if (error.response) {
             if (error.response.data) {
               errorInfo = error.response.data[0]
-              console.info(error.response)
               this.$notification.warn({
                 message: 'Warning',
                 description: errorInfo
               })
             } else {
-              console.info(error.response)
               this.$notification.error({
                 message: 'Error',
                 description: errorInfo
@@ -151,32 +153,26 @@
           }
         })
       },
+      handleTableChange (pagination) {
+        pagination = {
+          ...this.pagination,
+          ...pagination
+        }
+        this.pagination = pagination
+        const data = [...this.contributionList]
+        this.contributionListPreview = data.splice((pagination.current - 1) * pagination.pageSize, pagination.pageSize)
+      },
       // function used to export the contribution info to excel file
       exportToExcel () {
-        // when transforming to excel, use original format
-        var xlsxParam = { raw: true }
-        var wb = XLSX.utils.table_to_book(document.querySelector('#outTable'), xlsxParam)
-        var wbout = XLSX.write(wb, {
-          bookType: 'xlsx',
-          bookSST: true,
-          type: 'array'
-        })
-        try {
-          var courses = this.courseList
-          courses = courses.filter((item) => {
-            return item.id === this.selectedCourseId
-          })
-          const fileName = courses[0].title + '.xlsx'
-          FileSaver.saveAs(
-            new Blob(
-              [wbout],
-              { type: 'application/octet-stream;charset=utf-8' }),
-            fileName
-          )
-        } catch (e) {
-          if (typeof console !== 'undefined') console.log(e, wbout)
-        }
-        return wbout
+        const courseName = this.courseList.find(item => item.id === this.selectedCourseId).title
+        const data = [
+          ['Student Name', 'Student ID', 'Contribution', 'Bonus'],
+          ...this.contributionList.map(item => [item.username, item.student_id, item.contribution, item.bonus])
+        ]
+        const wb = XLSX.utils.book_new()
+        const ws = XLSX.utils.aoa_to_sheet(data)
+        XLSX.utils.book_append_sheet(wb, ws, courseName)
+        XLSX.writeFile(wb, courseName + '.xlsx')
       }
     }
   }

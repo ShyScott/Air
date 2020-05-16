@@ -228,6 +228,14 @@
             scopedSlots: { customRender: 'title' }
           },
           {
+            // Duration
+            title: 'Course Duration',
+            dataIndex: 'duration',
+            width: '20%',
+            align: 'center',
+            scopedSlots: { customRender: 'confirmation_status' }
+          },
+          {
             // Team name column
             title: 'Team Name',
             dataIndex: 'team_in.name',
@@ -244,14 +252,6 @@
             scopedSlots: { customRender: 'teamMembers' }
           },
           {
-            // Duration
-            title: 'Duration',
-            dataIndex: 'duration',
-            width: '20%',
-            align: 'center',
-            scopedSlots: { customRender: 'confirmation_status' }
-          },
-          {
             // operation
             title: 'Operation',
             dataIndex: 'operation',
@@ -265,7 +265,7 @@
           current: 1,
           pageSize: 5,
           // Show the number of total items
-          showTotal: (total) => `Totally ${ total } items`,
+          showTotal: (total) => `Total ${ total } items`,
           total: 0,
           showSizeChanger: true,
           pageSizeOptions: ['5', '10', '12', '15', '25'],

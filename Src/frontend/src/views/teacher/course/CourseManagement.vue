@@ -141,7 +141,7 @@
           },
           {
             // Student number column
-            title: 'Number',
+            title: 'Students Count',
             dataIndex: 'students_count',
             width: '25%',
             align: 'center',

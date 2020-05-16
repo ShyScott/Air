@@ -1,12 +1,12 @@
 <template>
   <div>
-    <a-card>
+    <a-card :bodyStyle="{ padding: '0 12px' }">
       <a-row>
         <a-col :span="7">
           <div style="justify-content: center; display: flex; margin-top: 100px; margin-bottom: 60px; flex-direction: column; align-items: center">
             <!--Avatar area-->
             <a-row>
-              <a-avatar :size="240" src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" />
+              <a-avatar :size="240" :src="avatarMedium" />
             </a-row>
             <!--Welcome Area-->
             <div style="margin-top: 55px">
@@ -19,66 +19,12 @@
           </div>
         </a-col>
         <a-col :span="17">
-          <a-card style="margin-top: 30px" title="Your Courses" class="card-border">
-            <a href="#" slot="extra" @click="showMoreCourseModal">More</a>
-            <a-row :gutter="16">
-              <!--Each row 3 items, at most 6 items rendered-->
-              <a-col :span="8" v-for="(item, i) in courseListForIndex" :key="item.id" v-if="i < 6">
-                <a-card hoverable style="width: 100%; margin-bottom: 10px">
-                  <!--Course Card Image-->
-                  <img
-                    alt="example"
-                    src="https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png"
-                    slot="cover"
-                  />
-                  <a-card-meta :title="item.title" description="This is the description">
-                    <a-avatar
-                      slot="avatar"
-                      src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-                    />
-                  </a-card-meta>
-                </a-card>
-              </a-col>
-            </a-row>
-          </a-card>
-          <!--TimeLine Area-->
-          <a-card class="card-border" title="Operation Log">
-            <template>
-              <div style="margin-top: 35px">
-                <a-row>
-                  <a-col :span="12">
-                    <div style="margin-top: 35px; justify-content: center; display: flex; font-size: 32px">
-                      <a-button size="large" type="link">View All Operation Records<a-icon type="container" /></a-button>
-                    </div>
-                  </a-col>
-                  <a-col :span="12">
-                    <a-timeline pending="Recording..." :reverse="false">
-                      <a-timeline-item>Create a services site 2015-09-01</a-timeline-item>
-                      <a-timeline-item>Solve initial network problems 2015-09-01</a-timeline-item>
-                      <a-timeline-item>Technical testing 2015-09-01</a-timeline-item>
-                    </a-timeline>
-                  </a-col>
-                </a-row>
-              </div>
-            </template>
+          <a-card style="margin-top: 30px" title="Your Courses" :bordered="false">
+            <a-table :dataSource="this.courseList" rowKey="id" :columns="courseTableColumns" :pagination="courseListPagination" />
           </a-card>
         </a-col>
       </a-row>
     </a-card>
-    <!--Show more course info modal-->
-    <template>
-      <div>
-        <a-modal v-model="showMoreCourseModalVisible" title="All Course Information" width="800px">
-          <template slot="footer">
-            <a-button key="back" type="primary" @click="handleMoreCourseModalCancel">
-              Return
-            </a-button>
-          </template>
-          <a-table :dataSource="this.courseList" rowKey="id" :columns="courseTableColumns" :pagination="courseListPagination">
-          </a-table>
-        </a-modal>
-      </div>
-    </template>
   </div>
 </template>
 
@@ -94,82 +40,53 @@
       return {
         // variable used to store the courses of current student
         courseList: [],
-        // variable used to store the courses of current student (dedicated for table)
-        courseListForIndex: [],
-        // variable used to control whether to display the more courses info modal
-        showMoreCourseModalVisible: false,
         // columns for the course info table
         courseTableColumns: [
             {
               // Course name
               title: 'Course Name',
               dataIndex: 'title',
-              width: '30%',
-              scopedSlots: { customRender: 'coursename' }
+              align: 'center',
+              width: '30%'
             },
             {
               // Duration column
               title: 'Duration',
               dataIndex: 'duration',
-              width: '40%',
-              scopedSlots: { customRender: 'duration' }
+              align: 'center',
+              width: '40%'
             },
             {
               // Student number column
-              title: 'Student Number',
+              title: 'Students Count',
               dataIndex: 'students_count',
-              width: '30%',
-              scopedSlots: { customRender: 'students_count' }
+              align: 'center',
+              width: '30%'
             }
         ],
         // pagination settings for course list table
         courseListPagination: {
-          // default page size
-          defaultPageSize: 5,
           // Show the number of total items
           showTotal: (total) => `Total ${ total } items`,
           total: 0,
+          current: 1,
+          pageSize: 10,
           showSizeChanger: true,
           pageSizeOptions: ['5', '10', '15', '20', '25'],
-          onShowSizeChange: (current, pageSize) => {
-            this.pageNumForCourse = current
-            this.pageSizeForCourse = pageSize
-            this.getTableCourses()
-          },
-          onChange: (page, pageSize) => {
-            this.pageSizeForCourse = pageSize
-            this.pageNumForCourse = page
-            this.getTableCourses()
-          }
-        },
-        // current page num for courses
-        pageNumForCourse: 1,
-        // current page size for submission
-        pageSizeForCourse: 5
+          onShowSizeChange: this.getTableCourses,
+          onChange: this.getTableCourses
+        }
       }
     },
     methods: {
-      // function used to get the courses info of the current student
-      getCourses () {
-        getStudentCourses().then(({ data: response }) => {
-          this.courseList = response.results.map(course => {
-            course.duration = convertDuration(moment(course.duration))
-            return course
-          })
-          this.courseListForIndex = response.results
-          this.courseListPagination.total = response.count
-        }).catch(error => {
-          if (error.response) {
-            return this.$notification.error({
-              message: 'Error',
-              description: 'Failed to get available course information'
-            })
-          }
-        })
-      },
       // function used to get the courses info of the current student for table
-      getTableCourses () {
-        const parameter = { page: this.pageNumForCourse, size: this.pageSizeForCourse }
+      getTableCourses (current, pageSize) {
+        this.courseListPagination = {
+          ...this.courseListPagination,
+          current,
+          pageSize
+        }
+        const parameter = { page: current, size: pageSize }
         getStudentCourses(parameter).then(({ data: response }) => {
           this.courseList = response.results.map(course => {
             course.duration = convertDuration(moment(course.duration))
@@ -184,24 +101,16 @@
             })
           }
         })
-      },
-      // function used to control whether the more course info modal should be display or not
-      showMoreCourseModal () {
-        this.showMoreCourseModalVisible = true
-      },
-      // function used when user click return button in the more course info modal
-      handleMoreCourseModalCancel () {
-        this.showMoreCourseModalVisible = false
       }
     },
     computed: {
       ...mapGetters([
         'nickname',
-        'isTeacher'
+        'avatarMedium'
       ])
     },
     created () {
-      this.getCourses()
+      this.getTableCourses(this.courseListPagination.current, this.courseListPagination.pageSize)
     }
   }
 </script>
