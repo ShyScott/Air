@@ -64,9 +64,17 @@ class InvitationViewSet(
         serializer = self.get_serializer(invitation, data=request.data)
         serializer.is_valid(raise_exception=True)
         invitation = serializer.save()
+        team = invitation.team
+        course = team.course
         if invitation.status == 1:
-            invitation.team.members.add(request.user)
+            team.members.add(request.user)
             # Mark all un-answered invitations from other teams in the same course as the current team as 'outdated'
-            Invitation.objects.filter(team__course=invitation.team.course, invitee=request.user, status=0).update(status=-2)
+            Invitation.objects.filter(team__course=course, invitee=request.user, status=0).update(status=-2)
+
+            # If form method in [4, 5] and current team is already a pair, mark all un-answered invitations from this team as 'outdated'
+            if course.form_method in [4, 5] and team.members.count() >= 2:
+                Invitation.objects.filter(team=team, status=0).update(status=-2)
+
+            Invitation.objects.filter()
 
         return Response(serializer.data)
