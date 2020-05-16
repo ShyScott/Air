@@ -434,7 +434,7 @@
               form_method: this.formOptionForm.formMethod,
               member_count_primary: parseInt(this.formOptionForm.memberCountPrimary),
               team_count_primary: this.formOptionForm.teamCountPrimary,
-              member_count_secondary: this.formOptionForm.memberCountSecondary,
+              member_count_secondary: parseInt(this.formOptionForm.memberCountSecondary),
               team_count_secondary: this.formOptionForm.teamCountSecondary,
               floating_band: parseFloat(this.formOptionForm.gpaFloatingBand)
             }
@@ -445,8 +445,12 @@
                 description: 'Team formation options submitted successfully'
               })
               this.formOptionModalVisible = false
-              this.spinning = true
-              setTimeout(() => { this.$router.push({ name: 'FormConfirmation', params: { courseId: this.selectedCourseId } }) }, 2000)
+              if ([2, 3].includes(parameter.form_method)) {
+                this.spinning = true
+                setTimeout(() => {
+                  this.$router.push({ name: 'FormConfirmation', params: { courseId: this.selectedCourseId } })
+                }, 2000)
+              }
             }).catch(error => {
               // if error occurs
               if (error.response) {
