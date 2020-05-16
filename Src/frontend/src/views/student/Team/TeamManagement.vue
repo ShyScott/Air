@@ -193,6 +193,7 @@
 </template>
 
 <script>
+  import moment from 'moment'
   import {
     createNewTeam,
     exitTeam,
@@ -202,6 +203,7 @@
     voteTeamLeader
   } from '../../../api/student'
   import { mapGetters } from 'vuex'
+  import { convertDuration } from '@/utils/util'
 
   export default {
     name: 'TeamManagement',
@@ -401,21 +403,9 @@
       },
       // function used to transfer the duration to proposed format
       formatDuration () {
-        for (let i = 0; i < this.courseList.length; i++) {
-          let durationAfterFormat = ''
-          const durationBeforeTransfer = this.courseList[i].duration
-          const durationSplit = durationBeforeTransfer.split('-')
-          // console.log(durationSplit)
-          // process the data split
-          // 1st Semester - 9 - 1
-          if (durationSplit[1] >= 9 || durationSplit[1] <= 1) {
-            durationAfterFormat = durationSplit[0] + '-' + (durationSplit[0] + 1) + ' Semester 1'
-          } else {
-            durationAfterFormat = (durationSplit[0] - 1) + '-' + durationSplit[0] + ' Semester 2'
-          }
-          this.courseList[i].duration = durationAfterFormat
-          // console.log(this.courseList[i].duration)
-        }
+        this.courseList.forEach(course => {
+          course.duration = convertDuration(moment(course.duration))
+        })
       },
       // function used to process the data in the courseList
       processCourseList () {

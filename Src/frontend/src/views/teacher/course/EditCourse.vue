@@ -87,6 +87,7 @@
 </template>
 
 <script>
+  import { convertDuration } from '@/utils/util'
   import { createCourse, editCourse, importStudents } from '@/api/teacher'
   import XLSX from 'xlsx'
   import pick from 'lodash.pick'
@@ -220,25 +221,7 @@
       }
 
       // initialize duration
-      let now = moment()
-      if (this.mode < 3) {
-        now = moment(this.selectedCourse.duration)
-      }
-
-      const year = now.year()
-      const month = now.month()
-      let durationS = ''
-      let durationY = ''
-      // if the first semester
-      if (month >= 7 || month <= 1) {
-        durationS = 'Semester 1'
-        durationY = year + ' - ' + (year + 1)
-      } else {
-        // if the second semester
-        durationS = 'Semester 2'
-        durationY = (year - 1) + ' - ' + year
-      }
-      this.duration = durationY + ' ' + durationS
+      this.duration = convertDuration(this.mode < 3 ? moment(this.selectedCourse.duration) : moment())
     },
     methods: {
       // file upload change handler
@@ -309,7 +292,7 @@
         this.tableData = info.splice((current - 1) * pageSize, pageSize)
         this.studentListPagination = { ...this.studentListPagination, current, pageSize }
       },
-      async save () {
+      save () {
         // validate the form. if there are errors, then this function will return
         this.$refs.editCourseFormRef.validate(valid => {
           if (!valid) {

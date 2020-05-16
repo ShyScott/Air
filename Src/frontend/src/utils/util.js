@@ -65,3 +65,10 @@ export function removeLoadingAnimate (id = '', timeout = 1500) {
     document.body.removeChild(document.getElementById(id))
   }, timeout)
 }
+
+export function convertDuration (time) {
+  const year = time.year()
+  const month = time.month()
+  if (month >= 7 || month <= 1) return `Semester 1 ${year} - ${year + 1}`
+  return `Semester 2 ${year - 1} - ${year}`
+}

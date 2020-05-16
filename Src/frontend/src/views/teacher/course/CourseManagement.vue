@@ -109,6 +109,8 @@
   import { getTeacherCourses, getStudentListOfTheCourse, deleteCourse, removeStudent } from '@/api/teacher'
   import AddStudentModal from './modal/AddStudentModal'
   import { mapGetters } from 'vuex'
+  import { convertDuration } from '@/utils/util'
+  import moment from 'moment'
 
   export default {
     name: 'CourseManagement',
@@ -261,7 +263,10 @@
         const parameter = { page: this.coursePagination.current, size: this.coursePagination.pageSize }
         getTeacherCourses(parameter).then(({ data: response }) => {
           // console.log(response)
-          this.courseList = response.results
+          this.courseList = response.results.map(course => {
+            course.duration = convertDuration(moment(course.duration))
+            return course
+          })
           // pagination settings
           this.coursePagination.total = response.count
           }
