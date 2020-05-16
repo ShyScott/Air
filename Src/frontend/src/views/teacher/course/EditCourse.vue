@@ -119,7 +119,7 @@
         const reg = /^\d+(.\d{1,2})?$/
         if (!reg.test(value)) return false
         const gpa = parseFloat(value)
-        return gpa >= 0 || gpa <= 4
+        return gpa >= 0 && gpa <= 4
       }
 
       return {

@@ -56,18 +56,14 @@
       // GPA format validator
       const checkGPA = (rule, value, cb) => {
         if (value === '') return cb()
-
         const regFloat = /^\d+(.\d{1,2})?$/
         if (!regFloat.test(value)) {
           return cb(new Error('Please input a float number with no more than 2 decimal places'))
         }
-
         const gpa = parseFloat(value)
-        const eps = 0.001
-        if (gpa < eps || gpa - 4 > eps) {
+        if (gpa < 0 || gpa > 4) {
           return cb(new Error('Please input a valid GPA'))
         }
-
         return cb()
       }
 
