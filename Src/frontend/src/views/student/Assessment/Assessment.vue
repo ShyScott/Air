@@ -174,16 +174,13 @@
         if (isSearch) this.paginationForCourseTable.current = 1
         const parameter = {
           page: this.paginationForCourseTable.current,
-          size: this.paginationForCourseTable.pageSize
+          size: this.paginationForCourseTable.pageSize,
+          assessible: 'true'
         }
         // if user wants to search
         if (this.queryContent !== '') parameter.title = this.queryContent
         getStudentCourses(parameter).then(({ data: response }) => {
           this.courseList = response.results
-          // filter the course with no team yet
-          this.courseList = this.courseList.filter((item) => {
-            return item.team_in !== null && item.team_in.leader !== null
-          })
           this.paginationForCourseTable.total = this.courseList.length
           // console.log(this.courseList)
         }).catch(error => {
