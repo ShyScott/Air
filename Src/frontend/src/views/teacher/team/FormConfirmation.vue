@@ -55,7 +55,7 @@
               <a-button type="default" :disabled="formMethod === 1" @click="regenerateTeams"><a-icon type="reload" /> Regenerate </a-button>
             </span>
             <span>
-              <a-button :disabled="(studentWithNoTeamList !== [] && (this.formMethod === 1 || this.formMethod === 4 || this.formMethod === 5) || (this.formMethod === null))" type="primary" @click="submitTeamConfirmation"><a-icon type="lock" /> Confirm </a-button>
+              <a-button :disabled="((studentWithNoTeamList.length !== 0 && (this.formMethod === 1 || this.formMethod === 4 || this.formMethod === 5)) || (this.formMethod === null))" type="primary" @click="submitTeamConfirmation"><a-icon type="lock" /> Confirm </a-button>
             </span>
           </div>
         </a-card>
@@ -264,17 +264,34 @@
         // console.log(this.teamList)
         const parameter = []
         // process the data
-        for (let i = 0; i < this.teamList.length; i++) {
-          const parameterItem = {
-            name: this.teamList[i].name,
-            course: this.selectedCourseId,
-            members: []
+        if (this.formMethod === 1) {
+            for (let i = 0; i < this.teamList.length; i++) {
+              // push all the member in each team to the parameter's members
+              for (let j = 0; j < this.teamList[i].members.length; j++) {
+                var parameterItemForM1 = {
+                  name: this.teamList[i].name,
+                  course: this.selectedCourseId,
+                  members: []
+                }
+                parameterItemForM1.members.push(this.teamList[i].members[j])
+              }
+              parameter.push(parameterItemForM1)
+              // console.log(parameter)
           }
-          // push all the member in each team to the parameter's members
-          for (let j = 0; j < this.teamList[i].members.length; j++) {
-            parameterItem.members.push(this.teamList[i].members[j].id)
+        } else {
+          for (let i = 0; i < this.teamList.length; i++) {
+            // push all the member in each team to the parameter's members
+            for (let j = 0; j < this.teamList[i].members.length; j++) {
+              var parameterItem = {
+                name: this.teamList[i].name,
+                course: this.selectedCourseId,
+                members: []
+              }
+              parameterItem.members.push(this.teamList[i].members[j].id)
+            }
+            parameter.push(parameterItem)
+            // console.log(parameter)
           }
-          parameter.push(parameterItem)
         }
         confirmTeamFormation(this.selectedCourseId, parameter).then(({ data: response }) => {
           this.$notification.success({
@@ -286,9 +303,11 @@
         }).catch(error => {
           if (error.response) {
             console.info(error.response)
-            return this.$notification.error({
+            var errorInfo = 'Failed to confirm the team formation'
+            if (error.response.data) errorInfo = error.response.data[0].members[0]
+            this.$notification.error({
               message: 'Error',
-              description: 'Failed to confirm the team formation'
+              description: errorInfo
             })
           }
         })
