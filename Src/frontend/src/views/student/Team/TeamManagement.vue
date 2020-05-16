@@ -494,9 +494,6 @@
         this.$refs.createNewTeamFormRef.validate(valid => {
           if (valid) {
             this.submitNewTeam()
-            this.$refs.createNewTeamFormRef.resetFields()
-            this.getCourses()
-            this.createTeamModalVisible = false
           }
         })
       },
@@ -508,6 +505,9 @@
             message: 'Success',
             description: 'Create new team successful'
           })
+          this.getCourses()
+          this.$refs.createNewTeamFormRef.resetFields()
+          this.createTeamModalVisible = false
         }).catch(error => {
           // if error occurs
           if (error.response) {

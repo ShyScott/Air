@@ -256,7 +256,7 @@
             { required: true, message: 'Please input the secondary number', trigger },
             { pattern: /^[0-9]\d*$/, message: 'Please input a natural number', trigger },
             {
-              validator () {
+              validator: () => {
                 this.$refs.formOptionFormRef.validateField(['memberCountPrimary'])
                 return true
               },
@@ -428,7 +428,16 @@
       handleEditFormOptionsOk () {
         this.$refs.formOptionFormRef.validate(valid => {
           if (valid) {
-            const parameter = { title: this.selectedCourseName, duration: this.courseToBeEdited.duration, form_method: this.formOptionForm.formMethod, member_count_primary: parseInt(this.formOptionForm.memberCountPrimary), team_count_primary: this.formOptionForm.teamCountPrimary, member_count_secondary: this.formOptionForm.memberCountSecondary, team_count_secondary: this.formOptionForm.teamCountSecondary, floating_band: parseFloat(this.formOptionForm.gpaFloatingBand) }
+            const parameter = {
+              title: this.selectedCourseName,
+              duration: this.courseToBeEdited.duration,
+              form_method: this.formOptionForm.formMethod,
+              member_count_primary: parseInt(this.formOptionForm.memberCountPrimary),
+              team_count_primary: this.formOptionForm.teamCountPrimary,
+              member_count_secondary: this.formOptionForm.memberCountSecondary,
+              team_count_secondary: this.formOptionForm.teamCountSecondary,
+              floating_band: parseFloat(this.formOptionForm.gpaFloatingBand)
+            }
             changeFormOption(this.selectedCourseId, parameter).then(({ data: response }) => {
               // console.log(response)
               this.$notification.success({
@@ -453,6 +462,12 @@
                 })
               }
             })
+          } else {
+            console.log(123)
+            this.$notification.warn({
+              message: 'Warning',
+              description: 'Please check your form'
+            })
           }
         })
       },
@@ -460,7 +475,7 @@
       validateTeamNumbers () {
         const validatePairs = (memberCountPrimary, memberCountSecondary) => {
           if (memberCountPrimary <= 0 || memberCountSecondary < 0) return false
-          if ([4, 5].includes(this.formOptionForm.formMethod) && (memberCountPrimary < 4 || memberCountPrimary % 2 > 0 || memberCountSecondary < 4 || memberCountSecondary % 2 > 0)) return false
+          if ([4, 5].includes(this.formOptionForm.formMethod) && (memberCountPrimary < 4 || memberCountPrimary % 2 > 0 || (memberCountSecondary < 4 && memberCountSecondary !== 0) || memberCountSecondary % 2 > 0)) return false
           let teamCountPrimary = Math.floor(this.currentNum / memberCountPrimary)
           for (; teamCountPrimary > 0; --teamCountPrimary) {
             const remain = this.currentNum - teamCountPrimary * memberCountPrimary

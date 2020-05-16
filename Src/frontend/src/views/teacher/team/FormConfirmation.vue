@@ -24,7 +24,6 @@
           </div>
           <!--Team list table area-->
           <a-table
-            v-if="this.formMethod !== 1"
             style="margin-top: 15px"
             :dataSource="teamList"
             :columns="teamListColumns"
@@ -32,7 +31,7 @@
             :pagination="teamListPagination"
           >
             <template slot="teamMember" slot-scope="text, record">
-              <span style="margin-right: 20px" v-for="(item, i) in record.members" :key="i">
+              <span style="margin-right: 20px" v-for="item in record.members" :key="item.id">
                 {{ item.username }}
               </span>
             </template>
@@ -106,12 +105,14 @@
             title: 'Team Name',
             dataIndex: 'name',
             width: '40%',
+            align: 'center',
             scopedSlots: { customRender: 'teamName' }
           },
           {
             title: 'Team member',
             dataIndex: 'members',
             width: '60%',
+            align: 'center',
             scopedSlots: { customRender: 'teamMember' }
           }
         ],
@@ -121,18 +122,21 @@
             title: 'Student Name',
             dataIndex: 'username',
             width: '33.3%',
+            align: 'center',
             scopedSlots: { customRender: 'username' }
           },
           {
             title: 'Student ID',
             dataIndex: 'student_profile.student_id',
             width: '33.3%',
+            align: 'center',
             scopedSlots: { customRender: 'studentId' }
           },
           {
             title: 'GPA',
             dataIndex: 'student_profile.gpa',
             width: '33.3%',
+            align: 'center',
             scopedSlots: { customRender: 'gpa' }
           }
         ],
@@ -189,6 +193,7 @@
     methods: {
       // function used to get the team list of current course
       getGeneratedTeams () {
+        this.teamList = []
         generateTeam(this.selectedCourseId).then(({ data: response }) => {
           // console.log(response)
           this.teamList = response
@@ -264,34 +269,13 @@
         // console.log(this.teamList)
         const parameter = []
         // process the data
-        if (this.formMethod === 1) {
-            for (let i = 0; i < this.teamList.length; i++) {
-              // push all the member in each team to the parameter's members
-              for (let j = 0; j < this.teamList[i].members.length; j++) {
-                var parameterItemForM1 = {
-                  name: this.teamList[i].name,
-                  course: this.selectedCourseId,
-                  members: []
-                }
-                parameterItemForM1.members.push(this.teamList[i].members[j])
-              }
-              parameter.push(parameterItemForM1)
-              // console.log(parameter)
-          }
-        } else {
-          for (let i = 0; i < this.teamList.length; i++) {
-            // push all the member in each team to the parameter's members
-            for (let j = 0; j < this.teamList[i].members.length; j++) {
-              var parameterItem = {
-                name: this.teamList[i].name,
-                course: this.selectedCourseId,
-                members: []
-              }
-              parameterItem.members.push(this.teamList[i].members[j].id)
-            }
-            parameter.push(parameterItem)
-            // console.log(parameter)
-          }
+        for (let i = 0; i < this.teamList.length; i++) {
+          // push all the member in each team to the parameter's members
+          parameter.push({
+            name: this.teamList[i].name,
+            course: this.selectedCourseId,
+            members: this.teamList[i].members.map((item) => item.id)
+          })
         }
         confirmTeamFormation(this.selectedCourseId, parameter).then(({ data: response }) => {
           this.$notification.success({
@@ -304,7 +288,7 @@
           if (error.response) {
             console.info(error.response)
             var errorInfo = 'Failed to confirm the team formation'
-            if (error.response.data) errorInfo = error.response.data[0].members[0]
+            if (error.response.data) errorInfo = error.response.data[0]
             this.$notification.error({
               message: 'Error',
               description: errorInfo

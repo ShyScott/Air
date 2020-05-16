@@ -121,8 +121,8 @@
         this.$refs.form.resetFields()
         this.visible = false
       },
-      async submit () {
-        await this.$refs.form.validate(valid => {
+      submit () {
+        this.$refs.form.validate(valid => {
           // if all the info user input has past the validation
           if (valid) {
             this.submitLoading = true
