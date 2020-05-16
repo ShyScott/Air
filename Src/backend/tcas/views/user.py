@@ -85,13 +85,12 @@ class UserViewSet(PermissionDictMixin, ModelViewSet):
             user_data = user_raw.copy()
             try:
                 user = User.objects.get(
-                    Q(username=user_data['username']) |
                     Q(student_profile__student_id=user_data['student_profile']['student_id']) |
                     Q(student_profile__email=user_data['student_profile']['email']))
                 duplicated_users.append(user)
             except User.DoesNotExist:
                 profile_data = user_data.pop('student_profile')
-                user = User.objects.create(**user_data)
+                user = User.objects.create(email=profile_data['email'], **user_data)
                 StudentProfile.objects.create(user=user, **profile_data)
                 user.set_password(password)
                 user.save()

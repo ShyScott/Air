@@ -10,7 +10,7 @@ class StudentProfile(models.Model):
         primary_key=True,
     )
     student_id = models.CharField(max_length=64, unique=True)
-    email = models.EmailField(unique=True)
+    email = models.EmailField(max_length=150, unique=True)
     gpa = models.FloatField(null=True)
 
     class Meta:

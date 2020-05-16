@@ -13,8 +13,12 @@ class UsernameEmailBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         if username is None or password is None:
             return None
+
         try:
-            user = UserModel.objects.get(Q(username=username) | Q(student_profile__email=username))
+            if '@' in username:
+                user = UserModel.objects.get(student_profile__isnull=False, email=username)
+            else:
+                user = UserModel.objects.get(student_profile__isnull=True, username=username)
         except UserModel.DoesNotExist:
             return None
         else:
