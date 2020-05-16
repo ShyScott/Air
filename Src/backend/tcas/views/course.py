@@ -24,7 +24,7 @@ from tcas.permissions import IsTeacher, IsLogin
 import random
 
 
-def group_students(students, members_list, team_nums, current_student, current_team, gpa_optimized, min_gpa, max_gpa):
+def group_students(students, members_list, team_nums, current_student, current_team, used, gpa_optimized, min_gpa, max_gpa):
     # Exit
     if current_student == len(students):
         while len(members_list[-1]) == 0:
@@ -33,6 +33,9 @@ def group_students(students, members_list, team_nums, current_student, current_t
 
     # Select a student (pair) and push into current team
     for index in range(current_student, len(students)):
+        if used[index]:
+            continue
+        used[index] = True
         if isinstance(students[index], list):
             count = len(students[index])
             members_list[current_team].extend(students[index])
@@ -44,16 +47,17 @@ def group_students(students, members_list, team_nums, current_student, current_t
         if has_new_team:
             # Check the GPA of this team if necessary
             if gpa_optimized:
-                gpa = sum(member.student_profile.gpa for member in members_list[current_team]) / team_nums[current_team]
+                gpa = sum([member.student_profile.gpa for member in members_list[current_team]]) / team_nums[current_team]
                 if gpa < min_gpa or gpa > max_gpa:
                     for _ in range(count):
                         members_list[current_team].pop()
+                    used[index] = False
                     continue
 
             members_list.append([])
             current_team += 1
 
-        if group_students(students, members_list, team_nums, current_student + 1, current_team, gpa_optimized, min_gpa, max_gpa):
+        if group_students(students, members_list, team_nums, current_student + 1, current_team, used, gpa_optimized, min_gpa, max_gpa):
             return True
 
         if has_new_team:
@@ -61,6 +65,7 @@ def group_students(students, members_list, team_nums, current_student, current_t
             current_team -= 1
         for _ in range(count):
             members_list[current_team].pop()
+        used[index] = False
 
     # No satisfying solution, reject
     return False
@@ -173,9 +178,10 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
         # Form method 2, 3: random generation (3 with GPA optimization)
         elif form_method in [2, 3]:
             members_list = [[]]
+            used = [False for _ in range(len(students))]
 
             # Try to group all students. This may fail because of GPA optimization (too small floating bands)
-            if not group_students(students, members_list, team_nums, 0, 0, form_method == 3, min_gpa, max_gpa):
+            if not group_students(students, members_list, team_nums, 0, 0, used, form_method == 3, min_gpa, max_gpa):
                 raise ValidationError('GPA floating band is too small!')
 
         # Form method 4, 5: random combination from pairs of students (5 with GPA optimization)
@@ -190,10 +196,11 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
                 total += 2
             if total != course.students.count():
                 raise ValidationError('There exist students which are not in any team!')
-            members_list = [[]]
 
+            members_list = [[]]
+            used = [False for _ in range(len(pairs_list))]
             # Try to group pairs of students. This may fail because of GPA optimization (too small floating bands)
-            if not group_students(students, members_list, team_nums, 0, 0, form_method == 5, min_gpa, max_gpa):
+            if not group_students(pairs_list, members_list, team_nums, 0, 0, used, form_method == 5, min_gpa, max_gpa):
                 raise ValidationError('GPA floating band is too small!')
 
         # Create teams from members_list for method 2, 3, 4, 5
