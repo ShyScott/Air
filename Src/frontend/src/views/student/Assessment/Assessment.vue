@@ -34,11 +34,11 @@
           <template slot="operation" slot-scope="text, record">
             <span v-if="record.team_in.leader === userId">
               <a-icon style="color: #1A8FFF" type="solution"></a-icon>
-              <a href="#" @click="moveToAssessSubmissionPage(record.id)"> Assess submissions </a>
+              <a @click="moveToAssessSubmissionPage(record.id)"> Assess submissions </a>
             </span>
             <span v-else>
               <a-icon style="color: #1A8FFF" type="rocket"></a-icon>
-              <a href="#" @click="showAssessLeaderModal(record)"> Assess team leader </a>
+              <a @click="showAssessLeaderModal(record)"> Assess team leader </a>
             </span>
           </template>
         </a-table>

@@ -46,8 +46,8 @@
         </template>
         <!--Operation area-->
         <template slot="operation" slot-scope="text, record">
-          <a href="#" @click="acceptInvitation(record)"><a-icon type="check" /> Accept </a>
-          <a style="color: red; margin-left: 20px" href="#" @click="rejectInvitation(record)"><a-icon type="stop" /> Reject </a>
+          <a @click="acceptInvitation(record)"><a-icon type="check" /> Accept </a>
+          <a style="color: red; margin-left: 20px" @click="rejectInvitation(record)"><a-icon type="stop" /> Reject </a>
         </template>
       </a-table>
     </a-card>

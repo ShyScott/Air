@@ -23,7 +23,7 @@
       <a-table style="margin-top: 30px" :dataSource="submissionList" :columns="submissionListColumns" :pagination="submissionListPagination" rowKey="id">
         <template slot-scope="text, record" slot="operation">
           <a-icon style="color: #1A8FFF" type="security-scan"></a-icon>
-          <a href="#" @click="showAssessModal(record)"> Assess </a>
+          <a @click="showAssessModal(record)"> Assess </a>
         </template>
       </a-table>
     </a-card>

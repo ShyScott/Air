@@ -45,7 +45,7 @@
               <template slot="title">
                 <span>Click to edit this submission</span>
               </template>
-              <a href="#" @click="showEditSubmissionModal(record)"><a-icon type="edit" />Edit</a>
+              <a @click="showEditSubmissionModal(record)"><a-icon type="edit" />Edit</a>
             </a-tooltip>
             <a-popconfirm title="Are you sure to delete this submission?" @confirm="confirmDeleteSubmission(record)" @cancel="cancelDeleteSubmission">
               <!--tooltip for operation button-->
@@ -53,7 +53,7 @@
                 <template slot="title">
                   <span>Click to delete this submission</span>
                 </template>
-                <a class="a-adjust" href="#"><a-icon type="delete" />Delete</a>
+                <a class="a-adjust"><a-icon type="delete" />Delete</a>
               </a-tooltip>
             </a-popconfirm>
           </template>

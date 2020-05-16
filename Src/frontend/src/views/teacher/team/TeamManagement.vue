@@ -33,14 +33,14 @@
                   <template slot="title">
                     <span>Click to do team formation settings</span>
                   </template>
-                  <a href="#" @click="showFormOptionsModal(record)"><a-icon type="setting" />Form options</a>
+                  <a @click="showFormOptionsModal(record)"><a-icon type="setting" />Form options</a>
                 </a-tooltip>
                 <!--tooltip for operation button-->
                 <a-tooltip>
                   <template slot="title">
                     <span>Click to confirm the team formation of this course</span>
                   </template>
-                  <a class="a-adjust" href="#" @click="moveToConfirmationPage(record)"><a-icon type="save" />Confirm Teams</a>
+                  <a class="a-adjust" @click="moveToConfirmationPage(record)"><a-icon type="save" />Confirm Teams</a>
                 </a-tooltip>
               </span>
               <span v-else>
@@ -48,7 +48,7 @@
                   <template slot="title">
                     <span>Click to view the team distribution</span>
                   </template>
-                  <a style="color: goldenrod" href="#" @click="showTeamDistributionModal(record)"><a-icon type="apartment" />Team Distribution</a>
+                  <a style="color: goldenrod" @click="showTeamDistributionModal(record)"><a-icon type="apartment" />Team Distribution</a>
                 </a-tooltip>
               </span>
             </template>

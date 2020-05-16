@@ -70,7 +70,7 @@
                 <template slot="title">
                   <span>Click to create a new team</span>
                 </template>
-                <a href="#" @click="showCreateTeamModal(record)"><a-icon type="usergroup-add" />Create team</a>
+                <a @click="showCreateTeamModal(record)"><a-icon type="usergroup-add" />Create team</a>
               </a-tooltip>
             </span>
             <!--Case 2: The student has been in a team, and the team is confirmed-->
@@ -80,7 +80,7 @@
                 <template slot="title">
                   <span>Click to vote a team leader for your team</span>
                 </template>
-                <a href="#" :disabled="record.team_in.leader !== null" @click="showVoteTeamLeaderModal(record)"><a-icon type="crown" />Vote leader</a>
+                <a :disabled="record.team_in.leader !== null" @click="showVoteTeamLeaderModal(record)"><a-icon type="crown" />Vote leader</a>
               </a-tooltip>
             </span>
             <!--Case 3: The student already in a team, but the team not yet confirmed-->
@@ -89,7 +89,7 @@
                 <template slot="title">
                   <span>Click to invite new member</span>
                 </template>
-                <a href="#" style="margin-right: 10px" :disabled="record.form_method === 4 && record.team_in.members.length >= 2" @click="showInviteNewMember(record)"><a-icon type="user-add" />Invite</a>
+                <a style="margin-right: 10px" :disabled="record.form_method === 4 && record.team_in.members.length >= 2" @click="showInviteNewMember(record)"><a-icon type="user-add" />Invite</a>
               </a-tooltip>
               <a-popconfirm title="Are you sure to exit this team?" @confirm="confirmExitCurrentTeam(record)" @cancel="cancelExitCurrentTeam">
                 <!--tooltip for operation button-->
@@ -97,7 +97,7 @@
                   <template slot="title">
                     <span>Click to exit this team</span>
                   </template>
-                  <a href="#" style="color: red"><a-icon type="api" />Exit team</a>
+                  <a style="color: red"><a-icon type="api" />Exit team</a>
                 </a-tooltip>
               </a-popconfirm>
             </span>
@@ -151,7 +151,7 @@
             </template>
             <!--operation area-->
             <template slot="operation" slot-scope="text, record">
-              <a href="#" :disabled="record.id === userId" @click="inviteThisStudent(record)"> Invite </a>
+              <a :disabled="record.id === userId" @click="inviteThisStudent(record)"> Invite </a>
             </template>
           </a-table>
         </a-modal>
