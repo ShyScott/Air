@@ -124,9 +124,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-# Project default user model
+# Project default user model and backend
 
 AUTH_USER_MODEL = 'tcas.User'
+AUTHENTICATION_BACKENDS = [
+    'tcas.utils.UsernameEmailBackend'
+]
 
 # Default login & logout url (for Swagger-UI)
 
