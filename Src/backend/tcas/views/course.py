@@ -158,7 +158,13 @@ class CourseViewSet(PermissionDictMixin, ModelViewSet):
 
         # Form method 1: all teams are created by students themselves
         if form_method == 1:
-            teams = TeamSerializer(course.teams.all(), many=True).data
+            teams = []
+            for team in course.teams.all():
+                teams.append({
+                    'name': team.name,
+                    'course': course.pk,
+                    'members': UserSerializer(team.members.all(), many=True, context={'with_student_gpa': True}).data
+                })
 
         # Form method 2, 3: random generation (3 with GPA optimization)
         elif form_method in [2, 3]:
