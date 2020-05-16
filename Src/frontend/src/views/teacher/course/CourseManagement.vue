@@ -93,7 +93,9 @@
               @confirm="ConfirmStudentRemove(selectedCourse.id, record.id)"
             >
               <a-tooltip title="Click to delete the student from this course">
-                <a class="a-adjust"><a-icon type="delete" />Remove</a>
+                <a :class="{ 'a-adjust': !selectedCourse.is_confirmed }" :disabled="selectedCourse.is_confirmed">
+                  <a-icon type="delete" />Remove
+                </a>
               </a-tooltip>
             </a-popconfirm>
           </template>
