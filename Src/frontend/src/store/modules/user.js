@@ -89,7 +89,7 @@ const user = {
           }
 
           resolve()
-        })
+        }).catch(err => reject(err))
       })
     },
 

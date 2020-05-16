@@ -57,6 +57,7 @@
 
 <script>
 // import md5 from 'md5'
+import { getMyInfo } from '@/api/auth'
 import { mapActions } from 'vuex'
 
 export default {
@@ -85,7 +86,8 @@ export default {
         if (!err) {
           values.csrfmiddlewaretoken = this.csrfToken
           Login(values)
-            .then((res) => this.loginSuccess(res))
+            .then(() => getMyInfo())
+            .then(() => this.loginSuccess())
             .catch(err => this.requestFailed(err))
             .finally(() => {
               this.loginBtn = false

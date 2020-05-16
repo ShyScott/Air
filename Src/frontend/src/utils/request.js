@@ -23,7 +23,7 @@ const err = (error) => {
         description: data.message
       })
     }
-    if (error.response.status === 401) {
+    if (error.response.status === 401 && error.response.config.url.indexOf('/users/me/') === -1) {
       notification.error({
         message: 'Unauthorized',
         description: 'Your login state is invalid. Please re-login.'
