@@ -65,7 +65,7 @@
           <a-table
             style="margin-top: 16px"
             size="middle"
-            rowKey="username"
+            rowKey="rowNo"
             :dataSource="tableData"
             :pagination="studentListPagination"
           >
@@ -74,9 +74,12 @@
               :key="col.dataIndex"
               :title="col.title"
               :dataIndex="col.dataIndex"
+              :width="col.width"
             >
               <template slot-scope="text">
-                <span :style="col.validator(text) ? {} : { fontWeight: 'bold', color: 'red' }">{{ text }}</span>
+                <span :style="col.validator(text) ? {} : { fontWeight: 'bold', color: 'red' }">
+                  {{ text === '' && !col.optional ? '(missing)' : text }}
+                </span>
               </template>
             </a-table-column>
           </a-table>
@@ -160,6 +163,7 @@
             // Student name column
             title: 'Student Name',
             dataIndex: 'username',
+            width: '25%',
             keyword: 'name',
             optional: false,
             validator: validateUserName
@@ -168,6 +172,7 @@
             // Email column
             title: 'Email Address',
             dataIndex: 'email',
+            width: '40%',
             keyword: 'mail',
             optional: false,
             validator: validateEmail
@@ -176,6 +181,7 @@
             // Student ID column
             title: 'Student ID',
             dataIndex: 'student_id',
+            width: '20%',
             keyword: 'id',
             optional: false,
             validator: validateStudentId
@@ -184,6 +190,7 @@
             // GPA column
             title: 'GPA',
             dataIndex: 'gpa',
+            width: '15%',
             keyword: 'gpa',
             optional: true,
             validator: validateGPA
@@ -263,7 +270,7 @@
           // scan and filter the column
           let hasError = false
           _this.studentsInfo = []
-          info.forEach(user => {
+          info.forEach((user, index) => {
             const fieldNames = Object.keys(user)
             const newUser = {}
             let rowHasError = false
@@ -271,6 +278,7 @@
               const fieldName = fieldNames.find(name => name.toLowerCase().indexOf(field.keyword) > -1)
               if (!field.optional && fieldName === undefined) {
                 hasError = rowHasError = true
+                newUser[field.dataIndex] = ''
               } else if (fieldName !== undefined) {
                 const value = user[fieldName]
                 hasError = hasError || !field.validator(value)
@@ -279,6 +287,7 @@
               }
             })
             newUser.rowHasError = rowHasError
+            newUser.rowNo = index
             _this.studentsInfo.push(newUser)
           })
           _this.studentsInfoHasError = hasError
@@ -289,6 +298,7 @@
       },
       previewStudentsInfo (current, pageSize) {
         const info = [...this.studentsInfo]
+        while ((current - 1) * pageSize >= info.length) --current
         this.tableData = info.splice((current - 1) * pageSize, pageSize)
         this.studentListPagination = { ...this.studentListPagination, current, pageSize }
       },
@@ -330,7 +340,6 @@
             importStudentsData.course = this.selectedCourse.id
             importStudentsData.default_password = this.editCourseForm.default_password
             importStudents(importStudentsData).then(({ data: result }) => {
-              console.log(result)
               this.$notification.success({
                 message: 'Success',
                 description: `Successfully import ${result.added_students_count} students`
