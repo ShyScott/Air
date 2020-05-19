@@ -1,0 +1,183 @@
+import { axios } from '@/utils/request'
+// get all the courses instructed by teacher logging in
+export function getTeacherCourses (params) {
+  return axios({
+    url: '/courses/',
+    method: 'get',
+    params
+  })
+}
+export function createCourse (data) {
+  return axios({
+    url: '/courses/',
+    method: 'post',
+    data
+  })
+}
+export function editCourse (courseId, data) {
+  return axios({
+    url: `/courses/${courseId}/`,
+    method: 'patch',
+    data
+  })
+}
+export function importStudents (data) {
+  return axios({
+    url: '/users/',
+    method: 'post',
+    data
+  })
+}
+// get the course information according to id given
+export function getCourseInfoById (courseId) {
+  return axios({
+    url: `/courses/${courseId}/`,
+    method: 'get'
+  })
+}
+// get all the students of a course
+export function getStudentListOfTheCourse (parameter) {
+  return axios({
+    url: '/users/',
+    method: 'get',
+    params: parameter
+  })
+}
+
+// delete the course selected by teacher
+export function deleteCourse (courseId) {
+  return axios({
+    url: `/courses/${courseId}/`,
+    method: 'delete'
+  })
+}
+// remove the student from the given course
+export function removeStudent (courseId, studentId) {
+  return axios({
+    url: `/courses/${courseId}/remove_student/`,
+    method: 'post',
+    data: { user: studentId }
+  })
+}
+// add a student to a selected course
+export function addStudentToTheCourse (data) {
+  return axios({
+    url: `/users/`,
+    method: 'post',
+    data
+  })
+}
+// get the submission list of current course
+export function getSubmissionList (parameter) {
+  return axios({
+    url: `/submissions/`,
+    method: 'get',
+    params: parameter
+  })
+}
+// add new submission to the current course
+export function addNewSubmissionToCourse (data) {
+  return axios({
+    url: '/submissions/',
+    method: 'post',
+    data
+  })
+}
+// get courses by query
+export function getCoursesByQuery (query) {
+  return axios({
+    url: '/courses/',
+    method: 'get',
+    params: query
+  })
+}
+// delete the submission from the course
+export function deleteSubmission (submissionId) {
+  return axios({
+    url: `/submissions/${submissionId}/`,
+    method: 'delete'
+  })
+}
+// edit the submission to the current course
+export function editSubmission (parameter, submissionId) {
+  return axios({
+    url: `/submissions/${submissionId}/`,
+    method: 'put',
+    data: parameter
+  })
+}
+// get all the teams info of current teacher
+export function getTeamsList (parameter) {
+  return axios({
+    url: '/teams/',
+    method: 'get',
+    params: parameter
+  })
+}
+// function used to get the mean gpa of selected course
+export function getMeanGPA (courseId) {
+  return axios({
+    url: `/courses/${courseId}/mean_gpa/`,
+    method: 'get'
+  })
+}
+// function used to submit and change the form options
+export function changeFormOption (courseId, parameter) {
+  return axios({
+    url: `/courses/${courseId}/`,
+    method: 'put',
+    data: parameter
+  })
+}
+// function used to get those students who have no team yet from the back end
+export function getNoTeamStudent (courseId) {
+  return axios({
+    url: `/courses/${courseId}/single_students`,
+    method: 'get'
+  })
+}
+// function used to get the randomly-generated teams from the backend
+export function generateTeam (courseID) {
+  return axios({
+    url: `/courses/${courseID}/generate_teams`,
+    method: 'get'
+  })
+}
+// function used for teacher to confirm the team formation of one course
+export function confirmTeamFormation (courseId, parameter) {
+  return axios({
+    url: `/courses/${courseId}/confirm_teams/`,
+    method: 'post',
+    data: parameter
+  })
+}
+// function used to query the course by course name
+export function queryCourseByName (parameter) {
+  return axios({
+    url: '/courses/',
+    method: 'get',
+    params: parameter
+  })
+}
+// get team info by course name
+export function getTeamDistribution (parameter) {
+  return axios({
+    url: '/teams/',
+    method: 'get',
+    params: parameter
+  })
+}
+// get course info by course id
+export function getCourseById (courseId) {
+  return axios({
+    url: `/courses/${courseId}`,
+    method: 'get'
+  })
+}
+// export contribution info
+export function exportContribution (courseId) {
+  return axios({
+    url: `/courses/${courseId}/export_contribution/`,
+    method: 'get'
+  })
+}

@@ -1,0 +1,646 @@
+<template>
+  <div>
+    <a-card>
+      <!--breadcrumb area-->
+      <a-breadcrumb>
+        <a-breadcrumb-item href="">
+          <a-icon @click="moveToIndex" type="home"/>
+          <span @click="moveToIndex">Main</span>
+        </a-breadcrumb-item>
+        <a-breadcrumb-item href="">
+          <a-icon type="team"/>
+          <span>Team Management</span>
+        </a-breadcrumb-item>
+      </a-breadcrumb>
+      <!--Operation area-->
+      <div style="margin-top: 45px">
+        <a-row>
+          <a-col :span="7">
+            <!--search bar-->
+            <a-input-search placeholder="Please input course name" v-model="queryContent" enter-button @search="onSearch" />
+          </a-col>
+          <a-col style="display: flex; justify-content: flex-end;" :span="17">
+            <!--view invitations button-->
+            <a-button type="primary" @click="() => { this.$router.push({ name: 'ViewInvitation' }) }"><a-icon type="star" /> View Invitations</a-button>
+          </a-col>
+        </a-row>
+      </div>
+      <!--Table area-->
+      <div style="margin-top: 25px">
+        <a-table :dataSource="this.courseList" :columns="this.teamTableColumns" rowKey="id" :pagination="this.paginationForTeamTable">
+          <!--Team name column-->
+          <template slot="teamName" slot-scope="text, record">
+            <span v-if="record.team_in !== null">
+              {{ record.team_in.name }}
+              <!--icon used to show whether this course is locked or not-->
+              <span v-if="record.is_confirmed === 'NO'" style="color: #1A8FFF">
+                <a-tooltip>
+                  <template slot="title">This course's team formation has not been confirmed</template>
+                  <a-icon type="unlock" />
+                </a-tooltip>
+              </span>
+              <span v-else-if="record.is_confirmed === 'YES'" style="color: red">
+                <a-tooltip>
+                  <template slot="title">This course's team formation has been confirmed</template>
+                  <a-icon type="lock" />
+                </a-tooltip>
+              </span>
+            </span>
+          </template>
+          <!--Team member column-->
+          <template slot="teamMembers" slot-scope="text, record">
+            <span v-if="record.team_in !== null">
+              <span style="margin-right: 10px" v-for="item in record.team_in.members" :key="item.id">
+                {{ item.username }}
+                <span v-if="record.team_in.leader === item.id">
+                  <a-tooltip>
+                    <template slot="title">Leader of the team</template>
+                    <a-icon type="crown" style="color: goldenrod" />
+                  </a-tooltip>
+                </span>
+              </span>
+            </span>
+          </template>
+          <!--Operation column-->
+          <template slot="operation" slot-scope="text, record">
+            <!--case 1: The student has not been in any team in this course-->
+            <span v-if="record.team_in === null">
+              <!--tooltip for operation button-->
+              <a-tooltip placement="top">
+                <template slot="title">
+                  <span>Click to create a new team</span>
+                </template>
+                <a @click="showCreateTeamModal(record)"><a-icon type="usergroup-add" />Create team</a>
+              </a-tooltip>
+            </span>
+            <!--Case 2: The student has been in a team, and the team is confirmed-->
+            <span v-else-if="record.team_in.is_locked === true">
+              <!--tooltip for operation button-->
+              <a-tooltip>
+                <template slot="title">
+                  <span>Click to vote a team leader for your team</span>
+                </template>
+                <a :disabled="record.team_in.leader !== null" @click="showVoteTeamLeaderModal(record)"><a-icon type="crown" />Vote leader</a>
+              </a-tooltip>
+            </span>
+            <!--Case 3: The student already in a team, but the team not yet confirmed-->
+            <span v-else>
+              <a-tooltip>
+                <template slot="title">
+                  <span>Click to invite new member</span>
+                </template>
+                <a style="margin-right: 10px" :disabled="record.form_method === 4 && record.team_in.members.length >= 2" @click="showInviteNewMember(record)"><a-icon type="user-add" />Invite</a>
+              </a-tooltip>
+              <a-popconfirm title="Are you sure to exit this team?" @confirm="confirmExitCurrentTeam(record)" @cancel="cancelExitCurrentTeam">
+                <!--tooltip for operation button-->
+                <a-tooltip>
+                  <template slot="title">
+                    <span>Click to exit this team</span>
+                  </template>
+                  <a style="color: red"><a-icon type="api" />Exit team</a>
+                </a-tooltip>
+              </a-popconfirm>
+            </span>
+          </template>
+        </a-table>
+      </div>
+    </a-card>
+    <!--Create team modal-->
+    <template>
+      <div>
+        <a-modal width="800px" v-model="createTeamModalVisible" title="Create New Team" on-ok="handleCreateNewTeamOk">
+          <template slot="footer">
+            <a-button key="cancel" @click="handleCreateNewTeamCancel">
+              Return
+            </a-button>
+            <a-button key="submit" type="primary" @click="handleCreateNewTeamOk">
+              Submit
+            </a-button>
+          </template>
+          <!--Create new team modal-->
+          <a-form-model
+            :model="createNewTeamForm"
+            :rules="createNewTeamFormRules"
+            ref="createNewTeamFormRef"
+            :label-col="{ span: 5 }"
+            :wrapper-col="{ span: 16 }"
+          >
+            <a-form-model-item label="Team Name" prop="teamName">
+              <a-input v-model="createNewTeamForm.teamName" allow-clear></a-input>
+            </a-form-model-item>
+          </a-form-model>
+        </a-modal>
+      </div>
+    </template>
+    <!--Invite modal-->
+    <template>
+      <div>
+        <a-modal width="800px" v-model="inviteModalVisible" title="Send Invitation" on-ok="handleInviteOk">
+          <template slot="footer">
+            <a-button type="primary" key="cancel" @click="handleInviteCancel">
+              Return
+            </a-button>
+          </template>
+          <!--search bar for student search-->
+          <a-input-search style="width: 70%" placeholder="Please input student name / ID" v-model="inviteQueryContent" enter-button @search="onStudentSearch" />
+          <a-table style="margin-top: 30px" :dataSource="inviteSearchResults" rowKey="id" :columns="studentListColumns" :pagination="inviteSearchResultsPagination">
+            <!--username column-->
+            <template slot="name" slot-scope="text, record">
+              <span>{{ record.username }}</span>
+              <span v-if="record.username === nickname"> (Yourself) </span>
+            </template>
+            <!--operation area-->
+            <template slot="operation" slot-scope="text, record">
+              <a :disabled="record.id === userId" @click="inviteThisStudent(record)"> Invite </a>
+            </template>
+          </a-table>
+        </a-modal>
+      </div>
+    </template>
+    <!--Vote team leader modal-->
+    <template>
+      <div>
+        <a-modal width="800px" v-model="voteLeaderModalVisible" title="Vote Team Leader" on-ok="handleVoteTeamLeaderOk">
+          <template slot="footer">
+            <a-button key="cancel" @click="handleVoteTeamLeaderCancel">
+              Cancel
+            </a-button>
+            <a-button key="submit" type="primary" @click="handleVoteTeamLeaderOk">
+              Vote
+            </a-button>
+          </template>
+          <!--Create new team modal-->
+          <a-form-model
+            :model="voteLeaderForm"
+            :rules="voteLeaderFormRules"
+            ref="voteLeaderFormRef"
+            :label-col="labelCol"
+            :wrapper-col="wrapperCol"
+          >
+            <a-form-model-item label="Choose your leader" prop="choice">
+              <a-select style="width: 80%" default-value="" v-model="voteLeaderForm.choice">
+                <a-icon slot="suffixIcon" type="crown" />
+                <a-select-option v-for="(item, i) in this.memberList" :key="i" :value="item.id">
+                  {{ item.username }}
+                </a-select-option>
+              </a-select>
+            </a-form-model-item>
+          </a-form-model>
+        </a-modal>
+      </div>
+    </template>
+  </div>
+</template>
+
+<script>
+  import moment from 'moment'
+  import {
+    createNewTeam,
+    exitTeam,
+    getStudentCourses,
+    inviteSomeone,
+    queryStudent,
+    voteTeamLeader
+  } from '../../../api/student'
+  import { mapGetters } from 'vuex'
+  import { convertDuration } from '@/utils/util'
+
+  export default {
+    name: 'TeamManagement',
+    data () {
+      return {
+        // variable used to store course list
+        courseList: [],
+        // variable used to store the student list
+        studentList: [],
+        // member list of the row selected in the course list
+        memberList: [],
+        // variable used to store the team selected
+        teamSelected: {},
+        // columns for the team table
+        teamTableColumns: [
+          {
+            // Course title column
+            title: 'Course Name',
+            dataIndex: 'title',
+            width: '15%',
+            align: 'center',
+            scopedSlots: { customRender: 'title' }
+          },
+          {
+            // Duration
+            title: 'Course Duration',
+            dataIndex: 'duration',
+            width: '20%',
+            align: 'center',
+            scopedSlots: { customRender: 'confirmation_status' }
+          },
+          {
+            // Team name column
+            title: 'Team Name',
+            dataIndex: 'team_in.name',
+            width: '10%',
+            align: 'center',
+            scopedSlots: { customRender: 'teamName' }
+          },
+          {
+            // Member list
+            title: 'Team Members',
+            dataIndex: 'team_in.members',
+            width: '35%',
+            align: 'center',
+            scopedSlots: { customRender: 'teamMembers' }
+          },
+          {
+            // operation
+            title: 'Operation',
+            dataIndex: 'operation',
+            width: '20%',
+            align: 'center',
+            scopedSlots: { customRender: 'operation' }
+          }
+        ],
+        // object used to adjust the pagination of the course table
+        paginationForTeamTable: {
+          current: 1,
+          pageSize: 5,
+          // Show the number of total items
+          showTotal: (total) => `Total ${ total } items`,
+          total: 0,
+          showSizeChanger: true,
+          pageSizeOptions: ['5', '10', '12', '15', '25'],
+          onShowSizeChange: (current, pageSize) => {
+            this.paginationForTeamTable.current = current
+            this.paginationForTeamTable.pageSize = pageSize
+            this.getCourses()
+          },
+          onChange: (current, pageSize) => {
+            this.paginationForTeamTable.pageSize = pageSize
+            this.paginationForTeamTable.current = current
+            this.getCourses()
+          }
+        },
+        // variable used to control the display of create team modal
+        createTeamModalVisible: false,
+        // layout settings for the add submission form
+        labelCol: { span: 8 },
+        wrapperCol: { span: 16 },
+        // form object for create new team form
+        createNewTeamForm: {
+          teamName: ''
+        },
+        // validation rules for create new team form
+        createNewTeamFormRules: {
+          teamName: [
+            { required: true, message: 'Please input your team name', trigger: ['blur', 'change'] }
+          ]
+        },
+        // variable used to store the id of course selected
+        selectedCourseId: '',
+        // query content input by the user
+        queryContent: '',
+        // variable used to control the show of invite modal
+        inviteModalVisible: false,
+        // query content input by user - in the send invitation modal
+        inviteQueryContent: '',
+        // variable used to control the display of vote team leader modal
+        voteLeaderModalVisible: false,
+        // form object used for the vote team leader modal
+        voteLeaderForm: {
+          choice: ''
+        },
+        // validation rules for the vote leader form
+        voteLeaderFormRules: {
+          choice: [
+            { required: true, message: 'Please choose one team member', trigger: 'blur' }
+          ]
+        },
+        // variable used to store the course selected after user click invite
+        courseSelected: {},
+        // search results in invite modal
+        inviteSearchResults: [],
+        // columns settings for the student list
+        studentListColumns: [
+          {
+            title: 'Student Name',
+            dataIndex: 'username',
+            width: '35%',
+            align: 'center',
+            scopedSlots: { customRender: 'name' }
+          },
+          {
+            title: 'Student ID',
+            dataIndex: 'student_profile.student_id',
+            width: '35%',
+            align: 'center',
+            scopedSlots: { customRender: 'id' }
+          },
+          {
+            title: 'Operation',
+            dataIndex: 'operation',
+            width: '30%',
+            align: 'center',
+            scopedSlots: { customRender: 'operation' }
+          }
+        ],
+        // pageination settings for the invite search results
+        inviteSearchResultsPagination: {
+          current: 1,
+          pageSize: 5,
+          // Show the number of total items
+          showTotal: (total) => `Totally ${ total } items`,
+          total: 0,
+          showSizeChanger: true,
+          pageSizeOptions: ['5', '10', '12', '15', '25'],
+          onShowSizeChange: (current, pageSize) => {
+            this.inviteSearchResultsPagination.current = current
+            this.inviteSearchResultsPagination.pageSize = pageSize
+            this.searchStudent()
+          },
+          onChange: (current, pageSize) => {
+            this.inviteSearchResultsPagination.pageSize = pageSize
+            this.inviteSearchResultsPagination.current = current
+            this.searchStudent()
+          }
+        },
+        // variable used to indicate whether the student is invited or not
+        isInvited: false,
+        // student selected to be invited
+        studentSelected: {},
+        // number of trys to search course by name
+        searchCourseTryNum: 0
+      }
+    },
+    methods: {
+      // function used to move to main page
+      moveToIndex () {
+        this.$router.push('mainpage')
+      },
+      // function used to get the course info of current student
+      getCourses (isSearch = false) {
+        // reset the page num for the table
+        if (isSearch) this.paginationForTeamTable.current = 1
+        const parameter = {
+          page: this.paginationForTeamTable.current,
+          size: this.paginationForTeamTable.pageSize
+        }
+        // if user wants to search
+        if (this.queryContent !== '') parameter.title = this.queryContent
+        getStudentCourses(parameter).then(({ data: response }) => {
+          this.courseList = response.results
+          this.paginationForTeamTable.total = response.count
+          this.processCourseList()
+          // console.log(this.courseList)
+        }).catch(error => {
+          if (error.response) {
+            console.info(error.response)
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to get the information of available courses'
+            })
+          }
+          })
+      },
+      // function used to transfer the duration to proposed format
+      formatDuration () {
+        this.courseList.forEach(course => {
+          course.duration = convertDuration(moment(course.duration))
+        })
+      },
+      // function used to process the data in the courseList
+      processCourseList () {
+        this.formatDuration()
+        this.formatIsConfirmed()
+      },
+      // function used to format the confirmation status in the courselist
+      formatIsConfirmed () {
+        for (let i = 0; i < this.courseList.length; i++) {
+          if (this.courseList[i].is_confirmed === true) {
+            this.courseList[i].is_confirmed = 'YES'
+          } else {
+            this.courseList[i].is_confirmed = 'NO'
+          }
+        }
+      },
+      // function used to control the show of creat team modal
+      showCreateTeamModal (course) {
+        // store the selected course id
+        this.selectedCourseId = course.id
+        // console.log(this.selectedCourseId)
+        this.createTeamModalVisible = true
+      },
+      // function used to control the show of vote team leader modal
+      showVoteTeamLeaderModal (course) {
+        // get all the members in this team currently
+        this.memberList = course.team_in.members
+        this.teamSelected = course.team_in
+        // console.log(this.teamSelected)
+        this.voteLeaderModalVisible = true
+        // console.log('Vote Team Leader')
+      },
+      // function executed when user confirm to quit the team
+      confirmExitCurrentTeam (course) {
+        this.teamSelected = course.team_in
+        exitTeam(this.teamSelected.id).then(({ data: response }) => {
+          this.$notification.success({
+            message: 'Success',
+            description: 'Exit the team successfully.'
+          })
+          // re-render
+          this.getCourses()
+        }).catch(error => {
+          // if error occurs
+          if (error.response) {
+            console.info(error.response)
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to exit the team.'
+            })
+          }
+        })
+      },
+      // function executed when user calcel to exit current team
+      cancelExitCurrentTeam () {
+        return this.$notification.info({
+          message: 'Info',
+          description: 'You have canceled the exit operation.'
+        })
+      },
+      // function used to control the show of invite new member modal
+      showInviteNewMember (course) {
+        this.courseSelected = course
+        // initially get all the students
+        this.searchStudent()
+        this.inviteModalVisible = true
+      },
+      // function executed when user click cancel button in the create new team modal
+      handleCreateNewTeamCancel () {
+        this.$refs.createNewTeamFormRef.resetFields()
+        this.createTeamModalVisible = false
+      },
+      // function executed when user click submit button in the create new team modal
+      handleCreateNewTeamOk () {
+        // console.log('submit')
+        this.$refs.createNewTeamFormRef.validate(valid => {
+          if (valid) {
+            this.submitNewTeam()
+          }
+        })
+      },
+      // function used to create a new team
+      submitNewTeam () {
+        const parameter = { name: this.createNewTeamForm.teamName, course: this.selectedCourseId }
+        createNewTeam(parameter).then(({ data: response }) => {
+          this.$notification.success({
+            message: 'Success',
+            description: 'Create new team successful'
+          })
+          this.getCourses()
+          this.$refs.createNewTeamFormRef.resetFields()
+          this.createTeamModalVisible = false
+        }).catch(error => {
+          // if error occurs
+          if (error.response) {
+            console.info(error.response)
+            this.$notification.error({
+              message: 'Error',
+              description: 'Failed to create new team'
+            })
+          }
+        })
+      },
+      onSearch () {
+        this.getCourses(true)
+      },
+      handleInviteCancel () {
+        this.inviteModalVisible = false
+      },
+      onStudentSearch () {
+        this.searchStudent(true)
+      },
+      // function executed when user click the cancel button in the vote team leader modal
+      handleVoteTeamLeaderCancel () {
+        this.$refs.voteLeaderFormRef.resetFields()
+        // this.voteLeaderForm.choice = ''
+        this.voteLeaderModalVisible = false
+      },
+      // function executed when user click the vote button in the vote team leader modal
+      handleVoteTeamLeaderOk () {
+        this.$refs.voteLeaderFormRef.validate(valid => {
+          if (valid) {
+            // process the data
+            const parameter = { leader: this.voteLeaderForm.choice }
+            voteTeamLeader(this.teamSelected.id, parameter).then(({ data: response }) => {
+              // console.log(response)
+              this.$refs.voteLeaderFormRef.resetFields()
+              this.voteLeaderModalVisible = false
+              this.getCourses()
+              this.$notification.success({
+                message: 'Success',
+                description: 'Vote team leader successful'
+              })
+            }).catch(error => {
+              // if error occurs
+              if (error.response) {
+                console.info(error.response)
+                this.$notification.error({
+                  message: 'Error',
+                  description: 'Failed to vote the team leader'
+                })
+              }
+            })
+          }
+        })
+      },
+      // search student by ID / name
+      searchStudent (isSearch = false) {
+        // reset the page num for search
+        if (isSearch) this.inviteSearchResultsPagination.current = 1
+        // process the data
+        const parameter = {
+          course: this.courseSelected.id,
+          page: this.inviteSearchResultsPagination.current,
+          size: this.inviteSearchResultsPagination.pageSize
+        }
+        // if user has input something for search
+        if (this.inviteQueryContent !== '') parameter.search = this.inviteQueryContent
+        queryStudent(parameter).then(({ data: response }) => {
+          // console.log(response)
+          this.inviteSearchResults = response.results
+          this.inviteSearchResultsPagination.total = response.count
+        }).catch(error => {
+          // if error occurs
+          if (error.response) {
+            return this.$notification.error({
+              message: 'Error',
+              description: 'Failed to get students search results'
+            })
+          }
+        })
+      },
+      // function executed when user click the invite button in the invited modal
+      inviteThisStudent (student) {
+        this.studentSelected = student
+        this.submitInvitation()
+      },
+      // send Invitation
+      submitInvitation () {
+        // process the data
+        const parameter = {
+          course: {
+            title: this.courseSelected.title,
+            form_method: this.courseSelected.form_method,
+            member_count_primary: this.courseSelected.member_count_primary,
+            team_count_primary: this.courseSelected.team_count_primary,
+            member_count_secondary: this.courseSelected.member_count_secondary,
+            team_count_secondary: this.courseSelected.team_count_secondary,
+            floating_band: this.courseSelected.floating_band,
+            instructor: this.courseSelected.instructor
+          },
+          team: this.courseSelected.team_in.id,
+          invitee: this.studentSelected.id
+        }
+        // console.log(parameter)
+        // send request to back end
+        inviteSomeone(parameter).then(({ data: response }) => {
+          return this.$notification.success({
+            message: 'Success',
+            description: 'Successfully invite ' + this.studentSelected.username
+          })
+        }).catch(error => {
+          if (error.response) {
+            console.info(error.response)
+            let errorInfo = 'Failed to invite ' + this.studentSelected.username
+            if (error.response.data) {
+              errorInfo = error.response.data.non_field_errors[0]
+              console.log(errorInfo)
+              return this.$notification.warn({
+                message: 'Warning',
+                description: errorInfo
+              })
+            }
+            this.$notification.error({
+              message: 'Error',
+              description: errorInfo
+              })
+          }
+        })
+      }
+    },
+    created () {
+      this.getCourses()
+    },
+    computed: {
+      ...mapGetters([
+        'nickname',
+        'userId'
+      ])
+    }
+  }
+</script>
+
+<style scoped>
+  .border-adjust {
+    border: 0px;
+  }
+</style>
