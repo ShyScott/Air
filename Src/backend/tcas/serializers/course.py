@@ -92,7 +92,7 @@ class CourseSerializer(serializers.ModelSerializer):
         if (form_method in [4, 5]) and (member_count_primary % 2 > 0 or
                                         member_count_primary < 4 or
                                         member_count_secondary % 2 > 0 or
-                                        member_count_secondary < 4):
+                                        (member_count_secondary < 4 and member_count_secondary != 0)):
             raise serializers.ValidationError('Member counts must be even numbers!')
 
         if (form_method is not None) and (member_count_primary * team_count_primary +
