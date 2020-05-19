@@ -18,7 +18,7 @@
         <div style="margin-top: 20px">
           <span style="margin-right: 15px">Target Course: </span>
           <a-select
-            placeholder="Select the course. Input the course name to filter."
+            placeholder="Select a course. Input the course name to filter."
             style="width: 400px"
             show-search
             :filterOption="false"
@@ -60,7 +60,7 @@
         </a-table>
         <!--Area prepared for the pie chart-->
         <div style="justify-content: center; display: flex; align-items: center; flex-direction: row">
-          <div id="main" style="width: 800px;height:500px; margin-top: 20px;"></div>
+          <div v-show="selectedCourseId !== null" id="main" style="width: 800px;height:500px; margin-top: 20px;"></div>
         </div>
       </a-card>
       <!--Add Submission Modal-->
@@ -189,7 +189,7 @@
       // list used store all the course info of current teacher
         courseList: [],
         // variable used to indicate the current selected course id
-        selectedCourseId: '',
+        selectedCourseId: null,
         // variable used to indicate the current selected course name
         selectedCourseName: '',
         // list used to store the submission of course selected

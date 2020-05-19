@@ -18,7 +18,7 @@
           <a-input-search
             style="margin-top: 20px; width: 50%"
             v-model="courseQuery"
-            placeholder="Please input course name"
+            placeholder="Search by course name..."
             @search="getCourses(true)"
             enterButton>
           </a-input-search>

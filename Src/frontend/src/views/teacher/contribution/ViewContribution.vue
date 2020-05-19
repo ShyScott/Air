@@ -18,7 +18,7 @@
             <!--search & select bar-->
             <a-select
               show-search
-              placeholder="Select a course"
+              placeholder="Select a course. Input the course name to filter."
               style="width: 400px"
               :filterOption="false"
               @search="handleSearch"
@@ -110,6 +110,18 @@
       moveToIndex () {
         this.$router.push('mainpage')
       },
+      // get all courses
+      getCourses () {
+        getTeacherCourses().then(({ data: response }) => {
+          this.courseList = response.results
+        }).catch(error => {
+          console.info(error)
+          this.$notification.error({
+            message: 'Error',
+            description: 'Failed to get the information of available courses'
+          })
+        })
+      },
       // executed when teacher wants to search
       handleSearch (value) {
         const parameter = { title: value }
@@ -174,6 +186,10 @@
         XLSX.utils.book_append_sheet(wb, ws, courseName)
         XLSX.writeFile(wb, courseName + '.xlsx')
       }
+    },
+    created () {
+      // get all the course info before page rendering
+      this.getCourses()
     }
   }
 </script>
