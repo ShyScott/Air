@@ -308,6 +308,8 @@
           if (this.coursePagination.total % this.coursePagination.pageSize === 1) {
             this.coursePagination.current -= 1
           }
+          // If this course is actually the selected course, then set it to null
+          this.$store.dispatch('SetSelectedCourse', null)
           // re-render
           this.getCourses()
           // this.getStudents(this.selectedCourseId)
