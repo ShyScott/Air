@@ -1,0 +1,6 @@
+from .user import UserViewSet
+from .course import CourseViewSet
+from .submission import SubmissionViewSet
+from .team import TeamViewSet
+from .invitation import InvitationViewSet
+from .contribution import ContributionViewSet
