@@ -20,7 +20,7 @@
       <div style="margin-top: 40px">
         <span style="margin-right: 15px"> Course Name: </span>
         <a-select
-          placeholder="Please select the course"
+          placeholder="Select a course. Input course name to filter."
           style="width: 400px"
           show-search
           :filterOption="false"
@@ -55,8 +55,9 @@
 </template>
 
 <script>
-  import { getCoursesByQuery, getInvitation, respondToRequest } from '../../../api/student'
+  import { getCoursesByQuery, getInvitation, respondToRequest } from '@/api/student'
   import { mapGetters } from 'vuex'
+  import { getTeacherCourses } from '@/api/teacher'
 
   export default {
     name: 'ViewInvitation',
@@ -135,6 +136,18 @@
       moveToIndex () {
         this.$router.push({ name: 'Index' })
       },
+      // get all courses
+      getCourses () {
+        getTeacherCourses().then(({ data: response }) => {
+          this.courseList = response.results
+        }).catch(error => {
+          console.info(error)
+          this.$notification.error({
+            message: 'Error',
+            description: 'Failed to get the information of available courses'
+          })
+        })
+      },
       // function used to move to the team management page
       moveToTeamManagementPage () {
         this.$router.push('/team')
@@ -154,7 +167,6 @@
           }
         })
       },
-      // TODO:function executed when user select the target course
       handleChange (value) {
         this.selectedCourse = value
         // use the course id to get invitations of the course
@@ -239,6 +251,7 @@
       }
     },
     created () {
+      this.getCourses()
       this.getAllInvitations()
     },
     computed: {
