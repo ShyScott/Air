@@ -167,7 +167,6 @@
           }
         })
       },
-      // TODO:function executed when user select the target course
       handleChange (value) {
         this.selectedCourse = value
         // use the course id to get invitations of the course
